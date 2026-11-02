@@ -5,3 +5,4 @@ Test 1 2 3, ABC XYZ, wyrazy-z-lacznikiem i WIELKIE LITERY.
 Jedno slowo w wierszu. I jeszcze jedno; plus "tekst w cudzyslowie" w srodku.
 Konstantynopolitanczykowianeczka, Szczebrzeszyn, 42% z 3,14159, i pan Nowak-Wisniewski junior.
 Powiedzial: nie rob tego! Potem (nawiasem mowiac) 1/2 + 3/4 = 5/4; zobacz s. 12.
+Kiedy poranny deszcz cicho stukal w okna, Daniel siedzial przy biurku i porownywal wyniki dwoch syntezatorow mowy, sprawdzajac, jak kazdy z nich radzi sobie z nietypowymi nazwiskami, wyrazeniami technicznymi, wyrazami zlozonymi i drobnymi zmianami interpunkcji, gdy przyszla wiadomosc od jego kolezanki z ciekawym pytaniem, czy ostatnia aktualizacja poprawila rytm dlugich zdan, wyrazistosc skrotow i wymowe slow, ktore moga byc zarowno rzeczownikami, jak i czasownikami, wiec otworzyl ponownie swoj dokument testowy i uwaznie wsluchal sie w kazdy szczegol.

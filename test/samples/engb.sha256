@@ -25,6 +25,7 @@ plain 7 483adf45a046c51c 0cbef8ceca1c8cc2 He said: don't! Then (parenthetically)
 plain 8 7377f8a434195c98 4c1402534b45dc75 A 5,000-strong crowd raised 1,000,500 dollars, and the fund reached 25,000,000.
 plain 9 986658ecb29ddb75 a7930dfa77a7a219 Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
 plain 10 7afa240e60c15b36 345a4ca9b0e2c20b Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.
+plain 11 c33831c874c91c88 60e6f6239927d0f9 While the morning rain tapped gently against the windows, Daniel sat at his desk, comparing the results of two speech synthesizers, noting how each handled unusual names, technical expressions, compound words, and subtle changes in punctuation, when a message from his colleague arrived with a curious question about whether the latest update had improved the rhythm of longer sentences, the clarity of abbreviations, and the pronunciation of words that could function as either nouns or verbs, prompting him to reopen his test document and listen carefully to every detail.
 utf8 1 afc87b05038e5040 8764ef6ce7062db2 The café near the naïve façade serves crème brûlée.
 utf8 2 5f836b350b77334d 83b10e55a872c3b7 Señor Muñoz sent a piñata to São Paulo.
 utf8 3 6b6cd1446eec8716 40d5a732515a08dc Zdzisław Świątek mieszka w Świdnicy przy ulicy Żółkiewskiego.
@@ -102,6 +103,7 @@ dict 7 483adf45a046c51c 7282b089135e7017 He said: don't! Then (parenthetically) 
 dict 8 7377f8a434195c98 a9b2311b876a166c A 5,000-strong crowd raised 1,000,500 dollars, and the fund reached 25,000,000.
 dict 9 986658ecb29ddb75 cff82983cd84c31e Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
 dict 10 7afa240e60c15b36 e3a4b7e98ea7c068 Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.
+dict 11 c33831c874c91c88 d18ffea13c0a5e28 While the morning rain tapped gently against the windows, Daniel sat at his desk, comparing the results of two speech synthesizers, noting how each handled unusual names, technical expressions, compound words, and subtle changes in punctuation, when a message from his colleague arrived with a curious question about whether the latest update had improved the rhythm of longer sentences, the clarity of abbreviations, and the pronunciation of words that could function as either nouns or verbs, prompting him to reopen his test document and listen carefully to every detail.
 second 1 83101ee490771d66 083d40f371469eb6 Hello. This is the Eloquence synthesizer speaking.
 second 2 afba71cf06b14738 354d18f3ec92bc83 Dr. Smith paid $1,234.56 on 3rd May 2026 at 7:45 p.m.
 second 3 121daba903ca76d0 043af82557176dbf The quick brown fox jumps over the lazy dog; e.g. www.example.com/path?q=1
@@ -112,6 +114,7 @@ second 7 9f69f8560ac1d0ab edfa8738f4abc6e5 He said: don't! Then (parenthetically
 second 8 c226c07056456d4c 2cc7c9b450834bd3 A 5,000-strong crowd raised 1,000,500 dollars, and the fund reached 25,000,000.
 second 9 31ae9136c8e3f30e 03cb156d70873ebc Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
 second 10 627291548ed3eee2 a26dbb4ff4c7ecfe Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.
+second 11 95f8331324f2ced8 93f1f82e41fae054 While the morning rain tapped gently against the windows, Daniel sat at his desk, comparing the results of two speech synthesizers, noting how each handled unusual names, technical expressions, compound words, and subtle changes in punctuation, when a message from his colleague arrived with a curious question about whether the latest update had improved the rhythm of longer sentences, the clarity of abbreviations, and the pronunciation of words that could function as either nouns or verbs, prompting him to reopen his test document and listen carefully to every detail.
 ssml 1 aa1bdf3d6cf3ab7f f326c1c8e402712d <speak version="1.0" xml:lang="en-GB">Hello there.</speak>
 ssml 2 bbec3a73b6400fc7 9d740b3c67d8db79 <speak version="1.0" xml:lang="en-GB"><prosody rate="slow">Slowly now.</prosody> Back to normal.</speak>
 ssml 3 21064891cec3c3dd cdeb49b6a0332341 <speak version="1.0" xml:lang="en-GB"><prosody pitch="high" range="x-high" volume="loud">All four at once.</prosody></speak>
@@ -132,3 +135,4 @@ wide 7 ac547aaf04c169f0 2103026393eb1ce6 He said: don't! Then (parenthetically) 
 wide 8 e28a5a93cd22cf98 416aef5c9c144604 A 5,000-strong crowd raised 1,000,500 dollars, and the fund reached 25,000,000.
 wide 9 eae0b91035d553ec fca1262ac04e2a79 Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
 wide 10 65310aa8c707aa82 a462c7816d9a5566 Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.
+wide 11 a51d8f1b2d7b34c9 28ddc124e8219dcb While the morning rain tapped gently against the windows, Daniel sat at his desk, comparing the results of two speech synthesizers, noting how each handled unusual names, technical expressions, compound words, and subtle changes in punctuation, when a message from his colleague arrived with a curious question about whether the latest update had improved the rhythm of longer sentences, the clarity of abbreviations, and the pronunciation of words that could function as either nouns or verbs, prompting him to reopen his test document and listen carefully to every detail.

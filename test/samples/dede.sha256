@@ -22,6 +22,7 @@ plain 4 8001a766555db7e7 e2dc8c70bb9f1481 Test 1 2 3, ABC XYZ, Bindestrich-Woert
 plain 5 11e7b2bf7d27a3d7 38afeeeff09b997c Ein Wort. Und noch eins; dazu "zitierter Text" mittendrin.
 plain 6 0868c08ddbf8f5c1 c9e541dda574dd73 Rechtschreibpruefung, Donaudampfschifffahrt, 42% von 3,14159, und Herr Mueller-Lued Jr.
 plain 7 863731c1c620414e e342a95adce7cdd4 Er sagte: nicht doch! Dann (nebenbei) 1/2 + 3/4 = 5/4; siehe S. 12.
+plain 8 cf3037479ffcabc8 e1687ef072035f67 Als der Regen am Morgen leise gegen die Fenster klopfte, sass Daniel an seinem Schreibtisch und verglich die Ergebnisse von zwei Sprachsynthesizern, wobei er genau darauf achtete, wie jeder von ihnen mit ungewoehnlichen Namen, technischen Ausdruecken, langen zusammengesetzten Woertern und feinen Unterschieden in der Zeichensetzung umging, als eine Nachricht von seiner Kollegin eintraf, die wissen wollte, ob das letzte Update den Rhythmus langer Saetze, die Klarheit von Abkuerzungen und die Aussprache von Woertern verbessert hatte, die sowohl Nomen als auch Verben sein koennen, worauf er sein Testdokument noch einmal oeffnete und jedem Detail sorgfaeltig zuhoerte.
 utf8 1 5132604b497b64d2 e0c22b19018cc8db Strasse, Gruesse, Mueller, Koeln, Weiss.
 utf8 2 5134c1147acf358c 91287eb8e86d05d7 Straße, Grüße, Müller, Köln, Weiß.
 utf8 3 868a2a54d07420ff 9976900b6ac287dc Über den Fluss und durch den Wald zur Großmutter.
@@ -95,6 +96,7 @@ dict 4 8001a766555db7e7 670cc00dd979acf1 Test 1 2 3, ABC XYZ, Bindestrich-Woerte
 dict 5 11e7b2bf7d27a3d7 8879aa81ce9ff843 Ein Wort. Und noch eins; dazu "zitierter Text" mittendrin.
 dict 6 0868c08ddbf8f5c1 77ef3871c8bd557a Rechtschreibpruefung, Donaudampfschifffahrt, 42% von 3,14159, und Herr Mueller-Lued Jr.
 dict 7 863731c1c620414e 51c91044763f6a78 Er sagte: nicht doch! Dann (nebenbei) 1/2 + 3/4 = 5/4; siehe S. 12.
+dict 8 cf3037479ffcabc8 f39bcd984f018f72 Als der Regen am Morgen leise gegen die Fenster klopfte, sass Daniel an seinem Schreibtisch und verglich die Ergebnisse von zwei Sprachsynthesizern, wobei er genau darauf achtete, wie jeder von ihnen mit ungewoehnlichen Namen, technischen Ausdruecken, langen zusammengesetzten Woertern und feinen Unterschieden in der Zeichensetzung umging, als eine Nachricht von seiner Kollegin eintraf, die wissen wollte, ob das letzte Update den Rhythmus langer Saetze, die Klarheit von Abkuerzungen und die Aussprache von Woertern verbessert hatte, die sowohl Nomen als auch Verben sein koennen, worauf er sein Testdokument noch einmal oeffnete und jedem Detail sorgfaeltig zuhoerte.
 second 1 4a873c4ab9720da3 580473d66fb06ad9 Hallo. Hier spricht der Eloquence Sprachsynthesizer.
 second 2 24a4f2ac67681a75 c987c1ad339d40dc Dr. Schmidt zahlte 1.234,56 Euro am 3. Mai 2026 um 19:45 Uhr.
 second 3 0787bf2b13044049 054a5731ea791ca1 Der schnelle braune Fuchs springt ueber den faulen Hund; z.B. www.beispiel.de/pfad?q=1
@@ -102,6 +104,7 @@ second 4 3d327de03e68d241 50649413de067c21 Test 1 2 3, ABC XYZ, Bindestrich-Woer
 second 5 e3bcf367dbab9886 a1946f7f62fe18ba Ein Wort. Und noch eins; dazu "zitierter Text" mittendrin.
 second 6 03904986e0c9fe4d 37bc57cf1b911d7f Rechtschreibpruefung, Donaudampfschifffahrt, 42% von 3,14159, und Herr Mueller-Lued Jr.
 second 7 49f39717dfe3776c cd1f24262c4466fe Er sagte: nicht doch! Dann (nebenbei) 1/2 + 3/4 = 5/4; siehe S. 12.
+second 8 ef51a2e4e3bf3275 b6c54f266ff308a0 Als der Regen am Morgen leise gegen die Fenster klopfte, sass Daniel an seinem Schreibtisch und verglich die Ergebnisse von zwei Sprachsynthesizern, wobei er genau darauf achtete, wie jeder von ihnen mit ungewoehnlichen Namen, technischen Ausdruecken, langen zusammengesetzten Woertern und feinen Unterschieden in der Zeichensetzung umging, als eine Nachricht von seiner Kollegin eintraf, die wissen wollte, ob das letzte Update den Rhythmus langer Saetze, die Klarheit von Abkuerzungen und die Aussprache von Woertern verbessert hatte, die sowohl Nomen als auch Verben sein koennen, worauf er sein Testdokument noch einmal oeffnete und jedem Detail sorgfaeltig zuhoerte.
 ssml 1 c5c5395dad437d78 7c064d64b3fe9e7c <speak version="1.0" xml:lang="de-DE">Guten Tag.</speak>
 ssml 2 c0e91a0416640ee2 5ef3913ff22f9576 <speak version="1.0" xml:lang="de-DE"><prosody rate="slow">Jetzt langsamer.</prosody> Wieder normal.</speak>
 ssml 3 4f716caca45f22b4 bb572f6ae3be7c65 <speak version="1.0" xml:lang="de-DE"><prosody pitch="high" range="x-high" volume="loud">Alle vier zugleich.</prosody></speak>
@@ -119,3 +122,4 @@ wide 4 df4758178b6c925e d72e4531d1b3ccc8 Test 1 2 3, ABC XYZ, Bindestrich-Woerte
 wide 5 2e43169364173196 6ea6debb40f455b1 Ein Wort. Und noch eins; dazu "zitierter Text" mittendrin.
 wide 6 222fd24658e79138 fbf25ab5661902ca Rechtschreibpruefung, Donaudampfschifffahrt, 42% von 3,14159, und Herr Mueller-Lued Jr.
 wide 7 d5d23fe53ede5cfe 7e7e6fdcb9679209 Er sagte: nicht doch! Dann (nebenbei) 1/2 + 3/4 = 5/4; siehe S. 12.
+wide 8 b1a2db335e7ff5f4 2ef66911d708904e Als der Regen am Morgen leise gegen die Fenster klopfte, sass Daniel an seinem Schreibtisch und verglich die Ergebnisse von zwei Sprachsynthesizern, wobei er genau darauf achtete, wie jeder von ihnen mit ungewoehnlichen Namen, technischen Ausdruecken, langen zusammengesetzten Woertern und feinen Unterschieden in der Zeichensetzung umging, als eine Nachricht von seiner Kollegin eintraf, die wissen wollte, ob das letzte Update den Rhythmus langer Saetze, die Klarheit von Abkuerzungen und die Aussprache von Woertern verbessert hatte, die sowohl Nomen als auch Verben sein koennen, worauf er sein Testdokument noch einmal oeffnete und jedem Detail sorgfaeltig zuhoerte.

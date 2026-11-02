@@ -2000,8 +2000,8 @@ label L0 was _set_global_constants
   push state 0
   call set_voice_param_constants arity 1 depth 3
   push state 0
-  store movw imm 400 statefld 1462
-  store movw imm 200 statefld 1466
+  store movw imm 1000 statefld 1462
+  store movw imm 500 statefld 1466
   store movw imm 100 statefld 1470
   call ZZstarttest2 arity 1 depth 4
   load movl state 1468 into r0
@@ -2034,8 +2034,8 @@ label L1 was at_0x254
   popreg r1
   popreg r1
   branch jne to L6
-  store movw imm 400 ind reg r6 1462
-  store movw imm 200 ind reg r6 1466
+  store movw imm 1000 ind reg r6 1462
+  store movw imm 500 ind reg r6 1466
   push reg r6
   store movw imm 100 ind reg r6 1470
   call ZZstarttest2 arity 1 depth 1

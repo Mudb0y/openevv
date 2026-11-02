@@ -5,3 +5,4 @@ Prueba 1 2 3, ABC XYZ, palabras-con-guion y MAYUSCULAS.
 Una sola palabra. Y otra mas; con "texto citado" en medio.
 Otorrinolaringologo, desoxirribonucleico, 42% de 3,14159, y el senor Perez-Lopez hijo.
 Dijo: no lo hagas! Luego (entre parentesis) 1/2 + 3/4 = 5/4; vease p. 12.
+Mientras la lluvia de la manana golpeaba suavemente las ventanas, Daniel estaba sentado en su escritorio comparando los resultados de dos sintetizadores de voz, observando como cada uno trataba los nombres poco comunes, las expresiones tecnicas, las palabras compuestas y los cambios sutiles de puntuacion, cuando llego un mensaje de su colega con una pregunta curiosa sobre si la ultima actualizacion habia mejorado el ritmo de las frases largas, la claridad de las abreviaturas y la pronunciacion de las palabras que pueden ser tanto nombres como verbos, lo que le llevo a abrir de nuevo su documento de prueba y a escuchar con mucha atencion cada detalle.

@@ -22,6 +22,7 @@ plain 4 f8490501b17441dc 8ef4213695dd1100 Essai 1 2 3, ABC XYZ, mots-avec-traits
 plain 5 025c37c98e327853 915c3a8bf622f149 Un seul mot. Et un autre encore; avec "du texte cite" au milieu.
 plain 6 eff983579f4e7be1 809b983397d93171 Anticonstitutionnellement, otorhinolaryngologiste, 42% de 3,14159, et monsieur Martin-Durand fils.
 plain 7 1805013ec5fd70c8 0639693a520a2945 Il a dit: ne fais pas cela! Puis (entre parentheses) 1/2 + 3/4 = 5/4; voir p. 12.
+plain 8 642206af919233dc 086bf073718725d2 Pendant que la pluie du matin tapait doucement contre les fenetres, Daniel etait assis a son bureau pour comparer les resultats de deux synthetiseurs vocaux, en notant la facon dont chacun traitait les noms inhabituels, les expressions techniques, les mots composes et les changements subtils de ponctuation, quand un message de sa collegue est arrive avec une question curieuse pour savoir si la derniere mise a jour avait ameliore le rythme des phrases longues, la clarte des abreviations et la prononciation des mots qui peuvent etre a la fois des noms et des verbes, ce qui l'a pousse a rouvrir son document de test et a ecouter chaque detail avec attention.
 utf8 1 19ff0e241335e8be 223e4497f0253979 Le cafe pres de la facade naive sert de la creme brulee.
 utf8 2 f6d2b2eb3b7e0ecd 370b6966e20cbad6 Le café près de la façade naïve sert de la crème brûlée.
 utf8 3 9e1890a62d6a8625 708781cee3bd4336 Où est allé le garçon élégant avec sa sœur aînée.
@@ -96,6 +97,7 @@ dict 4 f8490501b17441dc c9573cf5ae487024 Essai 1 2 3, ABC XYZ, mots-avec-traits-
 dict 5 025c37c98e327853 9504d64c865eab8c Un seul mot. Et un autre encore; avec "du texte cite" au milieu.
 dict 6 eff983579f4e7be1 1eeb297db8ba09e2 Anticonstitutionnellement, otorhinolaryngologiste, 42% de 3,14159, et monsieur Martin-Durand fils.
 dict 7 1805013ec5fd70c8 f5f4028df3726fc7 Il a dit: ne fais pas cela! Puis (entre parentheses) 1/2 + 3/4 = 5/4; voir p. 12.
+dict 8 642206af919233dc 3a9cc2c8aaf03a00 Pendant que la pluie du matin tapait doucement contre les fenetres, Daniel etait assis a son bureau pour comparer les resultats de deux synthetiseurs vocaux, en notant la facon dont chacun traitait les noms inhabituels, les expressions techniques, les mots composes et les changements subtils de ponctuation, quand un message de sa collegue est arrive avec une question curieuse pour savoir si la derniere mise a jour avait ameliore le rythme des phrases longues, la clarte des abreviations et la prononciation des mots qui peuvent etre a la fois des noms et des verbes, ce qui l'a pousse a rouvrir son document de test et a ecouter chaque detail avec attention.
 second 1 7a59051898a4492f 2d3da1b36d1b5579 Bonjour. Ici parle le synthetiseur de parole Eloquence.
 second 2 c75a4ffb96411ac7 430d7d9c1afefa3c Le docteur Dupont a paye 1 234,56 euros le 3 mai 2026 a 19h45.
 second 3 55ac6d6cd0e56a42 af5cfc7e67d09c5b Le rapide renard brun saute par-dessus le chien paresseux; p.ex. www.exemple.fr/chemin?q=1
@@ -103,6 +105,7 @@ second 4 c54112457aca5c03 e75327c7d5518239 Essai 1 2 3, ABC XYZ, mots-avec-trait
 second 5 3691d536c022f1e2 f2f55e855563b3d8 Un seul mot. Et un autre encore; avec "du texte cite" au milieu.
 second 6 4727b08f26107be1 98c029b0c5c0ff06 Anticonstitutionnellement, otorhinolaryngologiste, 42% de 3,14159, et monsieur Martin-Durand fils.
 second 7 3025a979786cb4f5 e68fe049ee606546 Il a dit: ne fais pas cela! Puis (entre parentheses) 1/2 + 3/4 = 5/4; voir p. 12.
+second 8 943890a7671dd5a6 aff2ae0c0cfe1df2 Pendant que la pluie du matin tapait doucement contre les fenetres, Daniel etait assis a son bureau pour comparer les resultats de deux synthetiseurs vocaux, en notant la facon dont chacun traitait les noms inhabituels, les expressions techniques, les mots composes et les changements subtils de ponctuation, quand un message de sa collegue est arrive avec une question curieuse pour savoir si la derniere mise a jour avait ameliore le rythme des phrases longues, la clarte des abreviations et la prononciation des mots qui peuvent etre a la fois des noms et des verbes, ce qui l'a pousse a rouvrir son document de test et a ecouter chaque detail avec attention.
 ssml 1 079150332f17ed4b 8f0708d0393d9728 <speak version="1.0" xml:lang="fr-CA">Bonjour.</speak>
 ssml 2 194009e4e618541f 0c098770aebfd90a <speak version="1.0" xml:lang="fr-CA"><prosody rate="slow">Plus lentement.</prosody> De nouveau normal.</speak>
 ssml 3 5dc180ff281e641b 4a8a4cdf5a9c8099 <speak version="1.0" xml:lang="fr-CA"><prosody pitch="high" range="x-high" volume="loud">Les quatre a la fois.</prosody></speak>
@@ -120,3 +123,4 @@ wide 4 1f0328bf5f2a78b9 44fcddf3e5f3688d Essai 1 2 3, ABC XYZ, mots-avec-traits-
 wide 5 11191c83569263d3 3acc0429be202421 Un seul mot. Et un autre encore; avec "du texte cite" au milieu.
 wide 6 f8310ef65ba8c566 8d43acb770e275dd Anticonstitutionnellement, otorhinolaryngologiste, 42% de 3,14159, et monsieur Martin-Durand fils.
 wide 7 ca3215427e98bad7 b1b00cdb571b8b0e Il a dit: ne fais pas cela! Puis (entre parentheses) 1/2 + 3/4 = 5/4; voir p. 12.
+wide 8 0ea281e747d33b86 076057e4834c6fe7 Pendant que la pluie du matin tapait doucement contre les fenetres, Daniel etait assis a son bureau pour comparer les resultats de deux synthetiseurs vocaux, en notant la facon dont chacun traitait les noms inhabituels, les expressions techniques, les mots composes et les changements subtils de ponctuation, quand un message de sa collegue est arrive avec une question curieuse pour savoir si la derniere mise a jour avait ameliore le rythme des phrases longues, la clarte des abreviations et la prononciation des mots qui peuvent etre a la fois des noms et des verbes, ce qui l'a pousse a rouvrir son document de test et a ecouter chaque detail avec attention.

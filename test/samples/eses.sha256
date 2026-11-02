@@ -22,6 +22,7 @@ plain 4 70de42bdc42b4916 613698f4d11c3ca4 Prueba 1 2 3, ABC XYZ, palabras-con-gu
 plain 5 bc0bed1816051243 a3ab0751b6f79206 Una sola palabra. Y otra mas; con "texto citado" en medio.
 plain 6 ef6f9add9d2a7168 28fc854c60102401 Otorrinolaringologo, desoxirribonucleico, 42% de 3,14159, y el senor Perez-Lopez hijo.
 plain 7 90c6e9b552c9a9b1 ddecfa5220abc8cc Dijo: no lo hagas! Luego (entre parentesis) 1/2 + 3/4 = 5/4; vease p. 12.
+plain 8 1063a8a153bda69b dc67aa3ec485686a Mientras la lluvia de la manana golpeaba suavemente las ventanas, Daniel estaba sentado en su escritorio comparando los resultados de dos sintetizadores de voz, observando como cada uno trataba los nombres poco comunes, las expresiones tecnicas, las palabras compuestas y los cambios sutiles de puntuacion, cuando llego un mensaje de su colega con una pregunta curiosa sobre si la ultima actualizacion habia mejorado el ritmo de las frases largas, la claridad de las abreviaturas y la pronunciacion de las palabras que pueden ser tanto nombres como verbos, lo que le llevo a abrir de nuevo su documento de prueba y a escuchar con mucha atencion cada detalle.
 utf8 1 09bae428b35cb667 0f6c8148473d0475 El senor Munoz envio una pinata a Sao Paulo.
 utf8 2 a759b9f1b5fac585 9809654036a955c0 El señor Muñoz envió una piñata a São Paulo.
 utf8 3 ceb57f26a3b71308 4998a342f0c5c70e La cigüeña bebió agua en el río antes del amanecer.
@@ -96,6 +97,7 @@ dict 4 70de42bdc42b4916 a88bde3ec27a6b9e Prueba 1 2 3, ABC XYZ, palabras-con-gui
 dict 5 bc0bed1816051243 c327f202f88b5dbd Una sola palabra. Y otra mas; con "texto citado" en medio.
 dict 6 ef6f9add9d2a7168 3911f1a487f5bb65 Otorrinolaringologo, desoxirribonucleico, 42% de 3,14159, y el senor Perez-Lopez hijo.
 dict 7 90c6e9b552c9a9b1 cf8fa4ec4f3abb4f Dijo: no lo hagas! Luego (entre parentesis) 1/2 + 3/4 = 5/4; vease p. 12.
+dict 8 1063a8a153bda69b c5dbd82cd2d4ea24 Mientras la lluvia de la manana golpeaba suavemente las ventanas, Daniel estaba sentado en su escritorio comparando los resultados de dos sintetizadores de voz, observando como cada uno trataba los nombres poco comunes, las expresiones tecnicas, las palabras compuestas y los cambios sutiles de puntuacion, cuando llego un mensaje de su colega con una pregunta curiosa sobre si la ultima actualizacion habia mejorado el ritmo de las frases largas, la claridad de las abreviaturas y la pronunciacion de las palabras que pueden ser tanto nombres como verbos, lo que le llevo a abrir de nuevo su documento de prueba y a escuchar con mucha atencion cada detalle.
 second 1 980484a95c8056af 6863fab8b2218d4d Hola. Aqui habla el sintetizador de voz Eloquence.
 second 2 5488fc7ae6504c5e 944ea5e581ceb810 El doctor Gomez pago 1.234,56 euros el 3 de mayo de 2026 a las 19:45.
 second 3 8bec9cada2b4d396 b292619c9d7b73c6 El rapido zorro marron salta sobre el perro perezoso; p.ej. www.ejemplo.es/ruta?q=1
@@ -103,6 +105,7 @@ second 4 e7a51f596ad2b051 3d6283a1175ec147 Prueba 1 2 3, ABC XYZ, palabras-con-g
 second 5 fccaeffb2ad27b60 818b93c3f75a8d0c Una sola palabra. Y otra mas; con "texto citado" en medio.
 second 6 18c5795a015ac0da 899aad29237b7c8a Otorrinolaringologo, desoxirribonucleico, 42% de 3,14159, y el senor Perez-Lopez hijo.
 second 7 dac131bf893adfcd 0fec329f2a59d7d3 Dijo: no lo hagas! Luego (entre parentesis) 1/2 + 3/4 = 5/4; vease p. 12.
+second 8 3298225b585812c7 a70ecfeaf59b05a8 Mientras la lluvia de la manana golpeaba suavemente las ventanas, Daniel estaba sentado en su escritorio comparando los resultados de dos sintetizadores de voz, observando como cada uno trataba los nombres poco comunes, las expresiones tecnicas, las palabras compuestas y los cambios sutiles de puntuacion, cuando llego un mensaje de su colega con una pregunta curiosa sobre si la ultima actualizacion habia mejorado el ritmo de las frases largas, la claridad de las abreviaturas y la pronunciacion de las palabras que pueden ser tanto nombres como verbos, lo que le llevo a abrir de nuevo su documento de prueba y a escuchar con mucha atencion cada detalle.
 ssml 1 d034cfcf86ff8e2d b8d3a53b62d921d9 <speak version="1.0" xml:lang="es-ES">Buenos dias.</speak>
 ssml 2 e8bcd2d0125ca5cd 9d2e54297643d50f <speak version="1.0" xml:lang="es-ES"><prosody rate="slow">Ahora mas despacio.</prosody> Otra vez normal.</speak>
 ssml 3 7203f39b28463857 70293ff9cecaa12e <speak version="1.0" xml:lang="es-ES"><prosody pitch="high" range="x-high" volume="loud">Los cuatro a la vez.</prosody></speak>
@@ -120,3 +123,4 @@ wide 4 aaa632c6bfe4d20a 9d6ffff4720ddb84 Prueba 1 2 3, ABC XYZ, palabras-con-gui
 wide 5 756c2b31587ab0d7 a4e5615d61f8319a Una sola palabra. Y otra mas; con "texto citado" en medio.
 wide 6 42195c397dc98db7 3594ad1c9a4e70ac Otorrinolaringologo, desoxirribonucleico, 42% de 3,14159, y el senor Perez-Lopez hijo.
 wide 7 08cf7925ba1f4502 e1eaf4097f5350b0 Dijo: no lo hagas! Luego (entre parentesis) 1/2 + 3/4 = 5/4; vease p. 12.
+wide 8 cf1c7cb1a48f7f3c 83a24f6a742761dd Mientras la lluvia de la manana golpeaba suavemente las ventanas, Daniel estaba sentado en su escritorio comparando los resultados de dos sintetizadores de voz, observando como cada uno trataba los nombres poco comunes, las expresiones tecnicas, las palabras compuestas y los cambios sutiles de puntuacion, cuando llego un mensaje de su colega con una pregunta curiosa sobre si la ultima actualizacion habia mejorado el ritmo de las frases largas, la claridad de las abreviaturas y la pronunciacion de las palabras que pueden ser tanto nombres como verbos, lo que le llevo a abrir de nuevo su documento de prueba y a escuchar con mucha atencion cada detalle.

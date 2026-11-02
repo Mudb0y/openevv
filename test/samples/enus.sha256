@@ -27,6 +27,7 @@ plain 9 8ead484af129be46 6bb469b5feb1eb9d Windows10 and teamtalk5 are words with
 plain 10 7ce5a5e125142b1e dd512c41c70ddd40 Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.
 plain 11 18383775fc714219 d9b13a74a6db9958 On 2026-10-11 part 123-456-789 suited ages 3-5, and 10-5-2=3.
 plain 12 2a0104dbde86c7d7 a0c0f4b3ce61259e It cost US$5.50 here, EUR 20.50 there, $5-$10 a head, or DM 5.
+plain 13 1169afbba8d1bd5b e881ace669610861 While the morning rain tapped gently against the windows, Daniel sat at his desk, comparing the results of two speech synthesizers, noting how each handled unusual names, technical expressions, compound words, and subtle changes in punctuation, when a message from his colleague arrived with a curious question about whether the latest update had improved the rhythm of longer sentences, the clarity of abbreviations, and the pronunciation of words that could function as either nouns or verbs, prompting him to reopen his test document and listen carefully to every detail.
 utf8 1 ebb7b49a4f0b54f8 82008faec60decb7 The café near the naïve façade serves crème brûlée.
 utf8 2 78ff65d995f63497 cd7285c4b201b708 Señor Muñoz sent a piñata to São Paulo.
 utf8 3 0d63cfdc39d625b8 6b2c0931330cc35a Zdzisław Świątek mieszka w Świdnicy przy ulicy Żółkiewskiego.
@@ -106,6 +107,7 @@ dict 9 8ead484af129be46 9448496fa8f8bf14 Windows10 and teamtalk5 are words with 
 dict 10 7ce5a5e125142b1e e8529d20b5a7988b Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.
 dict 11 18383775fc714219 f516d0953de8f107 On 2026-10-11 part 123-456-789 suited ages 3-5, and 10-5-2=3.
 dict 12 2a0104dbde86c7d7 b187648f71977773 It cost US$5.50 here, EUR 20.50 there, $5-$10 a head, or DM 5.
+dict 13 1169afbba8d1bd5b 2f62bf908188943f While the morning rain tapped gently against the windows, Daniel sat at his desk, comparing the results of two speech synthesizers, noting how each handled unusual names, technical expressions, compound words, and subtle changes in punctuation, when a message from his colleague arrived with a curious question about whether the latest update had improved the rhythm of longer sentences, the clarity of abbreviations, and the pronunciation of words that could function as either nouns or verbs, prompting him to reopen his test document and listen carefully to every detail.
 second 1 db2e00e0f9ab64fb 86d0d4a3017b6650 Hello. This is the Eloquence synthesizer speaking.
 second 2 b2226360d82f88fc e32227ad5af7f916 Dr. Smith paid $1,234.56 on 3rd May 2026 at 7:45 p.m.
 second 3 78a6c0d59944f21d e2e8fb8b668fca26 The quick brown fox jumps over the lazy dog; e.g. www.example.com/path?q=1
@@ -118,6 +120,7 @@ second 9 099acd3dfed85365 3dc1b33ed588a036 Windows10 and teamtalk5 are words wit
 second 10 aaf4a22d692dd644 5216c3fcc01d357d Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.
 second 11 42381b25367965bb 5276ccf885dc29f0 On 2026-10-11 part 123-456-789 suited ages 3-5, and 10-5-2=3.
 second 12 e39f9d8ddbeaeb00 e889aedb1dc6c5b3 It cost US$5.50 here, EUR 20.50 there, $5-$10 a head, or DM 5.
+second 13 b4326653551b285c ca1bd44b8b70dbb8 While the morning rain tapped gently against the windows, Daniel sat at his desk, comparing the results of two speech synthesizers, noting how each handled unusual names, technical expressions, compound words, and subtle changes in punctuation, when a message from his colleague arrived with a curious question about whether the latest update had improved the rhythm of longer sentences, the clarity of abbreviations, and the pronunciation of words that could function as either nouns or verbs, prompting him to reopen his test document and listen carefully to every detail.
 ssml 1 aeba6858c67acfd3 3fe5cf74a53482b3 <speak version="1.0" xml:lang="en-US">Hello there.</speak>
 ssml 2 302249f0afbd77b8 4dd4349233151d20 <speak version="1.0" xml:lang="en-US"><prosody rate="slow">Slowly now.</prosody> Back to normal.</speak>
 ssml 3 3653258574f72763 509fc18886a00308 <speak version="1.0" xml:lang="en-US"><prosody pitch="high" range="x-high" volume="loud">All four at once.</prosody></speak>
@@ -140,3 +143,4 @@ wide 9 b8158ca22dfd2a6c 8b2cde90fdc9d00a Windows10 and teamtalk5 are words with 
 wide 10 7a4c5c26644ae945 7ba4f973d4686967 Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.
 wide 11 7921ade5bc7c8478 9557587d24245b05 On 2026-10-11 part 123-456-789 suited ages 3-5, and 10-5-2=3.
 wide 12 e1a8a2b0e2ba296d 8608c6169e073d59 It cost US$5.50 here, EUR 20.50 there, $5-$10 a head, or DM 5.
+wide 13 6ea32f66c82c0d23 97fbd4358afebe06 While the morning rain tapped gently against the windows, Daniel sat at his desk, comparing the results of two speech synthesizers, noting how each handled unusual names, technical expressions, compound words, and subtle changes in punctuation, when a message from his colleague arrived with a curious question about whether the latest update had improved the rhythm of longer sentences, the clarity of abbreviations, and the pronunciation of words that could function as either nouns or verbs, prompting him to reopen his test document and listen carefully to every detail.
