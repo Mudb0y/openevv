@@ -4,7 +4,7 @@
 # test/words.sh record. The list is test/cases/words-enus.txt.
 # These are what this engine does, not what IBM's did: the
 # differential suite speaks sentences, not word lists.
-# CMU's dictionary agrees with the sounds of 19124 of the 20191 words both these answers and the ones before them have, where it agreed with 19123.
+# CMU's dictionary agrees with the sounds of 19124 of the 20191 words both these answers and the ones before them have, where it agreed with 19124.
 a	[`[.1e]]
 aardvark	[`[.1ard.2vark]]
 aaron	[`[.1er.0Xn]]
@@ -17074,8 +17074,8 @@ qualcomm	[`[.1kwal.2kam]]
 qualifier	[`[.1kwcl.0X.2fY.0R]]
 qualifies	[`[.1kwcl.0X.2fYz]]
 qualifying	[`[.1kwcl.0X.2fY.0IG]]
-qualities	[`[.1kwal.0x.0Fiz]]
-quality	[`[.1kwal.0x.0Fi]]
+qualities	[`[.1kwcl.0X.0Fiz]]
+quality	[`[.1kwcl.0X.0Fi]]
 qualm	[`[.1kwcm]]
 quandaries	[`[.1kwan.0dR.0iz]]
 quandary	[`[.1kwan.0dR.0i]]
