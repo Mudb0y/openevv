@@ -36,7 +36,8 @@
  * until its next utterance, so the rate asked for after it was dropped and a
  * new buffer refused -- issue 45. So a fresh instance has it turned on, then
  * has to say it is not speaking, take 44,100, take a new buffer, and answer
- * four times what 11 kHz said.
+ * four times what 11 kHz said, and the tail the end of a run pushes out of the
+ * wideband join and the converter after it.
  *
  * usage: rate
  */
@@ -52,6 +53,7 @@
 #endif
 
 #include "evv_abi.h"
+#include "eci_pcm.h"
 
 enum { FRAME = 1024 };
 
@@ -262,11 +264,25 @@ int main(void)
         return 1;
     }
     {
+        /* Twice each sinc's delay of nothing: 11 kHz into the join, which
+           doubles it, then 22 kHz into the converter, which doubles it
+           again. */
+        PcmResampler probe;
+        long tail = 0;
         long got = say_once(h);
 
-        if (got != at[1] * 4) {
+        if (pcm_resample_start(&probe, 11025, 22050, CVT_SINC)) {
+            tail += 2 * (long)pcm_resample_delay(&probe) * 4;
+            pcm_resample_end(&probe);
+        }
+        if (pcm_resample_start(&probe, 22050, 44100, CVT_SINC)) {
+            tail += 2 * (long)pcm_resample_delay(&probe) * 2;
+            pcm_resample_end(&probe);
+        }
+        if (got != at[1] * 4 + tail) {
             printf("rate: %ld samples at 44,100 with the wideband voice where"
-                   " four times 11 kHz is %ld\n", got, at[1] * 4);
+                   " four times 11 kHz and the tail is %ld\n", got,
+                   at[1] * 4 + tail);
             return 1;
         }
     }
