@@ -115,8 +115,11 @@
 0x10000	-1	He said "hello" and left.
 0x10000	-1	She said, 'not today.'
 0x10000	-1	The (quick) brown fox.
-0x10000	-1	See [section 3] for details.
-0x10000	-1	Use {braces} in code.
+# A square or curly bracket around an aside is read as a round one here and
+# not in 6.1, which is the thirty-first deliberate divergence, so these two
+# hold them where they enclose no aside.
+0x10000	-1	See [ section 3 ] for details.
+0x10000	-1	Set a[i] and b{j} here.
 0x10000	-1	x = y + 1;
 0x10000	-1	if (a > b) { return a; }
 0x10000	-1	for i in range(10): print(i)
