@@ -13,6 +13,70 @@
 
 #include "delta_lang.h"
 
+uint8_t esus_evv_authored_data[] = {
+    /* eti_null, 1 bytes at 0 */
+    0,
+    /* eti_s_e90f3, 1 bytes at 1 */
+    72,
+    /* eti_s_e90f4, 1 bytes at 2 */
+    71,
+    /* eti_s_e90f5, 1 bytes at 3 */
+    81,
+    /* eti_s_e90f6, 1 bytes at 4 */
+    96,
+    /* eti_s_e90f7, 1 bytes at 5 */
+    73,
+    /* eti_s_e90f8, 1 bytes at 6 */
+    168,
+    /* eti_s_e90f9, 1 bytes at 7 */
+    172,
+    /* eti_s_e90fa, 1 bytes at 8 */
+    65,
+    /* eti_s_e9119, 1 bytes at 9 */
+    67,
+    /* eti_s_e911b, 1 bytes at 10 */
+    66,
+    /* eti_s_e911c, 1 bytes at 11 */
+    69,
+    /* eti_s_e911d, 1 bytes at 12 */
+    64,
+    /* eti_s_e911e, 1 bytes at 13 */
+    68,
+    /* eti_s_e911f, 1 bytes at 14 */
+    2,
+    /* eti_s_e9120, 1 bytes at 15 */
+    70,
+    /* eti_s_e9121, 2 bytes at 16 */
+    70,71,
+    /* eti_s_e9134, 1 bytes at 18 */
+    167,
+    /* eti_s_e9135, 1 bytes at 19 */
+    76,
+    /* eti_s_e9136, 1 bytes at 20 */
+    171,
+    /* eti_s_e9139, 1 bytes at 21 */
+    80,
+    /* eti_s_e913a, 1 bytes at 22 */
+    83,
+    /* eti_s_e913b, 1 bytes at 23 */
+    82,
+    /* eti_s_e913c, 1 bytes at 24 */
+    94,
+    /* eti_s_e913d, 1 bytes at 25 */
+    95,
+    /* eti_s_e9143, 1 bytes at 26 */
+    187,
+    /* eti_s_e9144, 2 bytes at 27 */
+    72,72,
+    /* eti_s_e9146, 1 bytes at 29 */
+    84,
+    /* eti_s_e9147, 2 bytes at 30 */
+    65,72,
+    /* eti_s_e9149, 1 bytes at 32 */
+    199,
+};
+
 const delta_store esus_delta_authored_store[] = {
+    { esus_evv_authored_data, sizeof esus_evv_authored_data },
     { 0, 0 },
 };

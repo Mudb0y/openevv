@@ -2219,3 +2219,35 @@ at glob.obj ZZstring142 frfr_evv_glob_data_3 456
 at glob.obj ZZstring173 frfr_evv_glob_data_3 612
 at glob.obj ZZstring139 frfr_evv_glob_data_3 444
 at glob.obj ZZstring53 frfr_evv_glob_data_3 164
+
+# And the constants of our own, out of rules/constants by tools/rules/consts.py.
+store frfr_evv_authored_data
+at * eti_null frfr_evv_authored_data 0
+at * eti_s_13a0f2 frfr_evv_authored_data 1
+at * eti_s_13a0f3 frfr_evv_authored_data 2
+at * eti_s_13a0f4 frfr_evv_authored_data 3
+at * eti_s_13a0f5 frfr_evv_authored_data 4
+at * eti_s_13a0f6 frfr_evv_authored_data 5
+at * eti_s_13a0f7 frfr_evv_authored_data 6
+at * eti_s_13a0f8 frfr_evv_authored_data 7
+at * eti_s_13a0f9 frfr_evv_authored_data 8
+at * eti_s_13a118 frfr_evv_authored_data 9
+at * eti_s_13a11a frfr_evv_authored_data 10
+at * eti_s_13a11b frfr_evv_authored_data 11
+at * eti_s_13a11c frfr_evv_authored_data 12
+at * eti_s_13a11d frfr_evv_authored_data 13
+at * eti_s_13a11e frfr_evv_authored_data 14
+at * eti_s_13a11f frfr_evv_authored_data 15
+at * eti_s_13a120 frfr_evv_authored_data 16
+at * eti_s_13a13d frfr_evv_authored_data 18
+at * eti_s_13a13e frfr_evv_authored_data 19
+at * eti_s_13a13f frfr_evv_authored_data 20
+at * eti_s_13a142 frfr_evv_authored_data 21
+at * eti_s_13a143 frfr_evv_authored_data 22
+at * eti_s_13a144 frfr_evv_authored_data 23
+at * eti_s_13a145 frfr_evv_authored_data 24
+at * eti_s_13a146 frfr_evv_authored_data 25
+at * eti_s_13a15d frfr_evv_authored_data 26
+at * eti_s_13a15f frfr_evv_authored_data 28
+at * eti_s_13a160 frfr_evv_authored_data 29
+at * eti_s_13a162 frfr_evv_authored_data 31

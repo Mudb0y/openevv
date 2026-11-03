@@ -1,0 +1,137 @@
+# Punctuation as ETI Eloquence 6.1 reads it in French: the cases of eti-
+# punct.txt that its French engine and ours read alike. A case left out
+# differs in how a word is said, a mark's own name in verbatim among them, and
+# none in whether a mark is said at all.
+0x30000	-1	;
+0x30000	-1	:
+0x30000	-1	,
+0x30000	-1	.
+0x30000	-1	!
+0x30000	-1	?
+0x30000	-1	(
+0x30000	-1	)
+0x30000	-1	[
+0x30000	-1	"
+0x30000	-1	a;b
+0x30000	-1	value ; next
+0x30000	-1	value next
+0x30000	-1	hello
+0x30000	-1	if (a) ; else ;
+0x30000	-1	a ; b , c . d : e ! f ?
+0x30000	-1	ended with a semicolon;
+0x30000	0	;
+0x30000	0	:
+0x30000	0	,
+0x30000	0	.
+0x30000	0	!
+0x30000	0	?
+0x30000	0	(
+0x30000	0	)
+0x30000	0	[
+0x30000	0	"
+0x30000	0	a;b
+0x30000	0	value ; next
+0x30000	0	value next
+0x30000	0	hello
+0x30000	0	if (a) ; else ;
+0x30000	0	a ; b , c . d : e ! f ?
+0x30000	0	ended with a semicolon;
+0x30000	1	;
+0x30000	1	:
+0x30000	1	,
+0x30000	1	.
+0x30000	1	!
+0x30000	1	?
+0x30000	1	(
+0x30000	1	)
+0x30000	1	[
+0x30000	1	"
+0x30000	1	a;b
+0x30000	1	value ; next
+0x30000	1	value next
+0x30000	1	hello
+0x30000	1	Desktop list multi-select
+0x30000	1	if (a) ; else ;
+0x30000	1	a ; b , c . d : e ! f ?
+0x30000	1	ended with a semicolon;
+0x30000	2	;
+0x30000	2	:
+0x30000	2	,
+0x30000	2	.
+0x30000	2	!
+0x30000	2	?
+0x30000	2	(
+0x30000	2	)
+0x30000	2	[
+0x30000	2	"
+0x30000	2	a;b
+0x30000	2	value ; next
+0x30000	2	value next
+0x30000	2	hello
+0x30000	2	Desktop list multi-select
+0x30000	2	if (a) ; else ;
+0x30000	2	a ; b , c . d : e ! f ?
+0x30000	2	ended with a semicolon;
+0x30000	3	;
+0x30000	3	:
+0x30000	3	,
+0x30000	3	.
+0x30000	3	!
+0x30000	3	?
+0x30000	3	(
+0x30000	3	)
+0x30000	3	[
+0x30000	3	"
+0x30000	3	a;b
+0x30000	3	value ; next
+0x30000	3	value next
+0x30000	3	hello
+0x30000	3	if (a) ; else ;
+0x30000	3	a ; b , c . d : e ! f ?
+0x30000	3	ended with a semicolon;
+0x30000	-1	the transfer is done.
+0x30000	-1	the record is here.
+0x30000	-1	please record this.
+0x30000	-1	the wind is cold.
+0x30000	-1	Hello, world.
+0x30000	-1	Is this a question?
+0x30000	-1	Wait... what happened?
+0x30000	-1	Stop! Don't do that!!
+0x30000	-1	Really?!
+0x30000	-1	He said "hello" and left.
+0x30000	-1	She said, 'not today.'
+0x30000	-1	if (a > b) { return a; }
+0x30000	-1	for i in range(10): print(i)
+0x30000	-1	The U.S.A. and the U.K. signed.
+0x30000	-1	e.g. apples, oranges, i.e. fruit.
+0x30000	-1	He scored 3-2 in the final.
+0x30000	-1	Temperature: -5 degrees.
+0x30000	-1	First - second - third.
+0x30000	-1	A -- B --- C.
+0x30000	-1	Mixed?! punctuation?!?
+0x30000	-1	Asterisk * and caret ^ and tilde ~.
+0x30000	-1	Ampersand & and pipe | and backslash \.
+0x30000	-1	Less < than and greater > than.
+0x30000	-1	"Quoted sentence."
+0x30000	-1	'Single quoted.'
+0x30000	-1	(Parenthesised sentence.)
+0x30000	-1	[Bracketed.]
+0x30000	-1	- list item
+0x30000	-1	* bullet item
+0x30000	-1	a) lettered item
+0x30000	-1	Rock 'n' roll.
+0x30000	-1	;
+0x30000	-1	:
+0x30000	-1	,
+0x30000	-1	.
+0x30000	-1	!
+0x30000	-1	?
+0x30000	-1	-
+0x30000	-1	(
+0x30000	-1	)
+0x30000	-1	"
+0x30000	-1	'
+0x30000	-1	/
+0x30000	-1	...
+0x30000	-1	?!
+0x30000	-1	--

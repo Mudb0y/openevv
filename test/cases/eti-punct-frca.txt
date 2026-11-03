@@ -1,0 +1,79 @@
+# Punctuation as ETI Eloquence 6.1 reads it in Canadian French: the cases of
+# eti-punct.txt that its Canadian French engine and ours read alike. A case
+# left out differs in how a word is said, a mark's own name in verbatim among
+# them, and none in whether a mark is said at all.
+0x30001	-1	;
+0x30001	-1	:
+0x30001	-1	,
+0x30001	-1	.
+0x30001	-1	!
+0x30001	-1	?
+0x30001	-1	(
+0x30001	-1	)
+0x30001	-1	[
+0x30001	-1	"
+0x30001	-1	a;b
+0x30001	-1	value ; next
+0x30001	-1	if (a) ; else ;
+0x30001	0	;
+0x30001	0	:
+0x30001	0	,
+0x30001	0	.
+0x30001	0	!
+0x30001	0	?
+0x30001	0	(
+0x30001	0	)
+0x30001	0	[
+0x30001	0	"
+0x30001	0	a;b
+0x30001	0	value ; next
+0x30001	0	if (a) ; else ;
+0x30001	1	;
+0x30001	1	:
+0x30001	1	,
+0x30001	1	.
+0x30001	1	!
+0x30001	1	?
+0x30001	1	(
+0x30001	1	)
+0x30001	1	[
+0x30001	1	"
+0x30001	1	a;b
+0x30001	2	,
+0x30001	2	"
+0x30001	3	;
+0x30001	3	:
+0x30001	3	,
+0x30001	3	.
+0x30001	3	!
+0x30001	3	?
+0x30001	3	(
+0x30001	3	)
+0x30001	3	[
+0x30001	3	"
+0x30001	3	a;b
+0x30001	3	value ; next
+0x30001	3	if (a) ; else ;
+0x30001	-1	Wait... what happened?
+0x30001	-1	Really?!
+0x30001	-1	A -- B --- C.
+0x30001	-1	[Bracketed.]
+0x30001	-1	- list item
+0x30001	-1	* bullet item
+0x30001	-1	a) lettered item
+0x30001	-1	Rock 'n' roll.
+0x30001	-1	;
+0x30001	-1	:
+0x30001	-1	,
+0x30001	-1	.
+0x30001	-1	!
+0x30001	-1	?
+0x30001	-1	-
+0x30001	-1	(
+0x30001	-1	)
+0x30001	-1	"
+0x30001	-1	'
+0x30001	-1	/
+0x30001	-1	...
+0x30001	-1	?!
+0x30001	-1	--

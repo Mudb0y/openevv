@@ -1,0 +1,149 @@
+# Punctuation as ETI Eloquence 6.1 reads it in Castilian Spanish: the cases of
+# eti-punct.txt that its Castilian Spanish engine and ours read alike. A case
+# left out differs in how a word is said, a mark's own name in verbatim among
+# them, and none in whether a mark is said at all.
+0x20000	-1	;
+0x20000	-1	:
+0x20000	-1	,
+0x20000	-1	.
+0x20000	-1	!
+0x20000	-1	?
+0x20000	-1	(
+0x20000	-1	)
+0x20000	-1	[
+0x20000	-1	"
+0x20000	-1	a;b
+0x20000	-1	value ; next
+0x20000	-1	value next
+0x20000	-1	hello
+0x20000	-1	Desktop list multi-select
+0x20000	-1	if (a) ; else ;
+0x20000	-1	a ; b , c . d : e ! f ?
+0x20000	-1	ended with a semicolon;
+0x20000	0	;
+0x20000	0	:
+0x20000	0	,
+0x20000	0	.
+0x20000	0	!
+0x20000	0	?
+0x20000	0	(
+0x20000	0	)
+0x20000	0	[
+0x20000	0	"
+0x20000	0	a;b
+0x20000	0	value ; next
+0x20000	0	value next
+0x20000	0	hello
+0x20000	0	Desktop list multi-select
+0x20000	0	if (a) ; else ;
+0x20000	0	a ; b , c . d : e ! f ?
+0x20000	0	ended with a semicolon;
+0x20000	1	;
+0x20000	1	:
+0x20000	1	,
+0x20000	1	.
+0x20000	1	!
+0x20000	1	?
+0x20000	1	(
+0x20000	1	)
+0x20000	1	[
+0x20000	1	"
+0x20000	1	a;b
+0x20000	1	value ; next
+0x20000	1	value next
+0x20000	1	hello
+0x20000	1	Desktop list multi-select
+0x20000	1	if (a) ; else ;
+0x20000	1	a ; b , c . d : e ! f ?
+0x20000	2	;
+0x20000	2	:
+0x20000	2	,
+0x20000	2	.
+0x20000	2	!
+0x20000	2	?
+0x20000	2	(
+0x20000	2	)
+0x20000	2	[
+0x20000	2	"
+0x20000	2	a;b
+0x20000	2	value ; next
+0x20000	2	value next
+0x20000	2	hello
+0x20000	2	Desktop list multi-select
+0x20000	2	if (a) ; else ;
+0x20000	2	a ; b , c . d : e ! f ?
+0x20000	3	;
+0x20000	3	:
+0x20000	3	,
+0x20000	3	.
+0x20000	3	!
+0x20000	3	?
+0x20000	3	(
+0x20000	3	)
+0x20000	3	[
+0x20000	3	"
+0x20000	3	a;b
+0x20000	3	value ; next
+0x20000	3	value next
+0x20000	3	hello
+0x20000	3	Desktop list multi-select
+0x20000	3	if (a) ; else ;
+0x20000	3	a ; b , c . d : e ! f ?
+0x20000	3	ended with a semicolon;
+0x20000	-1	the transfer is done.
+0x20000	-1	the decrease is small.
+0x20000	-1	the record is here.
+0x20000	-1	please record this.
+0x20000	-1	I read the book.
+0x20000	-1	the wind is cold.
+0x20000	-1	nothing here changes at all.
+0x20000	-1	Hello, world.
+0x20000	-1	Wait... what happened?
+0x20000	-1	Stop! Don't do that!!
+0x20000	-1	Really?!
+0x20000	-1	He said "hello" and left.
+0x20000	-1	She said, 'not today.'
+0x20000	-1	The (quick) brown fox.
+0x20000	-1	See [ section 3 ] for details.
+0x20000	-1	if (a > b) { return a; }
+0x20000	-1	for i in range(10): print(i)
+0x20000	-1	It costs 1,234.56 dollars.
+0x20000	-1	The U.S.A. and the U.K. signed.
+0x20000	-1	e.g. apples, oranges, i.e. fruit.
+0x20000	-1	Version 2.0.1 was released.
+0x20000	-1	He scored 3-2 in the final.
+0x20000	-1	Pages 10-20 are missing.
+0x20000	-1	The ratio is 3:1.
+0x20000	-1	Temperature: -5 degrees.
+0x20000	-1	Item 1; item 2; item 3.
+0x20000	-1	First - second - third.
+0x20000	-1	A -- B --- C.
+0x20000	-1	Ellipsis at the end...
+0x20000	-1	...and at the start.
+0x20000	-1	Mixed?! punctuation?!?
+0x20000	-1	Ampersand & and pipe | and backslash \.
+0x20000	-1	Less < than and greater > than.
+0x20000	-1	(Parenthesised sentence.)
+0x20000	-1	[Bracketed.]
+0x20000	-1	- list item
+0x20000	-1	1. numbered item
+0x20000	-1	a) lettered item
+0x20000	-1	The year 1999 and the 1990s.
+0x20000	-1	Rock 'n' roll.
+0x20000	-1	O'Brien's dog's bone.
+0x20000	-1	It's 5 o'clock somewhere.
+0x20000	-1	The end.
+0x20000	-1	;
+0x20000	-1	:
+0x20000	-1	,
+0x20000	-1	.
+0x20000	-1	!
+0x20000	-1	?
+0x20000	-1	-
+0x20000	-1	(
+0x20000	-1	)
+0x20000	-1	"
+0x20000	-1	/
+0x20000	-1	...
+0x20000	-1	?!
+0x20000	-1	--

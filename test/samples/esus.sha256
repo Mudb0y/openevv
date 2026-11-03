@@ -109,7 +109,7 @@ second 8 e435306267f1db49 94a294789cf792b8 Mientras la lluvia de la manana golpe
 ssml 1 28b7971b9e96dbf5 3065885026bf7b8d <speak version="1.0" xml:lang="es-MX">Buenos dias.</speak>
 ssml 2 0793af2c3a32ded3 2b18ce047c60beec <speak version="1.0" xml:lang="es-MX"><prosody rate="slow">Ahora mas despacio.</prosody> Otra vez normal.</speak>
 ssml 3 ddc43963b8e51159 6e5013d98f6abb5b <speak version="1.0" xml:lang="es-MX"><prosody pitch="high" range="x-high" volume="loud">Los cuatro a la vez.</prosody></speak>
-ssml 4 f0768a8f3f94508c 7d651ea38e45d12e <speak version="1.0" xml:lang="es-MX"><emphasis level="strong">Este</emphasis>, no aquel.</speak>
+ssml 4 d8af8cad41482e63 e009ea9d6c127f83 <speak version="1.0" xml:lang="es-MX"><emphasis level="strong">Este</emphasis>, no aquel.</speak>
 ssml 5 fa0435a7a0bd1a71 5fdd9745b58725dc <speak version="1.0" xml:lang="es-MX"><voice gender="female">Ella lo dijo.</voice> Y el no.</speak>
 ssml 6 72d90a2618e4cc5c 7241b35b18da0aba <speak version="1.0" xml:lang="es-MX">Costo <say-as interpret-as="cardinal">1234</say-as> el <say-as interpret-as="ordinal">3</say-as>.</speak>
 ssml 7 0e86a981dacff9b0 ed9dbb27bfaeaaf2 <speak version="1.0" xml:lang="es-MX">Deletrea: <say-as interpret-as="letters">abc</say-as>, y llama al <say-as interpret-as="number" format="telephone">5551234</say-as>.</speak>

@@ -24,7 +24,7 @@ plain 6 0868c08ddbf8f5c1 c9e541dda574dd73 Rechtschreibpruefung, Donaudampfschiff
 plain 7 863731c1c620414e e342a95adce7cdd4 Er sagte: nicht doch! Dann (nebenbei) 1/2 + 3/4 = 5/4; siehe S. 12.
 plain 8 cf3037479ffcabc8 e1687ef072035f67 Als der Regen am Morgen leise gegen die Fenster klopfte, sass Daniel an seinem Schreibtisch und verglich die Ergebnisse von zwei Sprachsynthesizern, wobei er genau darauf achtete, wie jeder von ihnen mit ungewoehnlichen Namen, technischen Ausdruecken, langen zusammengesetzten Woertern und feinen Unterschieden in der Zeichensetzung umging, als eine Nachricht von seiner Kollegin eintraf, die wissen wollte, ob das letzte Update den Rhythmus langer Saetze, die Klarheit von Abkuerzungen und die Aussprache von Woertern verbessert hatte, die sowohl Nomen als auch Verben sein koennen, worauf er sein Testdokument noch einmal oeffnete und jedem Detail sorgfaeltig zuhoerte.
 utf8 1 5132604b497b64d2 e0c22b19018cc8db Strasse, Gruesse, Mueller, Koeln, Weiss.
-utf8 2 5134c1147acf358c 91287eb8e86d05d7 Straße, Grüße, Müller, Köln, Weiß.
+utf8 2 405d1b97e8993880 f8ac53715a56b113 Straße, Grüße, Müller, Köln, Weiß.
 utf8 3 868a2a54d07420ff 9976900b6ac287dc Über den Fluss und durch den Wald zur Großmutter.
 utf8 4 061e771e13b0550c 83b10e55a872c3b7 Ärzte, Öfen, Übungen, Äpfel, Öl und Übermut.
 utf8 5 fd9290d188402007 f6765b721d05540c Der Weißkopfseeadler fliegt über die schöne Landschaft.
@@ -56,7 +56,7 @@ anno3 4 eee935f6dc72d624 f39b42d0f6a2b1c8 Stimme `v2 zwei, `v5 fuenf, und `v1 zu
 anno3 5 02a9a98f269bd1da e4bd9c4555255a89 Eine Pause `0 kurz und `4 lang zwischen Woertern.
 anno3 6 503d601568bb45b6 f254d5f78456687d Rauheit `vr40 und Behauchtheit `vf60 geaendert.
 anno3 7 c15afd9281ab39d3 75f8f3c350a89f2b Ein woertlicher \`Backtick soll als Text gesprochen werden.
-anno3 8 76634398af8dcf02 fe948db4421ad258 Tempo mit Namen `vsfast und dann wieder `vsslow.
+anno3 8 2151d404d2620dd5 9dfeb2bf175fa9b5 Tempo mit Namen `vsfast und dann wieder `vsslow.
 anno3 9 1ac3f9cbe062d850 4a2224a3d8a32da6 Kopfgroesse `vh30 dann `vh70 in derselben Zeile.
 anno3 10 6b0b49f8967de94b 91311eb689e8aacd Geschlecht `vg1 und `vg0 im Wechsel.
 anno3 11 86e4f982ff81feaa 5f35f18b2529fb5f Vor `ui"Marke eins" und nach der Indexmarke.
@@ -76,7 +76,7 @@ realworld 4 eee935f6dc72d624 e0edb5df856002ff Stimme `v2 zwei, `v5 fuenf, und `v
 realworld 5 02a9a98f269bd1da 506016e6c0fa4dc2 Eine Pause `0 kurz und `4 lang zwischen Woertern.
 realworld 6 503d601568bb45b6 9e991383c241ab8c Rauheit `vr40 und Behauchtheit `vf60 geaendert.
 realworld 7 c15afd9281ab39d3 c0119384a315e37f Ein woertlicher \`Backtick soll als Text gesprochen werden.
-realworld 8 76634398af8dcf02 638584098f8f27d3 Tempo mit Namen `vsfast und dann wieder `vsslow.
+realworld 8 2151d404d2620dd5 624c3396bee251f3 Tempo mit Namen `vsfast und dann wieder `vsslow.
 realworld 9 1ac3f9cbe062d850 f1bd444351377eb9 Kopfgroesse `vh30 dann `vh70 in derselben Zeile.
 realworld 10 6b0b49f8967de94b fb5d8fc81bc02d06 Geschlecht `vg1 und `vg0 im Wechsel.
 realworld 11 86e4f982ff81feaa 2879941669b13a44 Vor `ui"Marke eins" und nach der Indexmarke.

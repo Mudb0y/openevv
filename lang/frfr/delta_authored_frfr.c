@@ -13,6 +13,68 @@
 
 #include "delta_lang.h"
 
+uint8_t frfr_evv_authored_data[] = {
+    /* eti_null, 1 bytes at 0 */
+    0,
+    /* eti_s_13a0f2, 1 bytes at 1 */
+    72,
+    /* eti_s_13a0f3, 1 bytes at 2 */
+    71,
+    /* eti_s_13a0f4, 1 bytes at 3 */
+    81,
+    /* eti_s_13a0f5, 1 bytes at 4 */
+    96,
+    /* eti_s_13a0f6, 1 bytes at 5 */
+    73,
+    /* eti_s_13a0f7, 1 bytes at 6 */
+    168,
+    /* eti_s_13a0f8, 1 bytes at 7 */
+    172,
+    /* eti_s_13a0f9, 1 bytes at 8 */
+    65,
+    /* eti_s_13a118, 1 bytes at 9 */
+    67,
+    /* eti_s_13a11a, 1 bytes at 10 */
+    66,
+    /* eti_s_13a11b, 1 bytes at 11 */
+    69,
+    /* eti_s_13a11c, 1 bytes at 12 */
+    68,
+    /* eti_s_13a11d, 1 bytes at 13 */
+    64,
+    /* eti_s_13a11e, 1 bytes at 14 */
+    4,
+    /* eti_s_13a11f, 1 bytes at 15 */
+    70,
+    /* eti_s_13a120, 2 bytes at 16 */
+    70,71,
+    /* eti_s_13a13d, 1 bytes at 18 */
+    167,
+    /* eti_s_13a13e, 1 bytes at 19 */
+    76,
+    /* eti_s_13a13f, 1 bytes at 20 */
+    171,
+    /* eti_s_13a142, 1 bytes at 21 */
+    80,
+    /* eti_s_13a143, 1 bytes at 22 */
+    83,
+    /* eti_s_13a144, 1 bytes at 23 */
+    82,
+    /* eti_s_13a145, 1 bytes at 24 */
+    94,
+    /* eti_s_13a146, 1 bytes at 25 */
+    95,
+    /* eti_s_13a15d, 2 bytes at 26 */
+    72,72,
+    /* eti_s_13a15f, 1 bytes at 28 */
+    84,
+    /* eti_s_13a160, 2 bytes at 29 */
+    65,72,
+    /* eti_s_13a162, 1 bytes at 31 */
+    199,
+};
+
 const delta_store frfr_delta_authored_store[] = {
+    { frfr_evv_authored_data, sizeof frfr_evv_authored_data },
     { 0, 0 },
 };

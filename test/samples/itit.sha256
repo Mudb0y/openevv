@@ -24,10 +24,10 @@ plain 6 fd7054a8041856c9 8e4119535bfbee73 Otorinolaringoiatra, precipitevolissim
 plain 7 45df2411a0fc3a9f b609f5cf485e7a56 Ha detto: non farlo! Poi (tra parentesi) 1/2 + 3/4 = 5/4; vedi p. 12.
 plain 8 ca77bcf8c001daa0 14c749f710dc2291 Mentre la pioggia del mattino batteva piano contro le finestre, Daniele sedeva alla sua scrivania e confrontava i risultati di due sintetizzatori vocali, notando come ciascuno trattava i nomi insoliti, le espressioni tecniche, le parole composte e i piccoli cambiamenti nella punteggiatura, quando arrivo un messaggio di una sua collega con una domanda curiosa sul fatto che l'ultimo aggiornamento avesse migliorato il ritmo delle frasi lunghe, la chiarezza delle abbreviazioni e la pronuncia delle parole che possono essere sia nomi sia verbi, cosi che lui riapri il suo documento di prova e ascolto con attenzione ogni dettaglio.
 utf8 1 08189a74b61fe275 71690b026164ae09 Perche la citta e cosi bella in primavera.
-utf8 2 f42c8776c67a93a3 4613337024a5dbfc Perché la città è così bella in primavera.
+utf8 2 bb4486f3d8742508 2ae8604d4fc7596d Perché la città è così bella in primavera.
 utf8 3 3e0ba5627f694716 666046ba4bfeeaf2 Niccolò andò a Nizza più tardi con lui.
-utf8 4 230d7de175b77219 053c2eb79127bbb9 Città, virtù, però, caffè, lunedì e giovedì.
-utf8 5 da959c740ace36fa ca65a648e0f81982 L'università è chiusa oggi perché è festa.
+utf8 4 5f169d20521e07d4 77d219a3523f3a95 Città, virtù, però, caffè, lunedì e giovedì.
+utf8 5 cf1cb9222935599d fe7b755453580716 L'università è chiusa oggi perché è festa.
 utf8 6 356ce22c3bca3e6a 89bc7a2647217726 Non è però così tardi come sembrava ieri sera.
 utf8 7 a0aaf825d78d1041 2031e232b728ab14 Una frase completamente senza accenti per confronto.
 anno 1 988b03ea2aacd832 3f9c0441d7f208ed Voce normale `vs50 ora molto piu lenta di prima.
@@ -109,7 +109,7 @@ second 8 bfbb1673d64582a6 9121f5beb1514a71 Mentre la pioggia del mattino batteva
 ssml 1 5ef49c7aef96ecd0 98f0c6eb928dcedf <speak version="1.0" xml:lang="it-IT">Buongiorno.</speak>
 ssml 2 d3abbd182a011f31 b7c4c3f1d75d99fa <speak version="1.0" xml:lang="it-IT"><prosody rate="slow">Adesso piu lentamente.</prosody> Di nuovo normale.</speak>
 ssml 3 dfd2f700d8a88252 fe1b3e2449e19b75 <speak version="1.0" xml:lang="it-IT"><prosody pitch="high" range="x-high" volume="loud">Tutti quattro insieme.</prosody></speak>
-ssml 4 bd76e5dcbaf0aff0 093c501132b7b630 <speak version="1.0" xml:lang="it-IT"><emphasis level="strong">Questo</emphasis>, non quello.</speak>
+ssml 4 471c302e9f87cff0 9d44a5293d92e3d7 <speak version="1.0" xml:lang="it-IT"><emphasis level="strong">Questo</emphasis>, non quello.</speak>
 ssml 5 da09c11dc0936362 70663891e0c1ded9 <speak version="1.0" xml:lang="it-IT"><voice gender="female">Lei lo ha detto.</voice> E lui no.</speak>
 ssml 6 60a56c0a81fa2815 3914c1a3a220035b <speak version="1.0" xml:lang="it-IT">Costava <say-as interpret-as="cardinal">1234</say-as> il <say-as interpret-as="ordinal">3</say-as>.</speak>
 ssml 7 1554831edbdb5f59 cfd72f811c26aa7c <speak version="1.0" xml:lang="it-IT">Compita: <say-as interpret-as="letters">abc</say-as>, e chiama il <say-as interpret-as="number" format="telephone">5551234</say-as>.</speak>
