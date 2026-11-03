@@ -1909,6 +1909,7 @@ dictionary pnames2 statement 1 width 0 records sound
   donoghue 255 255 130 says d a n x h y u
   donohue 255 255 131 says d a n x h y u
   donna 255 255 129 says d a n x
+  donya 255 255 127 says d o n y x
   dorothea 255 255 134 says d o r x T i x
   dorothy 255 255 135 says d o r x T i
   dornier 255 255 133 says d c r n i y e
@@ -2957,6 +2958,7 @@ dictionary pnames4 statement 1 width 0 records sound
   mulheren 255 255 63 says m x l h E r x n
   mulroney 255 255 64 says m H l r o n i
   munoz 255 255 65 says m u n y o z
+  munyoz 255 255 65 says m u n y o z
   murad 255 255 66 says m y U r A d
   murat 255 255 67 says m y u r a
   murray 255 255 68 says m R i
@@ -3431,6 +3433,9 @@ dictionary pnames5 statement 1 width 0 records sound
   senor 255 255 62 says s E n y c r
   senora 255 255 63 says s E n y c r x
   senorita 255 255 64 says s E n y c r i t x
+  senyor 255 255 62 says s E n y c r
+  senyora 255 255 63 says s E n y c r x
+  senyorita 255 255 64 says s E n y c r i t x
   sepulveda 255 255 67 says s E p a l v I F x
   sequoia 255 255 68 says s X k O x
   sera 255 255 69 says s e r a

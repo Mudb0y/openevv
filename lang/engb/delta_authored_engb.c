@@ -112,6 +112,8 @@ uint8_t engb_evv_authored_data[] = {
     65,72,
     /* eti_s_1c213c, 1 bytes at 85 */
     199,
+    /* lts_enye, 2 bytes at 86 */
+    21,30,
 };
 
 const delta_store engb_delta_authored_store[] = {

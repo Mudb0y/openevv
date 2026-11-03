@@ -70407,3 +70407,12 @@ etc	`[.2Et.1sE.0Fx.0rx]
 # a slash, as in /usr/bin
 usr	`[.1yu.2Es.2ar]
 passwd	`[.1pAs.2dH.0bxl.2yu.2di]
+
+# Words spelled with ñ that the community wrote only under plain n, which is
+# what they were found as while the normaliser wrote n for ñ; it writes n
+# and y now, and these are filed under that, said as the plain spelling is
+mañana	`[.2man.1ya.0nx]
+piñon	`[.1pIn.2yon]
+quiñones	`[.0kX.1nyo.0nXs]
+señorita	`[.2se.0nyx.1ri.0Fx]
+vargueño	`[.0var.1gen.0yo]

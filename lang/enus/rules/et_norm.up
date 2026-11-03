@@ -1,0 +1,25 @@
+# ñ as n and y rather than n, as ETI Eloquence 6.1 reads it.
+#
+# normalize_eng_letters in et_norm.dr gives an accented letter English has
+# no rule for the plain letter it is written on, so ñ became n: El Niño was
+# nee-no and España es-pah-nuh. 6.1 says the ny of the languages ñ comes
+# from. Its own normalize_eng_letters leaves accented letters to letter
+# rules written for them, which ours are not, so this changes the one
+# branch: ñ is replaced by the two letters n and y, which the letter rules
+# read as they read the ny of canyon. It stands where the wrapper that wrote
+# n stood, and has its shape. Every dictionary is asked after this, so the
+# words they hold with ñ are filed under n and y as well; docs/quirks.md
+# says where.
+
+rule enye_as_ny takes 3 from et_norm.obj
+  bare
+  afresh
+  call lpta_rpta_loadp arg 1 arg 2
+  call insert_2pt_s 1 2 sym lts_enye 0
+  if answer is not 0
+    go to refused
+  end
+  answer 0
+place refused
+  answer 1
+end

@@ -220,3 +220,6 @@ bytes eti_s_1be1df     c7 48 15 02 1c 48 1f 02 01 13 01 15 0d
 bytes eti_s_1be1ec     c7 48 0c 02 15 1a
 bytes eti_s_1be1f2     c7 48 16 02 15 0c 02
 bytes eti_s_1be339     48 16 04 03 15 1a
+
+# The two letters n and y, which et_norm.up writes in place of ñ.
+bytes lts_enye         15 1e

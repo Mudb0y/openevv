@@ -1,0 +1,9 @@
+# What English's normaliser writes in place of a letter before any
+# dictionary is asked, so that a word written here with the letter is filed
+# under what is written: niño is found as ninyo. A word written that way
+# already keeps its own reading, which is why espanyol, the club, stays as it
+# is beside español. Only ñ is here. The normaliser writes the plain letter
+# for every other accented one, and filing those under it would read the
+# verb expose as exposé. tools/module/builtindict.py reads it.
+
+ñ	ny

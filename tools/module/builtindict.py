@@ -17,6 +17,11 @@ lang/<tag>/dictionary holds it as text:
       if it is there, a word with a capital inside it that no dictionary
       holds is read as the words it is made of; each line is a beginning
       that makes such a word a name to be left whole, Mc for McDonald
+  fold
+      if it is there, each line is a letter and what the language's
+      normaliser writes in its place before any dictionary is asked, and a
+      word with the letter in it is filed under what is written: English's
+      niño as ninyo. A word written that way already keeps its own reading
 
 Each line is read the way the engine reads a file a caller loads -- a line
 with no tab is no entry, white space round both halves goes, every white
@@ -53,10 +58,32 @@ def parse(raw):
     return word[:WORD_MAX], says[:SAYS_MAX]
 
 
-def read_dic(path):
+def read_fold(here):
+    """What the normaliser writes for each letter lang/<tag>/dictionary/fold
+    names, as (letter, written) pairs in the Western set."""
+    path = os.path.join(here, "fold")
     out = []
     if not os.path.exists(path):
         return out
+    for n, line in enumerate(open(path, encoding="utf-8"), 1):
+        if line.startswith("#") or not line.strip():
+            continue
+        f = line.split()
+        if len(f) != 2:
+            sys.exit("builtindict: %s line %d is not a letter and what is "
+                     "written for it" % (path, n))
+        out.append((f[0].encode("cp1252"), f[1].encode("cp1252")))
+    return out
+
+
+def read_dic(path):
+    """A volume's entries in the order a repeated word is decided in: the
+    words filed under what the normaliser writes first, so that one written
+    that way already comes after it and keeps its reading."""
+    written, folded = [], []
+    if not os.path.exists(path):
+        return written
+    fold = read_fold(os.path.dirname(path))
     with open(path, "rb") as f:
         for n, raw in enumerate(f, 1):
             if raw.startswith(b"#"):
@@ -66,9 +93,16 @@ def read_dic(path):
             except (UnicodeDecodeError, UnicodeEncodeError) as e:
                 sys.exit("builtindict: %s line %d: %s" % (path, n, e))
             entry = parse(raw)
-            if entry:
-                out.append(entry)
-    return out
+            if not entry:
+                continue
+            word = entry[0]
+            for letter, written_as in fold:
+                word = word.replace(letter, written_as)
+            if word == entry[0]:
+                written.append(entry)
+            else:
+                folded.append((word[:WORD_MAX], entry[1]))
+    return folded + written
 
 
 def volumes(lang):

@@ -4962,7 +4962,7 @@ label L26 was $X20$99743
   load movl slotaddr 100 into r0
   push slotaddr 100
   push reg r6
-  call ZZlprp_load__insert_2pt_s_1_1_ZZstring234 arity 3 depth 3
+  call enye_as_ny arity 3 depth 3
   popn 3
   cmp testl reg r0 reg r0
   branch je to L8
