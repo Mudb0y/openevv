@@ -171,7 +171,9 @@ end of both Frenches' `ut_norm.up` is ours.
 In `lang/enus` alone, the words `lang/enus/merge` says were added, set or read
 as 6.1 reads them say what 6.1 says, taken from what it speaks rather than
 from its tables, and are on the same footing. The ledger itself, the letter
-arms it names and the tools that measured it are ours.
+arms it names and the tools that measured it are ours, and so is
+`smiley_stands_alone` in `rules/ea_text.up`, written to ask where a smiley
+stands as 6.1's own arms for the smileys ask it.
 
 `lang/fifi`, Finnish, is ETI Eloquence 6.1's from end to end: the rules in its
 `rules/f61_*.up`, the strings in `rules/constants`, the variables, the

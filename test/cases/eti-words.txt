@@ -208,3 +208,8 @@
 0x10000	-1	Call me :)
 0x10000	-1	Ha ;-) and :-( and ;) ok.
 0x10000	-1	That was it :(
+0x10000	-1	:) see you.
+0x10000	-1	Local Disk (C:)
+0x10000	-1	DVD Drive (E:) Audio CD
+0x10000	-1	ok:) ok
+0x10000	-1	Hi, :)

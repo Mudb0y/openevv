@@ -1,0 +1,39 @@
+# Whether a smiley stands on its own, as ETI Eloquence 6.1 asks before it
+# says one.
+#
+# The six smileys eng_tok_dict holds, :) and :( and their spellings with a
+# nose and a wink, came from 6.1's token dictionary, and 6.1's arms for them
+# say smiley face or sad face only when the smiley starts the text or a space
+# is the character before it. Ours said them wherever the dictionary was
+# asked, and the dictionary is asked again for what is left of a token once
+# a word has been read off its front, so Local Disk (C:) was C smiley face.
+# Anywhere else a smiley is its marks, as in 6.1: a colon's pause and a
+# bracket that says nothing.
+
+rule smiley_stands_alone takes 2 from ea_text.obj
+  afresh
+  local start bytes 8
+  variable text_start word 756
+
+  call get_parm addr start arg 1 -6
+  call fence 0 sym eti_null
+  call lpta_loadp addr start
+  call setscan_l 1
+  if answer
+    give up
+  end
+  plant scan after_space
+  call lpta_loadp addr text_start
+  call test_ptr
+  if answer
+    backtrack
+  end
+  match
+
+place after_space
+  call test_string_s 1 1 sym eti_s_1b90d7
+  if answer
+    give up
+  end
+  match
+end
