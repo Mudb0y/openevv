@@ -163,3 +163,24 @@
 0x10001	-1	...
 0x10001	-1	?!
 0x10001	-1	--
+# A hyphen at the end of a word, or at the start of any word but the first.
+0x10001	-1	word-
+0x10001	1	word-
+0x10001	2	word-
+0x10001	3	word-
+0x10001	-1	 dash-
+0x10001	1	 dash-
+0x10001	2	 dash-
+0x10001	3	 dash-
+0x10001	-1	ls -la
+0x10001	1	ls -la
+0x10001	2	ls -la
+0x10001	3	ls -la
+0x10001	-1	rm -rf /tmp
+0x10001	-1	the first-, second- and third-class
+0x10001	-1	anti- and pro-
+0x10001	-1	page 3-
+0x10001	-1	A-
+0x10001	-1	Type - to go back.
+0x10001	-1	-v
+0x10001	-1	x-ray

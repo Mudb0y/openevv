@@ -160,3 +160,24 @@
 0x50000	-1	...
 0x50000	-1	?!
 0x50000	-1	--
+# A hyphen at the end of a word, or at the start of any word but the first.
+0x50000	-1	word-
+0x50000	1	word-
+0x50000	2	word-
+0x50000	3	word-
+0x50000	-1	 dash-
+0x50000	1	 dash-
+0x50000	2	 dash-
+0x50000	3	 dash-
+0x50000	-1	ls -la
+0x50000	1	ls -la
+0x50000	2	ls -la
+0x50000	3	ls -la
+0x50000	-1	rm -rf /tmp
+0x50000	-1	the first-, second- and third-class
+0x50000	-1	anti- and pro-
+0x50000	-1	page 3-
+0x50000	-1	A-
+0x50000	-1	Type - to go back.
+0x50000	-1	-v
+0x50000	-1	x-ray

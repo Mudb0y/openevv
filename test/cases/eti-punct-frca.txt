@@ -77,3 +77,12 @@
 0x30001	-1	...
 0x30001	-1	?!
 0x30001	-1	--
+# A hyphen at the end of a word, or at the start of any word but the first.
+0x30001	-1	word-
+0x30001	3	word-
+0x30001	-1	 dash-
+0x30001	1	 dash-
+0x30001	3	 dash-
+0x30001	-1	A-
+0x30001	-1	-v
+0x30001	-1	x-ray

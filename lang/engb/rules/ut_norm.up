@@ -8380,3 +8380,537 @@ rule process_hostname takes 3
   place tm_1 on 1
   match
 end
+
+# 6.1's shortdash, lifted by tools/rules/lift64.py out of Apple's British
+# English module, which hyphen asks about a hyphen. 4.3's named a hyphen at
+# the end of a word or at the start of any word but the first, so word- was
+# word dash and ls -la was L S dash L A, where 6.1 says nothing for it. A
+# screen reader that sends a mark's name with the mark kept after it, as NVDA
+# does, was heard naming it twice.
+rule shortdash takes 3
+  instead
+  local c100 bytes 8
+  local c110 bytes 8
+  local c128 bytes 8
+  local v118 word
+  local h_r12
+  local h_r14
+  local h_r15
+  local h_rax
+  local h_rcx
+  local h_rsi
+  local s3bf97
+  local k3c062_0
+  variable g568 word 740
+  variable g578 word 748
+  place p3bd14
+  set h_r14 to arg 2
+  set h_r15 to arg 1
+  set h_r12 to 94
+  place p3bd53
+  place p3bdb6
+  set h_rsi to addr c110
+  set h_r12 to -6
+  set h_rcx to -6
+  call get_parm h_rsi arg 1 h_rcx
+  set h_rax to answer
+  set h_r15 to addr c100
+  set h_rsi to addr c100
+  set h_rcx to -6
+  call get_parm h_rsi arg 2 h_rcx
+  set h_rax to answer
+  set h_rsi to addr c128
+  call push_ptr_init h_rsi
+  set h_rax to answer
+  set h_r12 to 0
+  set h_rsi to 0
+  call fence h_rsi sym eti_null
+  set h_rax to answer
+  set h_rsi to 1
+  call starttest h_rsi
+  set h_rax to answer
+  set h_rsi to addr c100
+  call lpta_loadp h_rsi
+  call setscan_r 1
+  set h_rax to answer
+  if h_rax is 0
+    go to p3c005
+  end
+  place p3be2c
+  set v118 to arg 2
+  set h_r14 to h_r12
+  set h_rsi to 5
+  call starttest h_rsi
+  set h_rax to answer
+  set h_rsi to addr c100
+  call lpta_loadp h_rsi
+  call setscan_r 1
+  set h_rax to answer
+  if h_rax is 0
+    go to p3bfc8
+  end
+  place p3be5b
+  set h_r12 to h_r14
+  place p3be5e
+  place t3be5e_5 on 5
+  set h_r12 to unwind
+  set h_rsi to addr c110
+  call in_quotes h_rsi addr c100
+  set h_rax to answer
+  if h_rax is 0
+    go to p3c231
+  end
+  place p3be7c
+  place t3be7c_9 on 9
+  set h_r12 to unwind
+  set h_rsi to addr g578
+  call lpta_loadpn h_rsi
+  set h_rax to answer
+  set h_rsi to addr c110
+  call rpta_loadpn h_rsi
+  set h_rax to answer
+  set h_rsi to 4
+  call rpta_ctxtl h_rsi
+  set h_rax to answer
+  call compare_ptas
+  set h_rax to answer
+  if h_rax is not 0
+    go to p3bec1
+  end
+  place p3beb1
+  call testeq
+  set h_rax to answer
+  if h_rax is 0
+    go to p3c247
+  end
+  place p3bec1
+  place t3bec1_11 on 11
+  set h_r12 to unwind
+  set h_rsi to 12
+  call starttest h_rsi
+  set h_rax to answer
+  set h_rsi to addr c110
+  call lpta_loadp h_rsi
+  call setscan_l 1
+  set h_rax to answer
+  set h_r15 to h_r12
+  if h_rax is 0
+    go to p3c264
+  end
+  place p3bee9
+  place t3bee9_12 on 12
+  set h_r12 to unwind
+  set h_rsi to 16
+  call starttest h_rsi
+  set h_rax to answer
+  set h_rsi to addr c100
+  call lpta_loadp h_rsi
+  call setscan_r 1
+  set h_rax to answer
+  if h_rax is 0
+    go to p3c071
+  end
+  place p3bf0e
+  place t3bf0e_16 on 16
+  set h_r12 to unwind
+  set h_rsi to 21
+  call starttest h_rsi
+  set h_rax to answer
+  set h_rsi to addr c100
+  call lpta_loadp h_rsi
+  call setscan_r 1
+  set h_rax to answer
+  set h_r15 to h_r12
+  if h_rax is 0
+    go to p3c30d
+  end
+  place p3bf36
+  place t3bf36_21 on 21
+  set h_r12 to unwind
+  set h_r15 to h_r12
+  set h_rsi to 29
+  call starttest h_rsi
+  set h_rax to answer
+  set h_rsi to addr c100
+  call lpta_loadp h_rsi
+  call setscan_r 1
+  set h_rax to answer
+  if h_rax is not 0
+    go to p3c231
+  end
+  place p3bf5e
+  set h_rsi to 30
+  call bspush_ca_scan h_rsi
+  set h_rax to answer
+  set h_rcx to sym eti_s_1c20d8
+  set h_rsi to 1
+  call test_string_s h_rsi 1 h_rcx
+  set h_rax to answer
+  set h_r12 to h_r15
+  if h_rax is not 0
+    go to p3c393
+  end
+  place p3bf88
+  place t3bf88_30 on 30
+  set h_r12 to unwind
+  set h_rcx to sym eti_s_1c20db
+  set h_rsi to 1
+  call test_string_s h_rsi 1 h_rcx
+  set s3bf97 to answer
+  set h_rax to s3bf97
+  set h_r15 to h_r12
+  place p3bf9f
+  if h_rax is not 0
+    go to p3c393
+  end
+  place p3bfa7
+  place t3bfa7_15 on 15
+  set h_r12 to unwind
+  set h_rax to global half 1514
+  set h_rcx to global half 1630
+  set global half 1582 to h_rcx
+  set global half 1506 to h_rax
+  go to p3c247
+  place p3bfc8
+  call bspush_boa
+  set h_rax to answer
+  place p3bfd0
+  set h_r15 to sym eti_s_1c20d8
+  set h_r12 to 1
+  place p3bfdf
+  set h_rsi to 1
+  set h_rcx to sym eti_s_1c20d8
+  call test_string_s h_rsi 1 h_rcx
+  set h_rax to answer
+  if h_rax is not 0
+    go to p3c0ab
+  end
+  place p3bff8
+  set h_rsi to 6
+  call bspush_ca_scan h_rsi
+  set h_rax to answer
+  go to p3bfdf
+  place p3c005
+  set v118 to arg 2
+  set h_rsi to 1
+  set h_rcx to 2
+  call testFldeq h_rsi 3 h_rcx
+  set h_rax to answer
+  set h_r15 to 0
+  if h_rax is not 0
+    go to p3c393
+  end
+  place p3c028
+  call advance_tok
+  set h_rax to answer
+  if h_rax is not 0
+    go to p3c393
+  end
+  place p3c038
+  set h_rsi to 2
+  call starttest h_rsi
+  set h_rax to answer
+  set h_rsi to 3
+  call bspush_ca_boa h_rsi
+  set h_rax to answer
+  set h_rsi to addr c110
+  call lpta_loadp h_rsi
+  call setscan_l 4
+  set h_rax to answer
+  set h_rcx to 0
+  set k3c062_0 to h_rax
+  set h_rax to 0
+  if k3c062_0 is 0
+    set h_rax to 1
+  end
+  set h_rcx to h_rax
+  set h_r15 to h_rcx
+  go to p3c393
+  place p3c071
+  call bspush_boa
+  set h_rax to answer
+  place p3c079
+  place t3c079_18 on 18
+  set h_r12 to unwind
+  set h_r14 to h_r12
+  set h_r15 to 17
+  set h_r12 to sym eti_s_1c20d8
+  place p3c08b
+  set h_rsi to 17
+  call bspush_ca_scan h_rsi
+  set h_rax to answer
+  set h_rsi to 1
+  set h_rcx to sym eti_s_1c20d8
+  call test_string_s h_rsi 1 h_rcx
+  set h_rax to answer
+  if h_rax is 0
+    go to p3c08b
+  end
+  place p3c0ab
+  set h_r15 to h_r14
+  go to p3c393
+  place p3c0b8
+  place t3c0b8_1 on 1
+  set h_r12 to unwind
+  set h_r14 to arg 2
+  go to p3be2c
+  place p3c0c4
+  place t3c0c4_7 on 7
+  set h_r12 to unwind
+  set h_r14 to h_r12
+  go to p3bfd0
+  place p3c0fe
+  place t3c0fe_6 on 6
+  set h_r12 to unwind
+  call bspush_nboa
+  set h_rax to answer
+  set h_rsi to 1
+  set h_rcx to 2
+  call testFldeq h_rsi 3 h_rcx
+  set h_rax to answer
+  set h_rsi to h_r12
+  if h_rax is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p3c11e
+  call advance_tok
+  set h_rax to answer
+  set h_rsi to h_r12
+  if h_rax is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p3c12d
+  go to p3c231
+  place p3c132
+  place t3c132_14 on 14
+  set h_r12 to unwind
+  set h_rax to global word 744
+  call lpta_loadp addr g568
+  call test_ptr
+  set h_rax to answer
+  set h_rsi to h_r12
+  if h_rax is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p3c15f
+  go to p3bfa7
+  place p3c164
+  place t3c164_17 on 17
+  set h_r12 to unwind
+  call bspush_nboa
+  set h_rax to answer
+  set h_rsi to 19
+  go to p3c1cb
+  place p3c170
+  place t3c170_19 on 19
+  set h_r12 to unwind
+  set h_rax to global word 744
+  call lpta_loadp addr g568
+  call test_ptr
+  set h_rax to answer
+  go to p3c205
+  place p3c194
+  place t3c194_23 on 23
+  set h_r12 to unwind
+  set h_rax to global word 744
+  call lpta_loadp addr g568
+  call test_ptr
+  set h_rax to answer
+  set h_rcx to h_r12
+  set h_rsi to h_r12
+  if h_rax is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p3c1c4
+  go to p3c36b
+  place p3c1c9
+  place t3c1c9_25 on 25
+  set h_r12 to unwind
+  set h_rsi to 27
+  place p3c1cb
+  call bspush_ca_scan h_rsi
+  set h_rax to answer
+  set h_rcx to 1
+  set h_rsi to 1
+  go to p3c1ed
+  place p3c1e1
+  place t3c1e1_27 on 27
+  set h_r12 to unwind
+  set h_rsi to 1
+  set h_rcx to 2
+  place p3c1ed
+  call testFldeq h_rsi 3 h_rcx
+  set h_rax to answer
+  set h_rsi to h_r12
+  if h_rax is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p3c1fd
+  place t3c1fd_28 on 28
+  set h_r12 to unwind
+  call advance_tok
+  set h_rax to answer
+  place p3c205
+  set h_rsi to h_r12
+  if h_rax is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p3c210
+  go to p3c247
+  place p3c21b
+  place t3c21b_3 on 3
+  set h_r12 to unwind
+  call bspop_boa
+  set h_rax to answer
+  set h_rax to global half 1782
+  set global half 1766 to h_rax
+  place p3c231
+  place t3c231_29 on 29
+  set h_r12 to unwind
+  set h_rsi to addr c110
+  call single_chars h_rsi addr c100
+  set h_rax to answer
+  place p3c247
+  place t3c247_2 on 2
+  place t3c247_4 on 4
+  place t3c247_8 on 8
+  place t3c247_10 on 10
+  place t3c247_20 on 20
+  set h_r12 to unwind
+  set h_rax to cell c100 value
+  set h_rcx to arg 2
+  put h_rax into arg 2 at 4
+  set h_r14 to 0
+  match
+  place p3c261
+  place t3c261_13 on 13
+  set h_r12 to unwind
+  set h_r15 to h_r12
+  place p3c264
+  set h_rsi to 13
+  call savescptr h_rsi addr c128
+  set h_rax to answer
+  set h_rcx to sym eti_s_1c20d8
+  set h_rsi to 1
+  call test_string_s h_rsi 1 h_rcx
+  set h_rax to answer
+  if h_rax is not 0
+    go to p3c393
+  end
+  place p3c292
+  set h_rsi to addr c128
+  call lpta_loadp h_rsi
+  call setscan_r 1
+  set h_rax to answer
+  if h_rax is not 0
+    go to p3c393
+  end
+  place p3c2ac
+  call advance_tok
+  set h_rax to answer
+  if h_rax is not 0
+    go to p3c393
+  end
+  place p3c2bc
+  set h_rax to cell c100 value
+  call lpta_loadp addr c100
+  call test_ptr
+  set h_rax to answer
+  if h_rax is not 0
+    go to p3c393
+  end
+  place p3c2e6
+  set h_rsi to 14
+  call bspush_ca_scan h_rsi
+  set h_rax to answer
+  set h_rcx to sym eti_s_1c20d8
+  set h_rsi to 1
+  call test_string_s h_rsi 1 h_rcx
+  set h_rax to answer
+  go to p3bf9f
+  place p3c30a
+  place t3c30a_22 on 22
+  set h_r12 to unwind
+  set h_r15 to h_r12
+  place p3c30d
+  set h_rsi to 22
+  call savescptr h_rsi addr c128
+  set h_rax to answer
+  set h_rsi to 1
+  set h_rcx to 4
+  call testFldeq h_rsi 3 h_rcx
+  set h_rax to answer
+  if h_rax is not 0
+    go to p3c393
+  end
+  place p3c334
+  call advance_tok
+  set h_rax to answer
+  if h_rax is not 0
+    go to p3c393
+  end
+  place p3c340
+  set h_rsi to 23
+  call bspush_ca_scan h_rsi
+  set h_rax to answer
+  set h_rcx to sym eti_s_1c20d8
+  set h_rsi to 1
+  call test_string_s h_rsi 1 h_rcx
+  set h_rax to answer
+  set h_rcx to h_r15
+  if h_rax is not 0
+    go to p3c393
+  end
+  place p3c366
+  go to p3c36b
+  place p3c368
+  place t3c368_24 on 24
+  set h_r12 to unwind
+  set h_rcx to h_r12
+  place p3c36b
+  set h_r15 to h_rcx
+  set h_rsi to addr c128
+  call lpta_loadp h_rsi
+  call setscan_l 1
+  set h_rax to answer
+  if h_rax is not 0
+    go to p3c393
+  end
+  place p3c384
+  call advance_tok
+  set h_rax to answer
+  set h_r14 to h_r15
+  if h_rax is 0
+    go to p3c3a5
+  end
+  place p3c393
+  set h_rsi to h_r15
+  set unwind to h_rsi
+  backtrack
+  place p3c3a2
+  place t3c3a2_26 on 26
+  set h_r12 to unwind
+  set h_r14 to h_r12
+  place p3c3a5
+  set h_r15 to 25
+  set h_r12 to sym eti_s_1c20d8
+  place p3c3b4
+  set h_rsi to 25
+  call bspush_ca_scan h_rsi
+  set h_rax to answer
+  set h_rsi to 1
+  set h_rcx to sym eti_s_1c20d8
+  call test_string_s h_rsi 1 h_rcx
+  set h_rax to answer
+  if h_rax is 0
+    go to p3c3b4
+  end
+  place p3c3d4
+  go to p3c0ab
+end
