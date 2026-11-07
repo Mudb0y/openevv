@@ -1982,3 +1982,160 @@ OWASP	`[.1o.2wasp]
 SAAS	`[.1sAs]
 SaaS	`[.1sAs]
 saas	`[.1sAs]
+
+# Compounds of two words written as one that the rules run together: a
+# first word ending in a silent e (framebuffer was FRAM-ih-bih-fer), file
+# at either end (swapfile was SWAP-ful), dir at the end (readdir was
+# ree-A-der). Each is said as its two words, the first stressed, as such a
+# compound is
+framebuffer	frame buffer
+framebuffers	frame buffers
+ringbuffer	ring buffer
+ringbuffers	ring buffers
+pagefault	page fault
+pagefaults	page faults
+pagetable	page table
+pagetables	page tables
+hugepage	huge page
+dotfile	dot file
+dotfiles	dot files
+bitrate	`[.1bIt.2ret]
+bitrates	`[.1bIt.2rets]
+packfile	pack file
+packfiles	pack files
+zipfile	zip file
+zipfiles	zip files
+swapfile	swap file
+swapfiles	swap files
+mapfile	map file
+newfile	new file
+sendfile	send file
+catfile	cat file
+gitfile	git file
+authfile	auth file
+certfile	cert file
+soundfile	sound file
+sourcefile	source file
+errorfile	error file
+zonefile	zone file
+filelist	file list
+filemode	file mode
+filepath	file path
+filepaths	file paths
+filespec	file spec
+filespecs	file specs
+filetest	file test
+filetests	file tests
+filecopy	file copy
+readdir	read dir
+opendir	open dir
+closedir	close dir
+basedir	base dir
+upperdir	upper dir
+lowerdir	lower dir
+newdir	new dir
+codeset	code set
+codesets	code sets
+coderef	code ref
+coderefs	code refs
+nameref	name ref
+arrayref	array ref
+hashref	hash ref
+symref	sym ref
+nodeset	node set
+nodesize	node size
+nodelay	no delay
+sitelib	site lib
+bytemode	byte mode
+byteorder	byte order
+sizelimit	size limit
+modesetting	mode setting
+truecolor	true color
+writethrough	write through
+writecache	write cache
+readwrite	read write
+readpipe	read pipe
+readahead	read ahead
+userid	user igh D
+userdata	user data
+userinfo	user info
+usershare	user share
+timechart	time chart
+nowait	no wait
+genkey	gen key
+hostkeys	host keys
+setfont	set font
+setterm	set term
+setlocale	set locale
+setgid	set G igh D
+subgid	sub G igh D
+logrotate	log rotate
+loglevel	log level
+debuglevel	debug level
+patchlevel	patch level
+mergetool	merge tool
+mergesort	merge sort
+changelist	change list
+callgraph	call graph
+callchain	call chain
+smokeping	smoke ping
+livekit	live kit
+webapp	web app
+whatis	what is
+deinit	`[.2di.1I.0nXt]
+dentry	D entry
+gnuplot	new plot
+busybox	busy box
+opensearch	open search
+loadplugin	load plugin
+virtualhost	virtual host
+netlogon	net logon
+winbind	win bind
+redhat	red hat
+reflog	ref log
+reflogs	ref logs
+quotemeta	quote meta
+wantarray	want array
+bigint	big int
+retval	ret val
+tabpage	tab page
+viminfo	vim info
+nexthop	next hop
+autologin	auto login
+pkgname	P K G name
+strerror	S T R error
+stdcall	S T D call
+
+# Abbreviations of two capitals that the rules read as a word: said by
+# their letters, as the capitals of a word, IN or OR, are not
+CI	C igh
+CIs	C igh's
+CO	C O
+ER	E R
+EV	E V
+ev	E V
+EQ	E Q
+eq	E Q
+ED	E D
+ET	E T
+FY	F Y
+IC	igh C
+LA	L ay
+NY	N Y
+PA	P ay
+TA	T ay
+UT	U T
+VA	V ay
+VO	V O
+XO	X O
+xo	X O
+YA	Y ay
+AV	ay V
+GA	G ay
+MA	M ay
+MO	M O
+OD	O D
+OG	O G
+og	O G
+OP	O P
+TY	T Y
