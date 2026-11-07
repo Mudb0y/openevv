@@ -744,6 +744,29 @@ static const delta_dict_entry *builtin_find(const delta_builtin_dict *b,
     return 0;
 }
 
+/* The first word of a sentence arrives with a capital nobody wrote into its
+   entry, so a main entry written in small letters is found for a word whose
+   only capital is its first letter: Kubectl starting a sentence is kubectl.
+   An entry written with the capital is asked for first, and a capital inside
+   a word is left to the split, so Qt is still not qt nor MATE mate. A
+   caller's dictionary is matched as IBM's was. */
+static const delta_dict_entry *builtin_find_main(const delta_builtin_dict *b,
+                                                 const char *word)
+{
+    const delta_dict_entry *e = builtin_find(b, UD_MAIN, word);
+    char                    low[UD_LAST_ROOM];
+    size_t                  n;
+
+    if (e != 0 || word[0] < 'A' || word[0] > 'Z')
+        return e;
+    for (n = 1; word[n] != 0; n++)
+        if ((word[n] >= 'A' && word[n] <= 'Z') || n + 1 >= sizeof low)
+            return 0;
+    memcpy(low, word, n + 1);
+    low[0] = (char)(low[0] - 'A' + 'a');
+    return builtin_find(b, UD_MAIN, low);
+}
+
 /* Whether every character is one the stream's first field can name, which
    is what a line of a caller's file has to pass to be kept at all. Asked of
    an entry when it is found rather than when the image was built, since the
@@ -783,7 +806,9 @@ static int32_t builtin_lookupAndTranslate(delta_state *d, int32_t vol,
                         UD_LAST_ROOM))
         return UD_NO_SPINE;
 
-    e = builtin_find(of->builtin_dict, vol, lang->builtin_last[vol]);
+    e = vol == UD_MAIN
+        ? builtin_find_main(of->builtin_dict, lang->builtin_last[vol])
+        : builtin_find(of->builtin_dict, vol, lang->builtin_last[vol]);
     if (e == 0 || !builtin_sayable(d, stream, e->says))
         return UD_NOT_FOUND;
 
@@ -822,8 +847,8 @@ static const char *main_says(delta_state *d, const char *word)
         && (says = ud_lookup(s->vol[UD_MAIN], word)) != 0)
         return says;
     if (!lang->builtin_off && of != 0 && of->builtin_dict != 0) {
-        const delta_dict_entry *e = builtin_find(of->builtin_dict, UD_MAIN,
-                                                 word);
+        const delta_dict_entry *e = builtin_find_main(of->builtin_dict,
+                                                      word);
 
         if (e != 0)
             return e->says;

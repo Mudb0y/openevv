@@ -1585,3 +1585,10 @@ Cmd	command
 CMD	command
 PgUp	page up
 PgDn	page down
+
+# Words whose capital at the front makes them another word than the entry in
+# small letters is, held apart from it: the small-letter entry is found for
+# a capitalised word that has no entry of its own, as at the start of a
+# sentence, and ms is milliseconds where Ms is said as written
+Ms	M S
+Io	`[.1Y.0o]
