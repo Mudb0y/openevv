@@ -6338,6 +6338,19 @@ label L627 was $X539$101274
   call ZZtestFldeq1_1_2 arity 1 depth 1
   jump to L541
 label L628 was $X540$101280
+  load movl slotaddr 48 into r0
+  push slotaddr 48
+  load movl slotaddr 56 into r0
+  push slotaddr 56
+  load movl slotaddr 80 into r0
+  push slotaddr 80
+  push reg r6
+  call read_by_its_neighbours arity 4 depth 4
+  popn 4
+  cmp cmpl imm 1 reg r0
+  branch je to L856
+  cmp cmpl imm 2 reg r0
+  branch je to L857
   push imm 541
   push reg r6
   call starttest arity 2 depth 2
@@ -6354,6 +6367,18 @@ label L628 was $X540$101280
   popreg r1
   popreg r1
   jump to L634
+label L856 was $read_by_its_neighbours_reed
+  push imm 541
+  push reg r6
+  call starttest arity 2 depth 2
+  popn 2
+  jump to L543
+label L857 was $read_by_its_neighbours_red
+  push imm 541
+  push reg r6
+  call starttest arity 2 depth 2
+  popn 2
+  jump to L631
 label L629 was $X541$101286
   push imm 571
   push reg r6

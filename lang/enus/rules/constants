@@ -223,3 +223,11 @@ bytes eti_s_1be339     48 16 04 03 15 1a
 
 # The two letters n and y, which et_norm.up writes in place of ñ.
 bytes lts_enye         15 1e
+
+# The adverbs before read that say it was read before, which read_by_its_
+# neighbours in ea_homog.up holds the word before it against.
+bytes read_after_already     01 13 18 02 01 0d 1e
+bytes read_after_widely      1c 03 0d 02 13 1e
+bytes read_after_previously  16 18 02 1b 03 04 05 19 13 1e
+bytes read_after_recently    18 02 0c 02 15 1a 13 1e
+bytes read_after_yet         1e 02 1a
