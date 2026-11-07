@@ -1263,6 +1263,13 @@ Traefik	traffic
 VMware	V M ware
 SoX	`[.1saks]
 cURL	curl
+Gitea	`[.0gI.1ti]
+gitea	`[.0gI.1ti]
+sourcehut	source hut
+espeakup	E speak up
+geckodriver	gecko driver
+cuda	`[.1ku.0dx]
+rocm	`[.1rak.0xm]
 
 # Formats and languages
 YAML	`[.1yA.0mxl]
@@ -1284,6 +1291,11 @@ nodejs	node J S
 oauth	O auth
 vuex	view X
 vuejs	view J S
+gopls	go please
+pyright	pie right
+mypy	my pie
+gnupg	`[.1gnu] P G
+GnuPG	`[.1gnu] P G
 
 # Protocols and hardware
 URI	U R I
@@ -1297,6 +1309,9 @@ ACPI	ay C P igh
 CLI	C L igh
 IDE	igh D E
 adb	ay D B
+nvme	N V M E
+NVMe	N V M E
+virtio	virt igh O
 
 # Units, which IBM's abbreviation dictionary would expand and which is off
 Hz	hertz
@@ -1390,6 +1405,19 @@ moreutils	more utils
 zipinfo	zip info
 alsamixer	`[.1Al.0sx] mixer
 Csound	C sound
+easyeffects	easy effects
+fluidsynth	fluid synth
+gopass	go pass
+pipenv	pip env
+doas	do as
+menuitem	menu item
+tablist	tab list
+spinbutton	spin button
+openai	open ay igh
+comfyui	comfy U igh
+musicbrainz	music brainz
+Winamp	win amp
+winamp	win amp
 
 # Names shortened out of words, said by the letters they are written with
 # rather than by the words they stand for, so that what is heard can be
@@ -1506,6 +1534,28 @@ cfdisk	C F disk
 sfdisk	S F disk
 visudo	V igh sudo
 vi	V igh
+evv	E V V
+mkinitcpio	M K init C P igh O
+iwctl	igh W C T L
+pavucontrol	P ay V U control
+pamixer	P ay mixer
+qpwgraph	Q P W graph
+hdparm	H D parm
+iostat	igh O stat
+iotop	igh O top
+ncdu	N C D U
+httpie	H T T pie
+dnsmasq	D N S mask
+chronyd	chrony D
+gitui	git U igh
+venv	V env
+eslint	E S lint
+argocd	argo C D
+rspamd	R spam D
+opendkim	open D K igh M
+keepassxc	keepass X C
+eom	E O M
+greetd	greet D
 
 # Abbreviations from chat, said by their letters
 IIRC	igh igh ar cea
@@ -1526,3 +1576,12 @@ Unread	`[.2Hn.1rEd]
 UNREAD	`[.2Hn.1rEd]
 unreads	`[.2Hn.1rEdz]
 Unreads	`[.2Hn.1rEdz]
+
+# Keys, said by the words everyone reads them as, as etc is et cetera
+Ctrl	control
+ctrl	control
+CTRL	control
+Cmd	command
+CMD	command
+PgUp	page up
+PgDn	page down
