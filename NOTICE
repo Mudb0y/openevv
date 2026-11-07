@@ -117,7 +117,10 @@ which read a long number's groups of noughts the way the same number without
 commas is read, where IBM's rules read the comma after such a group as a
 digit. They are written here and stand on IBM's rules rather than replacing
 them: the two calls in each `ut_numbr.dr` that were pointed at them are an
-edit to IBM's text, and the rest of that text is IBM's as it was.
+edit to IBM's text, and the rest of that text is IBM's as it was. The
+words added to both Englishes' set of file endings said as words,
+`three_letter_extensions` in each `.sets`, were chosen here; the set and the
+words IBM put in it are IBM's.
 
 That data is IBM's work, not ours. The MIT licence does not cover it and we are
 in no position to license it to anyone. The SDK it was read out of says as much

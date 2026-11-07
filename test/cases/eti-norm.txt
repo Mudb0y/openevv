@@ -35,7 +35,9 @@
 0x10000	-1	version2 of firefox115.
 
 # Hosts, web and email addresses and paths, which 6.1 reads a part at a time,
-# with a domain it knows said as a word.
+# with a domain it knows said as a word. A file's ending that is a word, as
+# nix is, is said as one here and spelled by 6.1, as docs/quirks.md says,
+# so the path ends in one both spell.
 0x10000	-1	example.com
 0x10000	-1	example.org
 0x10000	-1	example.com/path
@@ -48,7 +50,7 @@
 0x10000	-1	Go to www.example.com now.
 0x10000	-1	Mail stas@example.org today.
 0x10000	-1	Write to john.smith@mail.co.uk please.
-0x10000	-1	Edit /etc/nixos/configuration.nix now.
+0x10000	-1	Edit /etc/nixos/notes.txt now.
 0x10000	-1	Run setup.exe twice.
 0x10000	-1	Visit example.com/path/to/page.html today.
 0x10000	-1	ftp://files.example.net/pub is old.
