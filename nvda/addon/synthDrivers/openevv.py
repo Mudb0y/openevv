@@ -161,6 +161,13 @@ class SynthDriver(SynthDriver):
 		# Translators: Label for a setting in voice settings dialog.
 		DriverSetting("dictionarySet", _("Dictionary s&et"), False),
 		BooleanDriverSetting(
+			"builtinDictionary",
+			# Translators: Label for a setting in voice settings dialog.
+			_("Use the built-in dictionar&y"),
+			False,
+			defaultVal=True,
+		),
+		BooleanDriverSetting(
 			"personalDictionary",
 			# Translators: Label for a setting in voice settings dialog.
 			_("Use personal dictionary entrie&s"),
@@ -580,6 +587,12 @@ class SynthDriver(SynthDriver):
 
 	def _set_wideband(self, enable):
 		self._engine.control([(self._engine.setWideband, (enable,))])
+
+	def _get_builtinDictionary(self):
+		return self._engine.builtinDict
+
+	def _set_builtinDictionary(self, enable):
+		self._engine.control([(self._engine.setBuiltinDict, (enable,))])
 
 	def _get_availableDictionarysets(self):
 		"""The managed dictionary sets installed add-ons offer, and none.

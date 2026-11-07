@@ -280,6 +280,7 @@ class FakeEngine:
         self.version = "test"
         self.player = None
         self.pauseMode = 1
+        self.builtinDict = True
         #: Whether each batch arrived as speech or as a setting.
         self.kinds = []
 
@@ -349,6 +350,9 @@ class FakeEngine:
         pass
 
     def setPauseMode(self, mode):
+        pass
+
+    def setBuiltinDict(self, enable):
         pass
 
     def voiceNamesFor(self, language):
@@ -789,6 +793,14 @@ def main():
     d.pauseMode = "often"
     check("one the engine has not is refused rather than passed on",
           d._engine.calls, [])
+
+    check("the built-in dictionary is offered, and on",
+          ("builtinDictionary" in [s.id for s in d.supportedSettings],
+           d.builtinDictionary), (True, True))
+    d._engine.calls = []
+    d.builtinDictionary = False
+    check("turning it off tells the engine", d._engine.calls,
+          [("setBuiltinDict", False)])
 
     d._engine.calls = []
     d.pause(True)
