@@ -1032,7 +1032,40 @@ static int32_t builtin_split(delta_state *d, int32_t l, int32_t r)
             return UD_NOT_FOUND;
     }
 
+    /* An abbreviation that ends in a hissing letter takes es or s for its
+       plural, SMSes and OSs, and the cut below took the last capital and
+       the es for a word, S M sess, or the rules left the s unsaid. Its
+       letters are written out as an entry spells them, the last with the
+       possessive the rules read as the syllable the plural adds. One a
+       main volume holds is said as a word or as its entry has it, BIOS and
+       DOS among them, and is left to the cut as before. */
     n = strlen(w);
+    for (k = 0; k < n && split_upper((unsigned char)w[k]); k++)
+        ;
+    if (k >= 2 && k * 4 + 3 <= sizeof out && strchr("SXZ", w[k - 1]) != 0
+        && (strcmp(w + k, "es") == 0 || strcmp(w + k, "s") == 0)) {
+        char run[UD_LAST_ROOM];
+        size_t m, o = 0;
+
+        memcpy(run, w, k);
+        run[k] = 0;
+        if (main_says(d, run) == 0) {
+            for (m = 0; m < k; m++) {
+                const char *say = w[m] == 'A' ? "ay" : w[m] == 'I' ? "igh" : 0;
+
+                if (m > 0)
+                    out[o++] = ' ';
+                if (say != 0) {
+                    memcpy(out + o, say, strlen(say));
+                    o += strlen(say);
+                } else
+                    out[o++] = w[m];
+            }
+            memcpy(out + o, "'s", 3);
+            goto cut;
+        }
+    }
+
     for (i = k = 0; i < n && k + 2 < sizeof out; i++) {
         if (i > 0 && split_starts(w, i)) {
             out[k++] = ' ';
@@ -1044,6 +1077,7 @@ static int32_t builtin_split(delta_state *d, int32_t l, int32_t r)
     if (cuts == 0 || i < n || split_held(d, b, w))
         return UD_NOT_FOUND;
 
+cut:
     del_two_point(d, stream, l, r);
     OWNER_MOVED(d) = 1;
     if (!insert_string(d, stream, r, out))
