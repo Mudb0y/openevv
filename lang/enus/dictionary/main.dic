@@ -431,7 +431,6 @@ IRC	igh ar cea
 IRIB	igh ar igh bea
 IRL	igh ar ell
 IRTVU	igh ar tea vee yue
-ISO	igh ess oe
 ISQ	igh ess kew
 ISS	igh ess ess
 ITU	igh tea yue
@@ -722,7 +721,6 @@ offlinemsg	offline em ess gee
 OFWGKTA	oe eff doubleyou jee keigh tea ay
 OIS	oe igh ess
 OK'd	`[.2o.1ked]
-OLED	oe ell ee dee
 OMB	oh em bee
 Omg	oe em jee
 omg	oe em jee
@@ -1592,3 +1590,395 @@ PgDn	page down
 # sentence, and ms is milliseconds where Ms is said as written
 Ms	M S
 Io	`[.1Y.0o]
+
+# Abbreviations in small letters that the rules read as words, said by
+# their letters as their capitals are, or by the letters of the part that is
+# not a word: from the manual pages installed on the machine this was made
+# on, the acronyms CMU says by their letters, and chat. One whose small
+# letters are also a word, as led and eta are, is left to be the word
+eci	E C igh
+eti	E T igh
+abi	ay B igh
+alu	ay L U
+uid	U igh D
+uids	U igh D's
+gid	G igh D
+gids	G igh D's
+uuid	U U igh D
+uuids	U U igh D's
+cpu	C P U
+cpus	C P U's
+gpu	G P U
+gpus	G P U's
+tpu	T P U
+npu	N P U
+fpu	F P U
+apu	ay P U
+mtu	M T U
+mpu	M P U
+pmu	P M U
+dso	D S O
+oid	O igh D
+utc	U T C
+ipc	igh P C
+icmp	igh C M P
+rdma	R D M ay
+udp	U D P
+utmp	U T M P
+vgpu	V G P U
+vcpu	V C P U
+vcpus	V C P U's
+aio	ay igh O
+gio	G igh O
+oci	O C igh
+odt	O D T
+dvi	D V igh
+pci	P C igh
+rsa	R S ay
+aes	ay E S
+ecn	E C N
+ast	ay S T
+gpo	G P O
+cgi	C G igh
+lzma	L Z M ay
+lzo	L Z O
+cpio	C P igh O
+cdma	C D M ay
+sda	S D ay
+otp	O T P
+imds	igh M D S
+ipcs	igh P C S
+pppoe	P P P O E
+afs	ay F S
+ipfs	igh P F S
+osd	O S D
+arn	ay R N
+rgba	R G B ay
+ebpf	E B P F
+lsipc	L S igh P C
+ipcrm	igh P C R M
+eax	E ay X
+ssid	S S igh D
+nsid	N S igh D
+fsid	F S igh D
+suid	S U igh D
+ppid	P P igh D
+sriov	S R igh O V
+ipynb	igh P Y N B
+ide	igh D E
+cli	C L igh
+ux	U X
+ota	O T ay
+oem	O E M
+odm	O D M
+osi	O S igh
+ietf	igh E T F
+cni	C N igh
+eks	E K S
+aks	ay K S
+ecs	E C S
+ami	ay M igh
+sso	S S O
+mfa	M F ay
+totp	T O T P
+iommu	igh O M M U
+avx	ay V X
+sse	S S E
+fpga	F P G ay
+soc	S O C
+mcu	M C U
+ecu	E C U
+ips	igh P's
+hdmi	H D M igh
+vga	V G ay
+lte	L T E
+umts	U M T S
+dsa	D S ay
+ecc	E C C
+ecdsa	E C D S ay
+vfio	V F igh O
+eol	E O L
+jre	J R E
+aot	ay O T
+ffi	F F igh
+amqp	ay M Q P
+irc	igh R C
+ocr	O C R
+asr	ay S R
+ceo	C E O
+ceos	C E O's
+cfo	C F O
+cia	C igh ay
+cio	C igh O
+cmu	C M U
+csi	C S igh
+dna	D N ay
+dui	D U igh
+epa	E P ay
+eu	E U
+fbi	F B igh
+hiv	H igh V
+iou	igh O U
+iq	igh Q
+irs	igh R S
+isbn	igh S B N
+mba	M B ay
+mri	M R igh
+nba	N B ay
+nypd	N Y P D
+oecd	O E C D
+oj	O J
+pga	P G ay
+rna	R N ay
+ufo	U F O
+ufos	U F O's
+usda	U S D ay
+usmc	U S M C
+uss	U S S
+ussr	U S S R
+vip	V igh P
+vips	V igh P's
+adhd	ay D H D
+amd	ay M D
+atv	ay T V
+av	ay V
+ac	ay C
+ama	ay M ay
+fyi	F Y igh
+afk	ay F K
+irl	igh R L
+ftfy	F T F Y
+imho	igh M H O
+diy	D igh Y
+omw	O M W
+ty	T Y
+hmu	H M U
+idc	igh D C
+ily	igh L Y
+ttyl	T T Y L
+afaict	ay F ay igh C T
+ianal	igh ay N ay L
+tia	T igh ay
+ptal	P T ay L
+eod	E O D
+eow	E O W
+ooo	O O O
+tmi	T M igh
+ie	igh E
+eg	E G
+ci	C igh
+du	D U
+enus	E N U S
+engb	E N G B
+jajp	J ay J P
+plpl	P L P L
+itit	igh T igh T
+frfr	F R F R
+frca	F R C ay
+eses	E S E S
+esus	E S U S
+fifi	F igh F igh
+ptbr	P T B R
+asap	ay S ay P
+cpan	C pan
+qdisc	Q disc
+vhost	V host
+idmap	igh D map
+ldap	L dap
+ldaps	L daps
+dport	D port
+umask	U mask
+torrc	tor R C
+vlan	V lan
+vlans	V lans
+vxlan	V X lan
+wlan	W lan
+wpan	W pan
+chdir	C H dir
+chmem	C H mem
+chcon	C H con
+chcpu	C H C P U
+teamd	team D
+tset	T set
+mtime	M time
+ctime	C time
+atime	ay time
+utime	U time
+docx	doc X
+xattr	X attr
+href	H ref
+zlib	Z lib
+lstat	L stat
+fstat	F stat
+gprof	G prof
+gdbus	G D bus
+keyid	key igh D
+netns	net N S
+nroff	N roff
+fsync	F sync
+srand	S rand
+kinit	K init
+inetd	inet D
+bcast	B cast
+gitk	git K
+tput	T put
+nmake	N make
+gmake	G make
+dmake	D make
+crun	C run
+vfat	V fat
+cksum	C K sum
+partx	part X
+veth	V eth
+arpd	arp D
+dnat	D nat
+snat	S nat
+vsock	V sock
+lsmem	L S mem
+vimrc	vim R C
+wcurl	W curl
+cgit	C git
+getc	get C
+mingw	min G W
+lval	L val
+mtab	M tab
+uuidd	U U igh D D
+iface	igh face
+tzset	T Z set
+hbase	H base
+ramfs	ram F S
+ptar	P tar
+vbuf	V buf
+pfifo	P fifo
+gvim	G vim
+pidfd	pid F D
+pobox	P O box
+popen	P open
+rbind	R bind
+fname	F name
+evim	E vim
+dgram	D gram
+pacmd	P ay C M D
+libm	lib M
+noop	no op
+adm	ay D M
+hmac	H mac
+qsort	Q sort
+lseek	L seek
+mget	M get
+dmask	D mask
+fmask	F mask
+pcap	P cap
+kmem	K mem
+atoi	ay to igh
+lockf	lock F
+fsize	F size
+zpool	Z pool
+tkip	T kip
+gcov	G cov
+rhost	R host
+capsh	cap S H
+netrc	net R C
+mcopy	M copy
+fopen	F open
+msdos	M S `[.1das]
+memfd	mem F D
+gtest	G test
+vnode	V node
+ntfy	notify
+uniq	`[.0yu.1nik]
+ini	`[.1I.0ni]
+sched	`[.1skEd]
+scsi	`[.1skH.0zi]
+iscsi	`[.2Y.1skH.0zi]
+cmos	`[.1si.2mas]
+oled	`[.1o.2lEd]
+guid	`[.1gu.0Xd]
+asic	`[.1e.0sXk]
+iana	`[.0Y.1A.0nx]
+ieee	igh triple E
+leds	L E D's
+
+# Sounds written as words, said as Merriam-Webster has them; zzz, shh and
+# psst are left spelled, a consonant held on its own being nothing the
+# phonemes can write
+hm	`[.1hM]
+mhm	`[.1m.2hM]
+tsk	`[.1tIsk]
+brr	`[.1bR]
+
+# Abbreviations in capitals that the rules read as words, said by their
+# letters, and a few with a reading of their own published: ISO as its
+# organisation says it, LED as Merriam-Webster lists first, SaaS as it is
+# said. Each small-letter form that is not a word is here too
+ROI	R O igh
+roi	R O igh
+SLA	S L ay
+sla	S L ay
+SEO	S E O
+seo	S E O
+ERP	E R P
+erp	E R P
+COO	C O O
+POC	P O C
+poc	P O C
+SOW	S O W
+MOU	M O U
+IOC	igh O C
+ioc	igh O C
+ABI	ay B igh
+AES	ay E S
+AFS	ay F S
+EEG	E E G
+eeg	E E G
+EOT	E O T
+EOM	E O M
+GID	G igh D
+UID	U igh D
+SUID	S U igh D
+XOR	`[.2Eks.1cr]
+xor	`[.2Eks.1cr]
+IDS	igh D's
+IPO	igh P O
+ipo	igh P O
+OSI	O S igh
+OTA	O T ay
+OCI	O C igh
+SPI	S P igh
+spi	S P igh
+DOJ	D O J
+DOA	D O ay
+POV	P O V
+pov	P O V
+SME	S M E
+sme	S M E
+TOS	T O S
+EDI	E D igh
+OOB	O O B
+oob	O O B
+VDI	V D igh
+vdi	V D igh
+ACLU	ay C L U
+AGM	ay G M
+BOM	B O M
+IANA	`[.0Y.1A.0nx]
+OLED	`[.1o.2lEd]
+DIY	D igh Y
+FYI	F Y igh
+ASAP	ay S ay P
+ETA	E T ay
+OAUTH	O auth
+ORM	O R M
+orm	O R M
+BI	B igh
+ISO	`[.1Y.0so]
+LED	L E D
+UFO	U F O
+NIMBY	`[.1nIm.0bi]
+AIX	ay igh X
+DRAM	`[.1di.2rAm]
+QED	Q E D
+OWASP	`[.1o.2wasp]
+SAAS	`[.1sAs]
+SaaS	`[.1sAs]
+saas	`[.1sAs]
