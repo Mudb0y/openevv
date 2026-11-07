@@ -682,7 +682,6 @@ NEVERENDING	never ending
 Neverending	never ending
 neverending	never ending
 newmap	`[.1nu.2mAp]
-NGINX	`[.1En.0JX.2nEks]
 NIAMH	neev
 NIHL	en igh aitch ell
 NIJ	en igh jeigh
@@ -897,7 +896,6 @@ Stfu	ess tea eff yue
 stfu	ess tea eff yue
 STORYCORPS	Story Corps
 SUBPACS	`[.1sHb.2pAks]
-SUSE	`[.1su.0sx]
 Suu	su
 SUV	ess yue vee
 SWI	ess doubleyou igh
@@ -951,7 +949,6 @@ UAV	yue ay vee
 UBS	yue bea ess
 UCAS	`[.1yu.2kAs]
 UDID	yue dee igh dee
-udisksctl	udisks ctl
 UEB	yue ee bea
 UEFI	yue ee eff igh
 UFED	yue eff ee dee
@@ -1214,6 +1211,58 @@ Kdenlive	`[.2ke.0dEn.1lYv]
 ROCm	`[.1rak.0xm]
 CUDA	`[.1ku.0dx]
 uv	yue vee
+NixOS	nix O S
+nixos	nix O S
+Nixos	nix O S
+NIXOS	nix O S
+NixOs	nix O S
+nixOs	nix O S
+Nixpkgs	nix P K G S
+Macos	mac O S
+MACOS	mac O S
+centos	cent O S
+chromeos	chrome O S
+webos	web O S
+steamos	steam O S
+endeavouros	endeavour O S
+lineageos	lineage O S
+grapheneos	graphene O S
+postmarketos	postmarket O S
+ipados	igh pad O S
+BeOS	bee O S
+beos	bee O S
+freebsd	free B S D
+openbsd	open B S D
+netbsd	net B S D
+SUSE	`[.1su.0zx]
+GNU	`[.1gnu]
+qt	cute
+PyQt	pie cute
+pyqt	pie cute
+pyside	pie side
+qtbase	cute base
+QtCreator	cute creator
+qtcreator	cute creator
+QtWebEngine	cute web engine
+qmake	Q make
+lxqt	L X cute
+Lxqt	L X cute
+qutebrowser	cute browser
+qbittorrent	Q bittorrent
+kde	K D E
+Kde	K D E
+kdenlive	`[.2ke.0dEn.1lYv]
+kwallet	K wallet
+kwin	K win
+xfce	X F C E
+uefi	U E F igh
+vscode	V S code
+NGINX	engine X
+Nginx	engine X
+Traefik	traffic
+VMware	V M ware
+SoX	`[.1saks]
+cURL	curl
 
 # Formats and languages
 YAML	`[.1yA.0mxl]
@@ -1226,6 +1275,15 @@ Vite	`[.1vit]
 PostgreSQL	`[.2post.1grEs] Q L
 LLaMA	`[.1la.0mx]
 WhatsApp	whats app
+SQLite	S Q L ite
+sqlite	S Q L ite
+mysql	my S Q L
+mongodb	mongo D B
+opengl	open G L
+nodejs	node J S
+oauth	O auth
+vuex	view X
+vuejs	view J S
 
 # Protocols and hardware
 URI	U R I
@@ -1235,6 +1293,10 @@ IoT	I O T
 EOF	E O F
 SIGSEGV	sig seg V
 SIGINT	sig int
+ACPI	ay C P igh
+CLI	C L igh
+IDE	igh D E
+adb	ay D B
 
 # Units, which IBM's abbreviation dictionary would expand and which is off
 Hz	hertz
@@ -1301,6 +1363,33 @@ pthread	P thread
 ioctl	I O C T L
 mmap	M map
 execve	exec V
+fixaudio	fix audio
+fontconfig	font config
+imagemagick	image magick
+killall	kill all
+nologin	no login
+networkmanager	network manager
+modemmanager	modem manager
+modinfo	mod info
+getconf	get conf
+getent	get ent
+getopt	get opt
+realpath	real path
+swapon	swap on
+sudoedit	sudo edit
+vimtutor	vim tutor
+smartmontools	smart mon tools
+winetricks	wine tricks
+weechat	wee chat
+devenv	dev env
+coreutils	core utils
+binutils	bin utils
+diffutils	diff utils
+findutils	find utils
+moreutils	more utils
+zipinfo	zip info
+alsamixer	`[.1Al.0sx] mixer
+Csound	C sound
 
 # Names shortened out of words, said by the letters they are written with
 # rather than by the words they stand for, so that what is heard can be
@@ -1343,6 +1432,80 @@ strncpy	S T R N C P Y
 strcat	S T R cat
 strlen	S T R len
 memcpy	mem C P Y
+aplay	ay play
+arecord	ay record
+amixer	ay mixer
+aconnect	ay connect
+paplay	P A play
+parecord	P A record
+pacat	P A cat
+alsactl	`[.1Al.0sx] C T L
+bcache	B cache
+blkid	B L K igh D
+blkdiscard	B L K discard
+dconf	D conf
+gsettings	G settings
+hwclock	H W clock
+fstrim	F S trim
+fsfreeze	F S freeze
+findfs	find F S
+wipefs	wipe F S
+dmsetup	D M setup
+dmenu	D menu
+mkswap	M K swap
+mktemp	M K temp
+mkfifo	M K fifo
+mknod	M K nod
+mkpasswd	M K pass W D
+iputils	igh P utils
+pciutils	P C igh utils
+usbutils	U S B utils
+procps	proc P S
+psmisc	P S misc
+pstree	P S tree
+pgrep	P grep
+pkill	P kill
+pidof	pid of
+nproc	N proc
+nsenter	N S enter
+ncurses	N curses
+kexec	K exec
+kmod	K mod
+rfkill	R F kill
+rtkit	R T kit
+smartd	smart D
+snapd	snap D
+tailscaled	tailscale D
+libvirtd	lib virt D
+nixfmt	nix F M T
+nixd	nix D
+stdenv	S T D env
+udisks	U disks
+udisksctl	U disks C T L
+upower	U power
+uuidgen	U U igh D gen
+xargs	X args
+xauth	X auth
+xdotool	X do tool
+xinput	X input
+xprop	X prop
+xrandr	X rand R
+xset	X set
+xterm	X term
+zcat	Z cat
+bzcat	B Z cat
+xzcat	X Z cat
+stty	S T T Y
+yt-dlp	Y T D L P
+rhvoice	R H voice
+SVOX	S vox
+hostid	host igh D
+agetty	ay getty
+losetup	lo setup
+cfdisk	C F disk
+sfdisk	S F disk
+visudo	V igh sudo
+vi	V igh
 
 # Abbreviations from chat, said by their letters
 IIRC	igh igh ar cea
