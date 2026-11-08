@@ -131,6 +131,27 @@ extern int   non_unique_value(delta_state *d, int8_t f, int32_t fld,
                               const char *s, const char **out_name,
                               void **out_value);
 
+/* A reading that ends in a letter said by name is put in with a space after
+   it. The rules take a lone letter before a full stop for an initial and say
+   nothing for the stop, so nginx.conf was engine X conf and kubectl.yaml kube
+   C T L yaml; with the space the stop is the dot it is. Before a stop that
+   ends a sentence, or before a comma, the space changes nothing. */
+static int insert_reading(delta_state *d, int8_t stream, int32_t at,
+                          const char *text)
+{
+    char   spaced[0x240];
+    size_t n = strlen(text);
+    char   c = n ? text[n - 1] : 0;
+
+    if (!((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'))
+        || (n > 1 && text[n - 2] != ' ') || n + 2 > sizeof spaced)
+        return insert_string(d, stream, at, text);
+    memcpy(spaced, text, n);
+    spaced[n] = ' ';
+    spaced[n + 1] = 0;
+    return insert_string(d, stream, at, spaced);
+}
+
 THIS UserDict *ud_ctor(UserDict *u);
 THIS void      ud_dtor(UserDict *u);
 THIS int32_t   ud_buildHashTable(UserDict *u, uint32_t want);
@@ -500,7 +521,7 @@ THIS int32_t ud_lookupAndTranslate(UserDict *u, delta_state *d,
     del_two_point(d, stream, l, r);
     OWNER_MOVED(d) = 1;
 
-    if (!insert_string(d, stream, r, xlat))
+    if (!insert_reading(d, stream, r, xlat))
         return UD_NO_SPINE;
 
     return UD_OK;
@@ -814,7 +835,7 @@ static int32_t builtin_lookupAndTranslate(delta_state *d, int32_t vol,
 
     del_two_point(d, stream, l, r);
     OWNER_MOVED(d) = 1;
-    if (!insert_string(d, stream, r, e->says))
+    if (!insert_reading(d, stream, r, e->says))
         return UD_NO_SPINE;
 
     lang->builtin_took[vol] = 1;
@@ -912,7 +933,7 @@ static int32_t main_possessive(delta_state *d, int32_t l, int32_t r)
 
     del_two_point(d, stream, l, r);
     OWNER_MOVED(d) = 1;
-    if (!insert_string(d, stream, r, out))
+    if (!insert_reading(d, stream, r, out))
         return UD_NO_SPINE;
 
     lang->builtin_took[UD_MAIN] = 1;
@@ -1080,7 +1101,7 @@ static int32_t builtin_split(delta_state *d, int32_t l, int32_t r)
 cut:
     del_two_point(d, stream, l, r);
     OWNER_MOVED(d) = 1;
-    if (!insert_string(d, stream, r, out))
+    if (!insert_reading(d, stream, r, out))
         return UD_NO_SPINE;
 
     lang->builtin_took[UD_MAIN] = 1;
@@ -1460,7 +1481,7 @@ static int32_t builtin_unsayable(delta_state *d, int32_t l, int32_t r)
 cut:
     del_two_point(d, stream, l, r);
     OWNER_MOVED(d) = 1;
-    if (!insert_string(d, stream, r, out))
+    if (!insert_reading(d, stream, r, out))
         return UD_NO_SPINE;
 
     lang->builtin_took[UD_MAIN] = 1;

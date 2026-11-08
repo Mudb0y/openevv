@@ -33,6 +33,11 @@ volume holds; a word English could say, a kept word, a Roman numeral, a Mc
 name and a word in capitals left whole; and a caller's entry for the word
 winning over the cut.
 
+A reading that ends in a letter said by name, nginx's engine X among them,
+is held to keeping the dot of a file name after it, nginx.conf as engine X
+dot conf, and to reading a sentence's full stop and a comma after it as the
+same reading written out does.
+
 What a word is read as is asked of eciGeneratePhonemes, which says it plainly;
 one check holds the samples as well, so that what the synthesiser is handed
 is known to follow.
@@ -297,6 +302,22 @@ def cut_checks(dll, have):
               != read(dll, b"cgroup", lang=BRITISH, builtin=0))
 
 
+def dot_checks(dll):
+    # A reading ending in a letter said by name used to swallow the dot of
+    # a file name, the rules taking the letter for an initial.
+    for name in (b"nginx.conf", b"kubectl.yaml", b"cpu.c",
+                 b"lvmlockd.service"):
+        check("%s keeps its dot" % name.decode(),
+              b"`[.1dat]" in read(dll, name))
+    for text in (b"I use nginx.", b"I use nginx, and more."):
+        check("and %s reads as before" % text.decode(),
+              read(dll, text) == read(dll, text.replace(b"nginx",
+                                                          b"engine X")))
+    mine = [(MAIN, b"zorbq", b"zorb Q")]
+    check("and so does a caller's entry",
+          b"`[.1dat]" in read(dll, b"zorbq.conf", entries=mine))
+
+
 def possessive_checks(dll):
     word, says = CARRIED_PHONES
     mine = word + b"'s"
@@ -356,6 +377,7 @@ def main(path):
     split_checks(dll, have)
     possessive_checks(dll)
     cut_checks(dll, have)
+    dot_checks(dll)
     sample_checks(dll)
     if BRITISH in have:
         word = CARRIED_ROOT[0]
