@@ -227,7 +227,6 @@ deleteme	delete me
 delmap	`[.1dEl.2mAp]
 devpts	dev pts
 dgdebug	dee gee debug
-Digi	dijji
 DLA	dee ell ay
 dpi	dee pea igh
 Dpiano	dee piano
@@ -624,7 +623,6 @@ Mar-a-Lago's	`[.2mar.0x.1la.0goz]
 mariadb	maria dee bea
 mbox	em `0 box
 MBROLA	`[.2Em.1bro.0lx]
-Mbrola	`[.2Em.1bro.0lx]
 MCAS	`[.1Em.2kAs]
 mcast	em `0 cast
 MCAT	`[.1Em.2kAt]
@@ -653,13 +651,11 @@ Mise-En-Scènes	`[.2mi.0zcn.1sEnz]
 Mise-en-scènes	`[.2mi.0zcn.1sEnz]
 mise-en-scènes	`[.2mi.0zcn.1sEnz]
 MIUI	mee yue igh
-mm	em em
 Mobipocket	mobi pocket
 mobipocket	mobi pocket
 MONTH	month
 MONTHS	months
 MOPP	em oe pea pea
-MOTD	em oe tea dee
 MOTORTREND	motor trend
 MPEG	em `0 peg
 mqueue	em `0 kew
@@ -800,8 +796,6 @@ randchal	`[.1rAnd.2CAl]
 randunofficial	rand unofficial
 rawdata	`[.1rc.2de.0Fx]
 rawmap	`[.1rc.2mAp]
-Read-Only	reed only
-Read-only	reed only
 read-only	reed only
 Readiris	reed iris
 Readonly	reed only
@@ -897,8 +891,6 @@ SUBPACS	`[.1sHb.2pAks]
 Suu	su
 SUV	ess yue vee
 SWI	ess doubleyou igh
-Sys	`[.1sIs]
-sys	`[.1sIs]
 Sysadmin	siss admin
 sysadmin	siss admin
 Sysadmins	siss adminz
@@ -1166,7 +1158,6 @@ XREAL's	`[.1Eks.2rilz]
 XROS	`[.1krcs]
 XTANDI	`[.0Xks.1tAn.0di]
 XTREAM	`[.0Xk.1strim]
-XYZ	eks wie zee
 xyz	eks wie zee
 YDD	wie  dee dee
 YMO	wie em oe
@@ -1275,7 +1266,6 @@ TOML	`[.1ta.0mxl]
 SAML	`[.1sA.0mxl]
 OCaml	O camel
 Haxe	`[.1hEks]
-Vue	view
 Vite	`[.1vit]
 PostgreSQL	`[.2post.1grEs] Q L
 LLaMA	`[.1la.0mx]
@@ -1908,9 +1898,9 @@ tsk	`[.1tIsk]
 brr	`[.1bR]
 
 # Abbreviations in capitals that the rules read as words, said by their
-# letters, and a few with a reading of their own published: ISO as its
-# organisation says it, LED as Merriam-Webster lists first, SaaS as it is
-# said. Each small-letter form that is not a word is here too
+# letters, and a few with a reading of their own published: LED as
+# Merriam-Webster lists first, SaaS as it is said. Each small-letter form
+# that is not a word is here too
 ROI	R O igh
 roi	R O igh
 SLA	S L ay
@@ -1971,7 +1961,6 @@ OAUTH	O auth
 ORM	O R M
 orm	O R M
 BI	B igh
-ISO	`[.1Y.0so]
 LED	L E D
 UFO	U F O
 NIMBY	`[.1nIm.0bi]

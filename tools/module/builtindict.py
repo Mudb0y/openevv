@@ -104,6 +104,14 @@ def read_dic(path):
             word = entry[0]
             for letter, written_as in fold:
                 word = word.replace(letter, written_as)
+            # The normaliser writes the plain letter for an accented one
+            # before the root volume is asked, so such a word there would
+            # never be found; the main volume is asked before it does.
+            if os.path.basename(path) == "root.dic" \
+                    and any(c >= 0x80 for c in word):
+                sys.exit("builtindict: %s line %d: an accented word in a "
+                         "root volume is never looked up; it belongs in "
+                         "main.dic or in a rule" % (path, n))
             if word == entry[0]:
                 written.append(entry)
             else:
