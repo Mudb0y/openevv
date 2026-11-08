@@ -49,6 +49,7 @@ int __stdcall eciSetDict(ECIHand, void *);
 void *__stdcall eciGetDict(ECIHand);
 int __stdcall eciDeleteDict(ECIHand, void *);
 int __stdcall eciLoadDict(ECIHand, void *, int, const char *);
+int __stdcall eciUpdateDict(ECIHand, void *, int, const char *, const char *);
 int __stdcall eciGetAvailableLanguages(unsigned *, int *);
 ECIHand __stdcall eciNewEx(unsigned);
 int __stdcall eciSpeaking(ECIHand);
@@ -274,6 +275,29 @@ int main(int argc, char **argv)
         printf("speak: loadDict %d\n", eciLoadDict(h, dict, 0, "x"));
         printf("speak: setDict none %d\n", eciSetDict(h, NULL));
         printf("speak: deleteDict %d\n", eciDeleteDict(h, dict));
+    }
+
+    /* A u puts the entries of user.dic, from where this is run, into the
+       caller's main volume one at a time, since IBM never wrote the call
+       that loads a file; test/compare.sh copies it there. */
+    if (argc > 3 && strchr(argv[3], 'u')) {
+        void *dict = eciNewDict(h);
+        FILE *f    = fopen("user.dic", "r");
+        char  line[256];
+
+        while (f != 0 && fgets(line, sizeof line, f) != 0) {
+            char *tab = strchr(line, '\t');
+
+            line[strcspn(line, "\r\n")] = 0;
+            if (tab == 0)
+                continue;
+            *tab = 0;
+            printf("speak: update %s %d\n", line,
+                   eciUpdateDict(h, dict, 0, line, tab + 1));
+        }
+        if (f != 0)
+            fclose(f);
+        printf("speak: setDict %d\n", eciSetDict(h, dict));
     }
 
     /* An s reads the text as SSML before speaking it. The filter is in

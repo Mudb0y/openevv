@@ -68,6 +68,8 @@ void    *STDCALL ed_getDict(OldInst *h);
 int      STDCALL ed_loadDict(OldInst *h, void *dict, int32_t which,
                              const char *name);
 int      STDCALL ed_deleteDict(OldInst *h, void *dict);
+int      STDCALL ed_updateDict(OldInst *h, void *dict, int32_t which,
+                               const char *key, const char *says);
 int      STDCALL eo_speaking(OldInst *h);
 int      STDCALL eo_getAvailableLanguages(uint32_t *out, int *count);
 int32_t  STDCALL es_setDefaultParam(int32_t which, int32_t value);
@@ -385,6 +387,31 @@ int main(int argc, char **argv)
         printf("speak: loadDict %d\n", ed_loadDict(h, dict, 0, "x"));
         printf("speak: setDict none %d\n", ed_setDict(h, NULL));
         printf("speak: deleteDict %d\n", ed_deleteDict(h, dict));
+    }
+
+    /* A u puts the entries of user.dic, from where this is run, into the
+       caller's main volume before speaking, which is the only way to hear
+       what an entry does to the sentence around it rather than to the word
+       alone. One at a time, since IBM's engine never wrote the call that
+       loads a file. test/compare.sh copies the file EVV_USER_DICT names. */
+    if (argc > 3 && strchr(argv[3], 'u')) {
+        void *dict = ed_newDict(h);
+        FILE *f    = fopen("user.dic", "r");
+        char  line[256];
+
+        while (f != 0 && fgets(line, sizeof line, f) != 0) {
+            char *tab = strchr(line, '\t');
+
+            line[strcspn(line, "\r\n")] = 0;
+            if (tab == 0)
+                continue;
+            *tab = 0;
+            printf("speak: update %s %d\n", line,
+                   ed_updateDict(h, dict, 0, line, tab + 1));
+        }
+        if (f != 0)
+            fclose(f);
+        printf("speak: setDict %d\n", ed_setDict(h, dict));
     }
 
     /* An s reads the text as SSML before speaking it, which is the only way

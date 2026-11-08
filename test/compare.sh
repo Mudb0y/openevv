@@ -91,6 +91,8 @@ esac
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 cp "$REFDIR"/*.exe "$work/" 2>/dev/null
+# The caller's main volume a u in the mode loads, on both sides.
+[ -n "${EVV_USER_DICT:-}" ] && cp "$EVV_USER_DICT" "$work/user.dic"
 cd "$work"
 
 # One case through one binary. Answers 0 when it produced a file, 1 when it
