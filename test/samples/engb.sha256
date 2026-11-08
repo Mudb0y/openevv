@@ -20,7 +20,7 @@ plain 2 6ae6aa1685876799 a5196b5cd0b42968 Dr. Smith paid $1,234.56 on 3rd May 20
 plain 3 69f08042b09abf35 a1ac46751153bd2a The quick brown fox jumps over the lazy dog; e.g. www.example.com/path?q=1
 plain 4 196ca8551338449c ee49f47ffe845ee4 Testing 1 2 3, ABC XYZ, hyphenated-words and UPPERCASE.
 plain 5 2834bb3006ab7d6e b014d69009da1c09 A one-word line. And another; plus "quoted text" inside.
-plain 6 728f21eaf9ed5225 291ed59cd4f7b37e Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.
+plain 6 8bdfea83a381d6a1 bb0e45f5940686b7 Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.
 plain 7 483adf45a046c51c 0cbef8ceca1c8cc2 He said: don't! Then (parenthetically) 1/2 + 3/4 = 5/4; see p. 12.
 plain 8 7377f8a434195c98 4c1402534b45dc75 A 5,000-strong crowd raised 1,000,500 dollars, and the fund reached 25,000,000.
 plain 9 986658ecb29ddb75 a7930dfa77a7a219 Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
@@ -98,7 +98,7 @@ dict 2 6ae6aa1685876799 f287a4b5e41e674c Dr. Smith paid $1,234.56 on 3rd May 202
 dict 3 69f08042b09abf35 2159283ea772d4e7 The quick brown fox jumps over the lazy dog; e.g. www.example.com/path?q=1
 dict 4 196ca8551338449c 55757e615903aabc Testing 1 2 3, ABC XYZ, hyphenated-words and UPPERCASE.
 dict 5 2834bb3006ab7d6e bbe94dc05adb4f90 A one-word line. And another; plus "quoted text" inside.
-dict 6 728f21eaf9ed5225 8d11134e507f694e Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.
+dict 6 8bdfea83a381d6a1 3c38c59477cc5950 Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.
 dict 7 483adf45a046c51c 7282b089135e7017 He said: don't! Then (parenthetically) 1/2 + 3/4 = 5/4; see p. 12.
 dict 8 7377f8a434195c98 a9b2311b876a166c A 5,000-strong crowd raised 1,000,500 dollars, and the fund reached 25,000,000.
 dict 9 986658ecb29ddb75 cff82983cd84c31e Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
@@ -109,7 +109,7 @@ second 2 afba71cf06b14738 354d18f3ec92bc83 Dr. Smith paid $1,234.56 on 3rd May 2
 second 3 121daba903ca76d0 043af82557176dbf The quick brown fox jumps over the lazy dog; e.g. www.example.com/path?q=1
 second 4 c9d4d7e74e952926 4fe5a155094b4b91 Testing 1 2 3, ABC XYZ, hyphenated-words and UPPERCASE.
 second 5 a158c0f26a6bce27 313538a0009e91d6 A one-word line. And another; plus "quoted text" inside.
-second 6 5f9185ab0fa8bc94 9f9d519c8257416f Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.
+second 6 3499ec84f76d567f fa3e8bded1cba2ca Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.
 second 7 9f69f8560ac1d0ab edfa8738f4abc6e5 He said: don't! Then (parenthetically) 1/2 + 3/4 = 5/4; see p. 12.
 second 8 c226c07056456d4c 2cc7c9b450834bd3 A 5,000-strong crowd raised 1,000,500 dollars, and the fund reached 25,000,000.
 second 9 31ae9136c8e3f30e 03cb156d70873ebc Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
@@ -130,7 +130,7 @@ wide 2 186fa03efd42aae5 a2f8a12d3660cccc Dr. Smith paid $1,234.56 on 3rd May 202
 wide 3 4ebd8d84036bb8b7 b9265ecbcbadce19 The quick brown fox jumps over the lazy dog; e.g. www.example.com/path?q=1
 wide 4 97ad59b6fead3679 d48bd9732556a831 Testing 1 2 3, ABC XYZ, hyphenated-words and UPPERCASE.
 wide 5 f28b5495e4b4487c ff9b946427b78478 A one-word line. And another; plus "quoted text" inside.
-wide 6 6d3db1c3b2551e61 3e968193d8ba3766 Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.
+wide 6 3536d9d387f5c9b8 c7500c037378f16d Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.
 wide 7 ac547aaf04c169f0 2103026393eb1ce6 He said: don't! Then (parenthetically) 1/2 + 3/4 = 5/4; see p. 12.
 wide 8 e28a5a93cd22cf98 416aef5c9c144604 A 5,000-strong crowd raised 1,000,500 dollars, and the fund reached 25,000,000.
 wide 9 eae0b91035d553ec fca1262ac04e2a79 Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.

@@ -125,6 +125,10 @@ extern int   sync_in_stm(delta_state *d, int8_t f, int32_t at);
 extern int   del_two_point(delta_state *d, int8_t f, int32_t l, int32_t r);
 extern char *extract_string(delta_state *d, int8_t f, int32_t l, int32_t r,
                             char *out, int32_t max);
+extern char *peek_string(delta_state *d, int8_t f, int32_t at, char *out,
+                         int32_t max);
+extern int   put_char(delta_state *d, int8_t f, int32_t at, char c);
+extern int32_t sync_to_right(delta_state *d, int8_t f, int32_t at);
 extern int   insert_string(delta_state *d, int8_t f, int32_t at,
                            const char *s);
 extern int   non_unique_value(delta_state *d, int8_t f, int32_t fld,
@@ -132,19 +136,28 @@ extern int   non_unique_value(delta_state *d, int8_t f, int32_t fld,
                               void **out_value);
 
 /* A reading that ends in a letter said by name is put in with a space after
-   it. The rules take a lone letter before a full stop for an initial and say
-   nothing for the stop, so nginx.conf was engine X conf and kubectl.yaml kube
-   C T L yaml; with the space the stop is the dot it is. Before a stop that
-   ends a sentence, or before a comma, the space changes nothing. */
+   it where a file name's dot follows, a stop with a letter or a digit
+   straight after it. The rules take a lone letter before a full stop for an
+   initial and say nothing for the stop, so nginx.conf was engine X conf and
+   kubectl.yaml kube C T L yaml; with the space the stop is the dot it is.
+   Before a stop with a space after it the reading goes in as it is, so that
+   the rules still tell an initial from the end of a sentence: Ms. Bennet is
+   not cut in two, and Ask the CPU. It knows. is. */
 static int insert_reading(delta_state *d, int8_t stream, int32_t at,
                           const char *text)
 {
     char   spaced[0x240];
+    char   after[3];
     size_t n = strlen(text);
     char   c = n ? text[n - 1] : 0;
 
+    peek_string(d, stream, at, after, sizeof after);
     if (!((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'))
-        || (n > 1 && text[n - 2] != ' ') || n + 2 > sizeof spaced)
+        || (n > 1 && text[n - 2] != ' ') || n + 2 > sizeof spaced
+        || after[0] != '.'
+        || !((after[1] >= 'A' && after[1] <= 'Z')
+             || (after[1] >= 'a' && after[1] <= 'z')
+             || (after[1] >= '0' && after[1] <= '9')))
         return insert_string(d, stream, at, text);
     memcpy(spaced, text, n);
     spaced[n] = ' ';
@@ -827,9 +840,32 @@ static int32_t builtin_lookupAndTranslate(delta_state *d, int32_t vol,
                         UD_LAST_ROOM))
         return UD_NO_SPINE;
 
-    e = vol == UD_MAIN
-        ? builtin_find_main(of->builtin_dict, lang->builtin_last[vol])
-        : builtin_find(of->builtin_dict, vol, lang->builtin_last[vol]);
+    /* A main entry written with its full stop is the word where a stop and
+       a space follow it, and takes the stop: Mr. Darcy is mister Darcy, and
+       the stop that would otherwise end the sentence there is a space. */
+    e = 0;
+    if (vol == UD_MAIN) {
+        char   after[3];
+        char   dotted[UD_LAST_ROOM + 1];
+        size_t n = strlen(lang->builtin_last[vol]);
+
+        peek_string(d, stream, r, after, sizeof after);
+        if (after[0] == '.' && after[1] == ' ' && n + 2 <= sizeof dotted) {
+            memcpy(dotted, lang->builtin_last[vol], n);
+            dotted[n]     = '.';
+            dotted[n + 1] = 0;
+            e = builtin_find_main(of->builtin_dict, dotted);
+            if (e != 0 && !builtin_sayable(d, stream, e->says))
+                e = 0;
+            if (e != 0
+                && !put_char(d, stream, sync_to_right(d, stream, r), ' '))
+                return UD_NO_SPINE;
+        }
+    }
+    if (e == 0)
+        e = vol == UD_MAIN
+            ? builtin_find_main(of->builtin_dict, lang->builtin_last[vol])
+            : builtin_find(of->builtin_dict, vol, lang->builtin_last[vol]);
     if (e == 0 || !builtin_sayable(d, stream, e->says))
         return UD_NOT_FOUND;
 

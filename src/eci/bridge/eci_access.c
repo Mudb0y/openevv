@@ -904,6 +904,40 @@ char *extract_string(delta_state *d, int8_t f, int32_t l, int32_t r,
     return out;
 }
 
+/* Read what stands after a mark, one character a token, up to a length
+   that counts the terminator. A space is written as one and the gap
+   between words as one too; any name longer than a character, which no
+   text written in letters has, as a question mark. It stops at the end of
+   the spine. */
+char *peek_string(delta_state *d, int8_t f, int32_t at, char *out,
+                  int32_t max)
+{
+    char *p = out;
+
+    max--;
+    while (max != 0 && at != 0 && next_token(d, f, at) != 0) {
+        int32_t next;
+
+        if (is_token_next(d, f, at)) {
+            const char *v = field_value(f, EVV_AT(void *, next_token(d, f,
+                                                                     at)), 0);
+
+            if (strcmp(v, "' '") == 0 || strcmp(v, "GAP") == 0)
+                *p++ = ' ';
+            else
+                *p++ = v[0] != 0 && v[1] == 0 ? v[0] : '?';
+            max--;
+        }
+        next = sync_to_right(d, f, at);
+        if (next == 0 || next == at)
+            break;
+        at = next;
+    }
+
+    *p = 0;
+    return out;
+}
+
 /* Put a string in one character at a time, each as its own token with a
    sync mark between. Only a type whose first field names single characters
    can take one, and any character the field does not name stops it; what
@@ -952,6 +986,37 @@ int insert_string(delta_state *d, int8_t f, int32_t at, const char *s)
             ins_sync(d, f, at, 1);
     }
 
+    OWNER_MOVED(d) = 1;
+    return 1;
+}
+
+/* Write one character over the token to the left of a mark, by the name
+   the stream's first field gives it, as insert_string looks one up. */
+int put_char(delta_state *d, int8_t f, int32_t at, char c)
+{
+    const char *const *names;
+    char               one[2];
+    int32_t            j = 0;
+
+    if (!enum_field(f, 0) && !single_letter_stream(f))
+        return 0;
+    names  = (const char *const *)FD(f, 0)->values;
+    one[0] = c;
+    one[1] = 0;
+    while (j < FD(f, 0)->nvalues && strcmp(names[j], one) != 0)
+        j++;
+    if (j >= FD(f, 0)->nvalues)
+        return 0;
+
+    if (FD(f, 0)->kind == KIND_NAMED8) {
+        int8_t idx = (int8_t)j;
+
+        set_fld_value(d, f, 0, &idx, 0, at);
+    } else {
+        int16_t idx = (int16_t)j;
+
+        set_fld_value(d, f, 0, &idx, 0, at);
+    }
     OWNER_MOVED(d) = 1;
     return 1;
 }

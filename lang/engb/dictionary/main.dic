@@ -1,0 +1,18 @@
+# British English's main volume. A word here is matched as the whole token it
+# is written as, capitals and all, and a word in small letters is found for
+# the same word with a capital at the front, as at the start of a sentence.
+# One a line, the word, a tab, and what is said; a line starting # is a
+# remark. tools/module/builtindict.py reads it.
+
+# Titles before a name, said as the words they stand for, as the Oxford and
+# Cambridge dictionaries have them, since the abbreviation dictionary that
+# would expand them is off and nobody reads them by their letters. Written
+# with the stop, an entry takes the stop after the word with it, so that
+# Mr. Darcy is not cut in two by a sentence's end; written without, it is
+# Mr Darcy as British text writes him. Dr and St are left out: each stands
+# for two words, doctor or drive and saint or street, and an entry cannot
+# tell which
+Mr	mister
+Mr.	mister
+Mrs	`[.1mI.0sXz]
+Mrs.	`[.1mI.0sXz]

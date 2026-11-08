@@ -16,7 +16,7 @@ The dictionary also splits a word with a capital inside it that nothing
 holds into the words it is made of, NixOS as Nix OS. That is held to reading
 exactly as the parts written apart do, with a name beginning such as Mc, a
 plural of capitals and a word a root volume holds left whole, and British
-English, which carries no entries, splitting all the same.
+English, which carries only two titles, splitting all the same.
 
 A main entry is a whole word, and one written in phones used to leave a
 possessive's ending outside its brackets to be spelled out. The possessive
@@ -36,7 +36,13 @@ winning over the cut.
 A reading that ends in a letter said by name, nginx's engine X among them,
 is held to keeping the dot of a file name after it, nginx.conf as engine X
 dot conf, and to reading a sentence's full stop and a comma after it as the
-same reading written out does.
+same reading written out does, and Ms. Bennet as M S. Bennet is, the stop an
+initial's and not a sentence's end.
+
+A main entry written with its full stop, as Mr. and Mrs. are in both
+Englishes, is held to taking the stop that follows the word with a space
+after it, so that Mr. Darcy reads as a caller's entry for Mr does with the
+stop not there at all, and to leaving a stop that ends the text alone.
 
 What a word is read as is asked of eciGeneratePhonemes, which says it plainly;
 one check holds the samples as well, so that what the synthesiser is handed
@@ -316,6 +322,38 @@ def dot_checks(dll):
     mine = [(MAIN, b"zorbq", b"zorb Q")]
     check("and so does a caller's entry",
           b"`[.1dat]" in read(dll, b"zorbq.conf", entries=mine))
+    # Only a file name's dot, with a letter or digit after it: before a
+    # space the rules still tell an initial from a sentence's end.
+    check("Ms. Bennet is not cut in two",
+          read(dll, b"Ms. Bennet left.")
+          == read(dll, b"M S. Bennet left.", builtin=0))
+
+
+def title_checks(dll, have):
+    # An entry written with its stop takes the stop: compared with a
+    # caller's entry for the word and the text without the stop.
+    for text, word, says in (
+            (b"Mr. Darcy bowed.", b"Mr", b"mister"),
+            (b"I saw Mr. and Mrs. Jones.", b"Mrs", b"`[.1mI.0sxz]")):
+        mine = [(MAIN, b"Mr", b"mister"), (MAIN, word, says)]
+        check("%s reads without a sentence's end" % text.decode(),
+              read(dll, text)
+              == read(dll, text.replace(b". ", b" "), builtin=0,
+                      entries=mine)
+              and read(dll, text) != read(dll, text, builtin=0))
+    mine = [(MAIN, b"Mrs", b"`[.1mI.0sxz]")]
+    check("and a stop that ends the text is left to end it",
+          read(dll, b"Ask the Mrs.")
+          == read(dll, b"Ask the Mrs.", builtin=0, entries=mine))
+    check("and Mr without a stop is mister too",
+          read(dll, b"Mr Darcy bowed.")
+          == read(dll, b"Mr Darcy bowed.", builtin=0,
+                  entries=[(MAIN, b"Mr", b"mister")]))
+    if BRITISH in have:
+        check("British English reads its titles as well",
+              read(dll, b"Mr. Darcy bowed.", lang=BRITISH)
+              == read(dll, b"Mr Darcy bowed.", lang=BRITISH, builtin=0,
+                      entries=[(MAIN, b"Mr", b"mister")]))
 
 
 def possessive_checks(dll):
@@ -378,11 +416,12 @@ def main(path):
     possessive_checks(dll)
     cut_checks(dll, have)
     dot_checks(dll)
+    title_checks(dll, have)
     sample_checks(dll)
     if BRITISH in have:
         word = CARRIED_ROOT[0]
-        check("British English carries no entries, and reads one the same"
-              " either way",
+        check("British English carries no root entries, and reads one the"
+              " same either way",
               read(dll, word, lang=BRITISH)
               == read(dll, word, lang=BRITISH, builtin=0))
 

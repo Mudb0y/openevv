@@ -1581,6 +1581,17 @@ PgDn	page down
 Ms	M S
 Io	`[.1Y.0o]
 
+# Titles before a name, said as the words they stand for, as Merriam-Webster
+# has them, since the abbreviation dictionary that would expand them is off
+# and nobody reads them by their letters. Written with the stop, an entry
+# takes the stop after the word with it, so that Mr. Darcy is not cut in two
+# by a sentence's end. Dr and St are left out: each stands for two words,
+# doctor or drive and saint or street, and an entry cannot tell which
+Mr	mister
+Mr.	mister
+Mrs	`[.1mI.0sxz]
+Mrs.	`[.1mI.0sxz]
+
 # Abbreviations in small letters that the rules read as words, said by
 # their letters as their capitals are, or by the letters of the part that is
 # not a word: from the manual pages installed on the machine this was made
