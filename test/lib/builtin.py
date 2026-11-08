@@ -24,6 +24,15 @@ is held to reading exactly as an entry for it written out would, whichever
 dictionary holds the word, and a caller's entry in words for it to leave the
 ending to the rules as before.
 
+A word in small letters English could not say is cut into the words,
+chunks and letters it can be said as, usrdct as U S R D C T and cgroup as C
+group. That is held to reading exactly as the pieces written apart do with
+the dictionary off, since what the cut writes is never looked up again; a
+plural of letters only where the letters end in an abbreviation a main
+volume holds; a word English could say, a kept word, a Roman numeral, a Mc
+name and a word in capitals left whole; and a caller's entry for the word
+winning over the cut.
+
 What a word is read as is asked of eciGeneratePhonemes, which says it plainly;
 one check holds the samples as well, so that what the synthesiser is handed
 is known to follow.
@@ -259,6 +268,35 @@ def split_checks(dll, have):
               != read(dll, b"NixOS", lang=BRITISH, builtin=0))
 
 
+def cut_checks(dll, have):
+    # The cut's pieces are handed to the rules and never looked up again, so
+    # they are held to the pieces read with the dictionary off.
+    for word, parts in ((b"usrdct", b"U S R D C T"), (b"cgroup", b"C group"),
+                        (b"tmpfiles", b"T M P files"),
+                        (b"vgchange", b"V G change"), (b"fdopen", b"F D open"),
+                        (b"cvsexportcommit", b"C V S export commit"),
+                        (b"gnutls", b"gnu T L S"), (b"procfs", b"proc F S"),
+                        (b"maxcpus", b"max C P U's")):
+        check("%s is cut as %s" % (word.decode(), parts.decode()),
+              read(dll, word) == read(dll, parts, builtin=0)
+              and read(dll, word) != read(dll, word, builtin=0))
+    for word in (b"twelfths", b"brzezinski", b"algorithm", b"against",
+                 b"couldn", b"xvii", b"mcfarland", b"comm", b"freq",
+                 b"USRDCT"):
+        check("%s is left whole" % word.decode(),
+              read(dll, word) == read(dll, word, builtin=0))
+    mine = [(MAIN, b"usrdct", b"user dict")]
+    check("a caller's main entry for the word wins over the cut",
+          read(dll, b"usrdct", entries=mine)
+          == read(dll, b"usrdct", builtin=0, entries=mine))
+    if BRITISH in have:
+        check("British English cuts as well",
+              read(dll, b"cgroup", lang=BRITISH)
+              == read(dll, b"C group", lang=BRITISH, builtin=0)
+              and read(dll, b"cgroup", lang=BRITISH)
+              != read(dll, b"cgroup", lang=BRITISH, builtin=0))
+
+
 def possessive_checks(dll):
     word, says = CARRIED_PHONES
     mine = word + b"'s"
@@ -317,6 +355,7 @@ def main(path):
     reading_checks(dll)
     split_checks(dll, have)
     possessive_checks(dll)
+    cut_checks(dll, have)
     sample_checks(dll)
     if BRITISH in have:
         word = CARRIED_ROOT[0]

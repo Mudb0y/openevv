@@ -212,8 +212,8 @@ Its authors dedicated it to the public domain under CC0 1.0,
 and on 30 October 2026 it became ours: one set of files, with the entries
 we took out of it named in `removed` and the commit of theirs whose changes
 it has taken named in `upstream`. The MIT licence covers what we wrote and
-the whole as it is put together, and so `split`, `removed`, `upstream` and
-`lang/engb/dictionary` as well. The community's entries in it were given to
+the whole as it is put together, and so `split`, `removed`, `upstream`,
+`sayable`, `pieces` and `lang/engb/dictionary` as well. The community's entries in it were given to
 the public domain by their authors and stay free to anyone, whatever this
 file says.
 
@@ -225,6 +225,13 @@ is Copyright 1993 by Carnegie Mellon University, which made its use for any
 research or commercial purpose completely unrestricted and asked only to be
 acknowledged, which this is. Wiktionary decides which of their readings is
 the published one and nothing of Wiktionary is copied.
+
+`sayable` and the body of `pieces` in both Englishes are written by
+tools/module/sayable.py out of Moby's word lists, which Grady Ward placed in
+the public domain with the Pronunciator, and the same 1993 release of CMU's
+dictionary. The way the engine uses them, asking whether English could say a
+word and spelling what it could not, is the way eSpeak NG reads a word it
+does not know; nothing of eSpeak NG's is copied.
 
 Where it came from
 ------------------

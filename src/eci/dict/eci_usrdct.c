@@ -1087,6 +1087,386 @@ cut:
     return UD_OK;
 }
 
+/* Ours as well. A word in small letters that no dictionary holds goes to the
+   letter rules, which read anything as a word, so usrdct, cgroup and
+   tmpfiles came out as single invented words. Where the language carries
+   what tells one that can be said from one that cannot -- the consonants an
+   English word may begin and end with, which tools/module/sayable.py takes
+   from word lists -- such a word is first asked whether it could be said:
+   whether it begins and ends as a word may, and whether each run of
+   consonants between its vowels divides into an ending and a beginning. One
+   that could is left to the rules, however it is spelled, so qemu, env and
+   sudo are read as they were. One that could not is cut into known words,
+   chunks that could be said and letters said by name, whichever costs least,
+   the way eSpeak NG reads a word it cannot pronounce: cgroup as C group,
+   tmpfiles as T M P files, usrdct as U S R D C T. Left whole whatever they
+   look like: a word the root volumes hold, a word the language keeps as a
+   word because it fails the test and is one (algorithm, Edinburgh,
+   couldnt), a word it may be cut into, a Roman numeral, and a name
+   beginning Mc. */
+
+#define SAY_MAX 32
+
+static int ws_cmp(const char *key, size_t n, const char *word)
+{
+    size_t i;
+
+    for (i = 0; i < n; i++) {
+        unsigned char a = (unsigned char)key[i];
+        unsigned char b = (unsigned char)word[i];
+
+        if (b == 0)
+            return 1;
+        if (a != b)
+            return a < b ? -1 : 1;
+    }
+    return word[n] == 0 ? 0 : -1;
+}
+
+static int ws_has(const delta_wordset *s, const char *key, size_t n)
+{
+    int32_t     lo = 0, hi, i;
+    const char *p;
+
+    if (s->words == 0 || s->count == 0)
+        return 0;
+    hi = (s->count + 15) / 16 - 1;
+    while (lo < hi) {
+        int32_t mid = (lo + hi + 1) / 2;
+
+        if (ws_cmp(key, n, s->words + s->index[mid]) >= 0)
+            lo = mid;
+        else
+            hi = mid - 1;
+    }
+    p = s->words + s->index[lo];
+    for (i = lo * 16; i < s->count && i < lo * 16 + 16; i++) {
+        int c = ws_cmp(key, n, p);
+
+        if (c == 0)
+            return 1;
+        if (c < 0)
+            return 0;
+        p += strlen(p) + 1;
+    }
+    return 0;
+}
+
+static int say_plain_vowel(char c)
+{
+    return c == 'a' || c == 'e' || c == 'i' || c == 'o' || c == 'u';
+}
+
+/* y is a vowel after a consonant and a consonant anywhere else. */
+static int say_vowel(const char *w, size_t i)
+{
+    return say_plain_vowel(w[i])
+        || (w[i] == 'y' && i > 0 && !say_plain_vowel(w[i - 1]));
+}
+
+static int say_part(const delta_wordset *s, const char *w, size_t n)
+{
+    return n == 0 || ws_has(s, w, n);
+}
+
+/* A doubled letter is one sound and a q alone after the vowel is said as
+   k, so comm ends as com does and freq as wreck does; postgresql's sql is
+   still no ending. */
+static int say_coda(const delta_builtin_dict *b, const char *w, size_t n)
+{
+    char   c[SAY_MAX];
+    size_t i, m = 0;
+    int    moved = 0;
+
+    if (say_part(&b->coda, w, n))
+        return 1;
+    for (i = 0; i < n; i++) {
+        char x = w[i] == 'q' && n == 1 ? 'k' : w[i];
+
+        if (m > 0 && c[m - 1] == x)
+            moved = 1;
+        else
+            c[m++] = x;
+        moved |= x != w[i];
+    }
+    return moved && say_part(&b->coda, c, m);
+}
+
+static int say_able(const delta_builtin_dict *b, const char *w, size_t n)
+{
+    size_t i = 0, j, k;
+
+    while (i < n && !say_vowel(w, i))
+        i++;
+    if (i == n || !say_part(&b->onset, w, i))
+        return 0;
+    k = n;
+    while (!say_vowel(w, k - 1))
+        k--;
+    if (!say_coda(b, w + k, n - k))
+        return 0;
+    while (i < k) {
+        size_t m, split_ok = 0;
+
+        while (i < k && say_vowel(w, i))
+            i++;
+        if (i == k)
+            break;
+        j = i;
+        while (!say_vowel(w, j))
+            j++;
+        for (m = 0; m <= j - i && !split_ok; m++)
+            split_ok = say_coda(b, w + i, m)
+                       && say_part(&b->onset, w + i + m, j - i - m);
+        if (!split_ok)
+            return 0;
+        i = j;
+    }
+    return 1;
+}
+
+/* Whether the stem is a piece, as written, with a doubled last letter
+   undone (runn), or with the e an ending took off (bounc). */
+static int say_stem(const delta_builtin_dict *b, const char *w, size_t n)
+{
+    char e[SAY_MAX + 1];
+
+    if (n < 2 || n >= SAY_MAX)
+        return 0;
+    if (ws_has(&b->pieces, w, n))
+        return 1;
+    if (n > 3 && w[n - 1] == w[n - 2] && !say_plain_vowel(w[n - 1])
+        && ws_has(&b->pieces, w, n - 1))
+        return 1;
+    memcpy(e, w, n);
+    e[n] = 'e';
+    return ws_has(&b->pieces, e, n + 1);
+}
+
+/* A piece, or a piece with an ending English adds to words: tmpfiles is
+   T M P files, not file S, and gstreamer G streamer. */
+static int say_word(const delta_builtin_dict *b, const char *w, size_t n)
+{
+    static const char *const end[] = { "ings", "ing", "ers", "er", "ed",
+                                       "es", "s", 0 };
+    size_t i;
+
+    if (ws_has(&b->pieces, w, n))
+        return 1;
+    for (i = 0; end[i] != 0; i++) {
+        size_t k = strlen(end[i]);
+
+        if (n < k + 3 || memcmp(w + n - k, end[i], k) != 0)
+            continue;
+        if (end[i][0] == 's' && w[n - 2] == 's')
+            continue;
+        if (strcmp(end[i], "es") == 0
+            && !strchr("sxzh", w[n - 3]))
+            continue;
+        if (say_stem(b, w, n - k))
+            return 1;
+    }
+    return 0;
+}
+
+/* Whether the language would leave the word to the rules. */
+static int say_leave(delta_state *d, const delta_builtin_dict *b,
+                     const char *w, size_t n)
+{
+    char   low[SAY_MAX + 1];
+    size_t i;
+    int    vowel = 0, roman = 1;
+
+    if (n < 2 || n > SAY_MAX)
+        return 1;
+    for (i = 0; i < n; i++) {
+        if (w[i] < 'a' || w[i] > 'z')
+            return 1;
+        vowel |= say_vowel(w, i);
+        roman &= strchr("ivxlc", w[i]) != 0;
+    }
+    if (!vowel || roman || (w[0] == 'm' && w[1] == 'c'))
+        return 1;
+    if (ws_has(&b->kept, w, n) || ws_has(&b->pieces, w, n))
+        return 1;
+    memcpy(low, w, n);
+    low[n] = 0;
+    if (split_rooted(d, b, low))
+        return 1;
+    if (n > 2 && w[n - 1] == 's') {
+        low[n - 1] = 0;
+        if (split_rooted(d, b, low))
+            return 1;
+    }
+    return say_able(b, w, n);
+}
+
+/* The cheapest cut of the word, with the end of each piece written into
+   ends. A word costs more than a letter and less than two, so
+   cvsexportcommit is C V S export commit rather than anything with sex in
+   it, and fdopen F D open rather than F do pen. A chunk no list holds costs
+   more than four letters, so that getpwuid is get P W U I D rather than get
+   P wuid; in a build without the pieces a chunk is all there is to say a
+   part with, and costs what a word does. And each run of letters costs a
+   little more, enough to settle a
+   tie and nothing else, since an abbreviation's letters belong together:
+   gnutls is gnu T L S, not G nut L S, and dlopen D L open, not D lope N.
+   So the cheapest cut is kept twice from each place on, one that begins
+   with a letter and one that does not, as what a letter costs depends on
+   what follows it. */
+#define SAY_LETTER 30
+#define SAY_WORD   39
+#define SAY_CHUNK  132
+#define SAY_NONE   0x3fffffff
+
+static size_t say_cut(const delta_builtin_dict *b, const char *w, size_t n,
+                      size_t *ends)
+{
+    int32_t letter[SAY_MAX + 1], other[SAY_MAX + 1];
+    size_t  to[SAY_MAX + 1];
+    size_t  i, j, pieces = 0;
+    int     by_letter;
+
+    letter[n] = SAY_NONE;
+    other[n]  = 0;
+    for (i = n; i-- > 0;) {
+        int32_t next = other[i + 1] + 1;
+
+        letter[i] = SAY_LETTER + (letter[i + 1] < next ? letter[i + 1] : next);
+        other[i]  = SAY_NONE;
+        for (j = i + 2; j <= n; j++) {
+            int32_t c, rest = letter[j] < other[j] ? letter[j] : other[j];
+
+            if (say_word(b, w + i, j - i))
+                c = SAY_WORD;
+            else if (j - i >= 3 && say_able(b, w + i, j - i))
+                c = b->pieces.count ? SAY_CHUNK : SAY_WORD;
+            else
+                continue;
+            if (rest + c < other[i]) {
+                other[i] = rest + c;
+                to[i]    = j;
+            }
+        }
+    }
+    by_letter = letter[0] <= other[0];
+    for (i = 0; i < n; i = ends[i], pieces++) {
+        if (by_letter) {
+            ends[i]   = i + 1;
+            by_letter = letter[i + 1] < other[i + 1] + 1;
+        } else {
+            ends[i]   = to[i];
+            by_letter = letter[to[i]] < other[to[i]];
+        }
+    }
+    return pieces;
+}
+
+static size_t say_write(const char *w, size_t n, const size_t *ends,
+                        char *out, size_t room)
+{
+    size_t i, o = 0;
+
+    for (i = 0; i < n; i = ends[i]) {
+        size_t len = ends[i] - i;
+        const char *say = w + i;
+
+        if (o + len + 5 >= room)
+            return 0;
+        if (o > 0)
+            out[o++] = ' ';
+        if (len == 1 && w[i] == 'a')
+            say = "ay", len = 2;
+        else if (len == 1 && w[i] == 'i')
+            say = "igh", len = 3;
+        memcpy(out + o, say, len);
+        if (len == 1)
+            out[o] = (char)(w[i] - 'a' + 'A');
+        o += len;
+    }
+    out[o] = 0;
+    return o;
+}
+
+/* Whether the s after a stem is a plural: cpus is C P U's and vcpus V C P
+   U's, but gnutls is gnu T L S and procfs proc F S. The letters the stem's
+   cut ends in have to end in an abbreviation the main volume holds, since
+   nothing else tells the plural of CPU from the S of TLS. */
+static int say_plural(delta_state *d, const char *w, size_t n,
+                      const size_t *ends)
+{
+    size_t run = n, i, k;
+    char   low[SAY_MAX + 1], up[SAY_MAX + 1];
+
+    for (i = 0; i < n; i = ends[i])
+        if (ends[i] - i != 1)
+            run = n;
+        else if (run == n)
+            run = i;
+    if (run == n || n - run < 2)
+        return 0;
+    for (k = run; k + 2 <= n; k++) {
+        for (i = k; i < n; i++) {
+            low[i - k] = w[i];
+            up[i - k]  = (char)(w[i] - 'a' + 'A');
+        }
+        low[n - k] = up[n - k] = 0;
+        if (main_says(d, low) != 0 || main_says(d, up) != 0)
+            return 1;
+    }
+    return 0;
+}
+
+static int32_t builtin_unsayable(delta_state *d, int32_t l, int32_t r)
+{
+    DeltaLang                *lang = DT_LANG(d);
+    const delta_language     *of   = delta_lang_of(d);
+    const delta_builtin_dict *b    = of ? of->builtin_dict : 0;
+    int8_t                    stream = DL_STREAM(lang);
+    char                     *w = lang->builtin_last[UD_MAIN];
+    char                      out[UD_LAST_ROOM * 4];
+    size_t                    ends[SAY_MAX + 1];
+    size_t                    n, o, last;
+
+    if (lang->builtin_off || b == 0 || b->onset.count == 0)
+        return UD_NOT_FOUND;
+    if (!sync_in_stm(d, stream, l) || !sync_in_stm(d, stream, r))
+        return UD_NO_SPINE;
+    if (!extract_string(d, stream, l, r, w, UD_LAST_ROOM))
+        return UD_NO_SPINE;
+    n = strlen(w);
+    if (say_leave(d, b, w, n))
+        return UD_NOT_FOUND;
+
+    say_cut(b, w, n, ends);
+    for (last = 0; ends[last] < n; last = ends[last])
+        ;
+    if (n > 3 && w[n - 1] == 's' && w[n - 2] != 's'
+        && !say_word(b, w + last, n - last) && !say_leave(d, b, w, n - 1)) {
+        size_t stem[SAY_MAX + 1];
+
+        say_cut(b, w, n - 1, stem);
+        if (say_plural(d, w, n - 1, stem)) {
+            o = say_write(w, n - 1, stem, out, sizeof out - 2);
+            if (o == 0)
+                return UD_NOT_FOUND;
+            memcpy(out + o, "'s", 3);
+            goto cut;
+        }
+    }
+    if (say_write(w, n, ends, out, sizeof out) == 0)
+        return UD_NOT_FOUND;
+
+cut:
+    del_two_point(d, stream, l, r);
+    OWNER_MOVED(d) = 1;
+    if (!insert_string(d, stream, r, out))
+        return UD_NO_SPINE;
+
+    lang->builtin_took[UD_MAIN] = 1;
+    return UD_OK;
+}
+
 void builtin_dict_enable(delta_state *d, int32_t on)
 {
     if (d != 0 && d->dlang != 0)
@@ -1122,6 +1502,8 @@ int32_t callUserDictLookup(delta_state *d, const void *volume,
         rc = main_possessive(d, l->value, r->value);
     if (rc == UD_NOT_FOUND && vol == UD_MAIN)
         rc = builtin_split(d, l->value, r->value);
+    if (rc == UD_NOT_FOUND && vol == UD_MAIN)
+        rc = builtin_unsayable(d, l->value, r->value);
     return rc != 0;
 }
 

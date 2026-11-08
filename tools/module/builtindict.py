@@ -22,6 +22,12 @@ lang/<tag>/dictionary holds it as text:
       normaliser writes in its place before any dictionary is asked, and a
       word with the letter in it is filed under what is written: English's
       niño as ninyo. A word written that way already keeps its own reading
+  sayable, pieces
+      if sayable is there, a word in small letters that no dictionary holds
+      and that the language could not say is cut into words, chunks it can
+      say and letters said by name; tools/module/sayable.py writes both and
+      says what they hold. The pieces are compiled under EVV_NO_PIECES's
+      absence, so a build that defines it carries the test without them
 
 Each line is read the way the engine reads a file a caller loads -- a line
 with no tab is no entry, white space round both halves goes, every white
@@ -204,6 +210,54 @@ def read_split(lang):
     return out
 
 
+def read_sayable(lang):
+    """The onsets, codas and words kept whole, or None where the language
+    cuts nothing."""
+    path = os.path.join(lang, "dictionary", "sayable")
+    if not os.path.exists(path):
+        return None
+    out = {"onset": [], "coda": [], "word": []}
+    for n, line in enumerate(open(path, encoding="utf-8"), 1):
+        f = line.split()
+        if not f or f[0].startswith("#"):
+            continue
+        if len(f) != 2 or f[0] not in out:
+            sys.exit("builtindict: %s line %d: %r" % (path, n, line.strip()))
+        out[f[0]].append(f[1].encode("ascii"))
+    return out
+
+
+def read_pieces(lang):
+    path = os.path.join(lang, "dictionary", "pieces")
+    if not os.path.exists(path):
+        return []
+    return [l.strip().encode("ascii") for l in open(path, encoding="utf-8")
+            if l.strip() and not l.startswith("#")]
+
+
+def wordset(name, words, lines):
+    """A set as the engine reads it: one block of text, each word ended by a
+    null and in byte order, and where every sixteenth word begins."""
+    words = sorted(set(words))
+    if not words:
+        return "{ 0, 0, 0 }"
+    lines.append("static const char %s_words[] =" % name)
+    offsets, at = [], 0
+    for i, w in enumerate(words):
+        if i % 16 == 0:
+            offsets.append(at)
+        at += len(w) + 1
+    for i in range(0, len(words), 8):
+        lines.append("    " + " ".join('"%s\\0"' % w.decode() for w in words[i:i + 8]))
+    lines[-1] += ";"
+    lines.append("static const uint32_t %s_index[] = {" % name)
+    for i in range(0, len(offsets), 12):
+        lines.append("    " + ", ".join(str(o) for o in offsets[i:i + 12]) + ",")
+    lines.append("};")
+    lines.append("")
+    return "{ %s_words, %s_index, %d }" % (name, name, len(words))
+
+
 def literal(b):
     """A C string literal for the bytes, octal past ASCII and a question mark
     escaped so that no pair of them reads as a trigraph."""
@@ -249,20 +303,37 @@ def write(lang):
         lines.append("    0")
         lines.append("};")
         lines.append("")
+    say = read_sayable(lang)
+    sets = ["{ 0, 0, 0 }"] * 4
+    if say:
+        sets[0] = wordset("%s_builtin_onset" % tag, say["onset"], lines)
+        sets[1] = wordset("%s_builtin_coda" % tag, say["coda"], lines)
+        sets[2] = wordset("%s_builtin_kept" % tag, say["word"], lines)
+        lines.append("#ifndef EVV_NO_PIECES")
+        sets[3] = wordset("%s_builtin_pieces" % tag, read_pieces(lang), lines)
+        lines.append("#define %s_BUILTIN_PIECES %s" % (tag.upper(), sets[3]))
+        lines.append("#else")
+        lines.append("#define %s_BUILTIN_PIECES { 0, 0, 0 }" % tag.upper())
+        lines.append("#endif")
+        lines.append("")
+        sets[3] = "%s_BUILTIN_PIECES" % tag.upper()
     lines.append("const delta_builtin_dict %s_builtin_dict = {" % tag)
     lines.append("    { %s }," % ", ".join(n for n, _c in names))
     lines.append("    { %s }," % ", ".join(str(c) for _n, c in names))
     lines.append("    %d," % (whole is not None))
     lines.append("    %s," % ("%s_builtin_whole" % tag if whole else "0"))
+    for st in sets:
+        lines.append("    %s," % st)
     lines.append("};")
     text = "\n".join(lines) + "\n"
     if os.path.exists(path) and open(path).read() == text:
         return
     with open(path, "w") as f:
         f.write(text)
-    print("%s: %s%s" % (path, ", ".join("%d %s" % (len(vols[v]), v)
-                                         for v in VOLUMES),
-                         "" if whole is None else ", split"))
+    print("%s: %s%s%s" % (path, ", ".join("%d %s" % (len(vols[v]), v)
+                                           for v in VOLUMES),
+                           "" if whole is None else ", split",
+                           "" if not say else ", sayable"))
 
 
 def main(argv):
