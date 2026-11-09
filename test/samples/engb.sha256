@@ -23,7 +23,7 @@ plain 5 2834bb3006ab7d6e b014d69009da1c09 A one-word line. And another; plus "qu
 plain 6 8bdfea83a381d6a1 bb0e45f5940686b7 Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.
 plain 7 483adf45a046c51c 0cbef8ceca1c8cc2 He said: don't! Then (parenthetically) 1/2 + 3/4 = 5/4; see p. 12.
 plain 8 7377f8a434195c98 4c1402534b45dc75 A 5,000-strong crowd raised 1,000,500 dollars, and the fund reached 25,000,000.
-plain 9 986658ecb29ddb75 a7930dfa77a7a219 Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
+plain 9 33aa1c1e94a69925 eb06577b94c53fcb Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
 plain 10 7afa240e60c15b36 345a4ca9b0e2c20b Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.
 plain 11 c33831c874c91c88 60e6f6239927d0f9 While the morning rain tapped gently against the windows, Daniel sat at his desk, comparing the results of two speech synthesizers, noting how each handled unusual names, technical expressions, compound words, and subtle changes in punctuation, when a message from his colleague arrived with a curious question about whether the latest update had improved the rhythm of longer sentences, the clarity of abbreviations, and the pronunciation of words that could function as either nouns or verbs, prompting him to reopen his test document and listen carefully to every detail.
 utf8 1 afc87b05038e5040 8764ef6ce7062db2 The café near the naïve façade serves crème brûlée.
@@ -101,7 +101,7 @@ dict 5 2834bb3006ab7d6e bbe94dc05adb4f90 A one-word line. And another; plus "quo
 dict 6 8bdfea83a381d6a1 3c38c59477cc5950 Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.
 dict 7 483adf45a046c51c 7282b089135e7017 He said: don't! Then (parenthetically) 1/2 + 3/4 = 5/4; see p. 12.
 dict 8 7377f8a434195c98 a9b2311b876a166c A 5,000-strong crowd raised 1,000,500 dollars, and the fund reached 25,000,000.
-dict 9 986658ecb29ddb75 cff82983cd84c31e Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
+dict 9 33aa1c1e94a69925 7f40ba8272619594 Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
 dict 10 7afa240e60c15b36 e3a4b7e98ea7c068 Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.
 dict 11 c33831c874c91c88 d18ffea13c0a5e28 While the morning rain tapped gently against the windows, Daniel sat at his desk, comparing the results of two speech synthesizers, noting how each handled unusual names, technical expressions, compound words, and subtle changes in punctuation, when a message from his colleague arrived with a curious question about whether the latest update had improved the rhythm of longer sentences, the clarity of abbreviations, and the pronunciation of words that could function as either nouns or verbs, prompting him to reopen his test document and listen carefully to every detail.
 second 1 83101ee490771d66 083d40f371469eb6 Hello. This is the Eloquence synthesizer speaking.
@@ -112,7 +112,7 @@ second 5 a158c0f26a6bce27 313538a0009e91d6 A one-word line. And another; plus "q
 second 6 3499ec84f76d567f fa3e8bded1cba2ca Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.
 second 7 9f69f8560ac1d0ab edfa8738f4abc6e5 He said: don't! Then (parenthetically) 1/2 + 3/4 = 5/4; see p. 12.
 second 8 c226c07056456d4c 2cc7c9b450834bd3 A 5,000-strong crowd raised 1,000,500 dollars, and the fund reached 25,000,000.
-second 9 31ae9136c8e3f30e 03cb156d70873ebc Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
+second 9 6e9cfcf264536e96 5c15d1ff9dd8957e Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
 second 10 627291548ed3eee2 a26dbb4ff4c7ecfe Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.
 second 11 95f8331324f2ced8 93f1f82e41fae054 While the morning rain tapped gently against the windows, Daniel sat at his desk, comparing the results of two speech synthesizers, noting how each handled unusual names, technical expressions, compound words, and subtle changes in punctuation, when a message from his colleague arrived with a curious question about whether the latest update had improved the rhythm of longer sentences, the clarity of abbreviations, and the pronunciation of words that could function as either nouns or verbs, prompting him to reopen his test document and listen carefully to every detail.
 ssml 1 aa1bdf3d6cf3ab7f f326c1c8e402712d <speak version="1.0" xml:lang="en-GB">Hello there.</speak>
@@ -133,6 +133,6 @@ wide 5 f28b5495e4b4487c ff9b946427b78478 A one-word line. And another; plus "quo
 wide 6 3536d9d387f5c9b8 c7500c037378f16d Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.
 wide 7 ac547aaf04c169f0 2103026393eb1ce6 He said: don't! Then (parenthetically) 1/2 + 3/4 = 5/4; see p. 12.
 wide 8 e28a5a93cd22cf98 416aef5c9c144604 A 5,000-strong crowd raised 1,000,500 dollars, and the fund reached 25,000,000.
-wide 9 eae0b91035d553ec fca1262ac04e2a79 Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
+wide 9 83fad5d0cc299645 2ad1e63d0cb33a73 Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
 wide 10 65310aa8c707aa82 a462c7816d9a5566 Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.
 wide 11 a51d8f1b2d7b34c9 28ddc124e8219dcb While the morning rain tapped gently against the windows, Daniel sat at his desk, comparing the results of two speech synthesizers, noting how each handled unusual names, technical expressions, compound words, and subtle changes in punctuation, when a message from his colleague arrived with a curious question about whether the latest update had improved the rhythm of longer sentences, the clarity of abbreviations, and the pronunciation of words that could function as either nouns or verbs, prompting him to reopen his test document and listen carefully to every detail.
