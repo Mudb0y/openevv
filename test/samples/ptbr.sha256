@@ -57,7 +57,7 @@ anno3 5 e4ef8ff13e656249 9849ab8791e748a2 Pausa `0 curta e `4 longa entre as pal
 anno3 6 f5b13ed24356486e 6f83739cccadbb7b Aspereza `vr40 e respiracao `vf60 alteradas.
 anno3 7 38e774ece19cae86 e0f65914f2e336bc Uma \`crase literal lida como texto.
 anno3 8 397339d9d594b609 975261cee34d3a1c Velocidade pelo nome `vsfast e depois `vsslow de volta.
-anno3 9 87d723d258b1bf3e ffa9da4c421d4a9c Tamanho da cabeca `vh30 depois `vh70 na mesma linha.
+anno3 9 f24af53d01c24d5b ffa9da4c421d4a9c Tamanho da cabeca `vh30 depois `vh70 na mesma linha.
 anno3 10 ea77ba23665833bd c0bcd7a79d0cf222 Genero `vg1 e `vg0 alternados.
 anno3 11 b6a9c28702a25c02 2e87e7d518634a0f Antes `ui"marca um" e depois da marca de indice.
 anno3 12 0a755057d91d569e 28973d22971b8317 Marca `aud"bip" sonora no meio da linha.
@@ -67,7 +67,7 @@ anno3 15 df01a02c3360f5ee 582b5a414283177d Erradas `vzz e `q e `v999 todas na me
 anno3 16 a38937a29297a882 7334386e3e0a52dc Duas `vs30`vv40 anotacoes sem nada entre elas.
 anno3 17 eaa544f4949f6e4d 14327295c00b8acc `ui"a"`ui"b" duas marcas sem nada entre elas.
 anno3 18 445c79a8c61f3c00 6facd56542db85d1 Sem fechar `ui"marca que nunca termina
-anno3 19 bbc8812174a522bb 44cbba59ff864e75 Juntos `v3 voz `vs70 velocidade `vv50 volume de uma vez.
+anno3 19 ba8afcccdaf0fbeb 44cbba59ff864e75 Juntos `v3 voz `vs70 velocidade `vv50 volume de uma vez.
 anno3 20 c4046e0a83f9f447 9101bf38e907b329 Tabulacao	e quebra de linha `vb40 com mudanca.
 realworld 1 502988241230c5b5 28fdb28a7307da0a Fala normal `vs50 agora muito mais devagar do que antes.
 realworld 2 78be6b68f2e93ca8 460245d5001f3e0c Volume `vv30 mais baixo, depois `vv90 mais alto de novo.
@@ -77,7 +77,7 @@ realworld 5 e4ef8ff13e656249 534f2efa4b57770c Pausa `0 curta e `4 longa entre as
 realworld 6 f5b13ed24356486e 8067dca8b30637e8 Aspereza `vr40 e respiracao `vf60 alteradas.
 realworld 7 38e774ece19cae86 c5bdf6d6d7656e80 Uma \`crase literal lida como texto.
 realworld 8 397339d9d594b609 4065c5d504254246 Velocidade pelo nome `vsfast e depois `vsslow de volta.
-realworld 9 87d723d258b1bf3e a13b5a285129fc51 Tamanho da cabeca `vh30 depois `vh70 na mesma linha.
+realworld 9 f24af53d01c24d5b a13b5a285129fc51 Tamanho da cabeca `vh30 depois `vh70 na mesma linha.
 realworld 10 ea77ba23665833bd 9d6207691b1e0e08 Genero `vg1 e `vg0 alternados.
 realworld 11 b6a9c28702a25c02 15862700c1694cb8 Antes `ui"marca um" e depois da marca de indice.
 realworld 12 0a755057d91d569e c623dcd458c8a529 Marca `aud"bip" sonora no meio da linha.
@@ -87,7 +87,7 @@ realworld 15 df01a02c3360f5ee fa3a403f6616de79 Erradas `vzz e `q e `v999 todas n
 realworld 16 11b176ed756e5d4f afdaae0581fe1eef Duas `vs30`vv40 anotacoes sem nada entre elas.
 realworld 17 eaa544f4949f6e4d 1dfa7f315ee2abab `ui"a"`ui"b" duas marcas sem nada entre elas.
 realworld 18 445c79a8c61f3c00 d4bd9969c0a7e89e Sem fechar `ui"marca que nunca termina
-realworld 19 6711a5b2934a4682 b6e232977983c64f Juntos `v3 voz `vs70 velocidade `vv50 volume de uma vez.
+realworld 19 a9d128fdefcaa37e b6e232977983c64f Juntos `v3 voz `vs70 velocidade `vv50 volume de uma vez.
 realworld 20 4d7a400438f1d3d1 b948865f3d7756b0 Tabulacao	e quebra de linha `vb40 com mudanca.
 dict 1 c0a6cf2c9d3923ba 80045850334022a6 Sao tres horas e la fora esta chovendo muito.
 dict 2 db39c4c896eaf2ea 7c6a423da454ed9e O Dr. Pereira pagou R$ 1.234,56 no dia 3 de maio de 2026 as 19h45.
