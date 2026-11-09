@@ -16722,15 +16722,21 @@ set final_compound_word
   alike
   apple
   away
+  axe
+  baby
   bach
   bacher
   back
   bag
   bait
+  bake
   ball
+  balls
   band
   bank
   base
+  bases
+  basket
   bauer
   baugh
   baum
@@ -16745,6 +16751,7 @@ set final_compound_word
   bee
   bell
   belle
+  belly
   berg
   berger
   bergh
@@ -16756,11 +16763,14 @@ set final_compound_word
   blanket
   blast
   bleed
+  blende
   block
   blood
+  blow
   board
   boat
   body
+  bolt
   bomb
   bone
   book
@@ -16773,13 +16783,16 @@ set final_compound_word
   bourne
   bow
   bowl
+  box
   boy
   brain
+  brake
   branch
   bread
   break
   breast
   bred
+  breed
   briar
   bridge
   brier
@@ -16793,9 +16806,11 @@ set final_compound_word
   broom
   brother
   brough
+  brow
   brush
   buckle
   buckling
+  bud
   bug
   burg
   burger
@@ -16810,13 +16825,21 @@ set final_compound_word
   cap
   card
   care
+  cart
   case
   cast
+  caster
+  casting
   castle
   cat
+  catcher
+  cellar
   chair
+  chamber
+  champ
   check
   child
+  chip
   chop
   chuck
   church
@@ -16826,8 +16849,10 @@ set final_compound_word
   clerk
   cliff
   cliffe
+  climax
   clock
   cloth
+  clothes
   cloud
   club
   coach
@@ -16838,6 +16863,7 @@ set final_compound_word
   comb
   combe
   comer
+  conductor
   corn
   country
   court
@@ -16860,16 +16886,19 @@ set final_compound_word
   deck
   deer
   devil
+  disk
   dog
   doll
   door
   dorf
   down
+  dragon
   drake
   dream
   drift
   drill
   drop
+  drug
   drum
   eye
   face
@@ -16877,11 +16906,15 @@ set final_compound_word
   faire
   fall
   fallen
+  family
   fare
   farm
+  fast
   father
+  feed
   feet
   feld
+  fellow
   felt
   field
   fight
@@ -16890,6 +16923,8 @@ set final_compound_word
   fire
   fish
   flake
+  flash
+  flight
   flow
   flower
   flown
@@ -16902,13 +16937,16 @@ set final_compound_word
   fore
   fork
   form
+  forward
   fowl
+  frame
   free
   friend
   front
   fruit
   game
   garden
+  gather
   gear
   girl
   give
@@ -16919,18 +16957,21 @@ set final_compound_word
   good
   gown
   gram
+  graphics
   grass
   green
   groom
   ground
   group
   grove
+  grown
   guard
   gun
   hagen
   hair
   hammer
   hand
+  handed
   handle
   hardt
   hart
@@ -16939,6 +16980,7 @@ set final_compound_word
   hauser
   haven
   head
+  heads
   heap
   heart
   heath
@@ -16965,6 +17007,7 @@ set final_compound_word
   house
   how
   hug
+  hunter
   iron
   jack
   jacket
@@ -16979,22 +17022,30 @@ set final_compound_word
   knife
   lake
   land
+  lands
+  language
   lark
+  latch
   laub
   lawn
   lead
   leaf
+  leap
+  leg
   lid
   lieb
   life
   lift
   light
+  like
   line
   liter
   load
   lock
+  loft
   long
   lord
+  lust
   lynn
   macher
   macro
@@ -17003,6 +17054,7 @@ set final_compound_word
   make
   maker
   man
+  map
   mark
   mason
   mast
@@ -17041,19 +17093,29 @@ set final_compound_word
   nut
   off
   out
+  pad
   pain
+  paint
   pan
   paper
   parent
   park
+  part
+  parts
+  paw
   pea
+  peace
   peck
   pence
+  penny
   people
   person
   phone
+  phosphate
+  phrase
   pick
   piece
+  pilot
   pin
   pipe
   pit
@@ -17061,10 +17123,14 @@ set final_compound_word
   plane
   plant
   plate
+  pleasure
+  plug
+  plus
   podge
   point
   pointe
   pole
+  poll
   pool
   pop
   port
@@ -17074,6 +17140,7 @@ set final_compound_word
   pox
   press
   print
+  prize
   proof
   puff
   punk
@@ -17096,6 +17163,8 @@ set final_compound_word
   sack
   safe
   sail
+  sap
+  sauce
   saw
   say
   scape
@@ -17108,14 +17177,20 @@ set final_compound_word
   script
   seed
   seer
+  self
+  sense
+  setter
   shaft
+  shank
   share
+  shave
   sheet
   shell
   shield
   shift
   shine
   shirt
+  shit
   shod
   shoe
   shoot
@@ -17123,11 +17198,14 @@ set final_compound_word
   shore
   shot
   show
+  shrub
   sick
   side
+  sight
   sill
   sister
   skin
+  skirt
   skull
   slap
   slid
@@ -17135,8 +17213,11 @@ set final_compound_word
   smith
   snake
   snap
+  snipe
   soap
   soever
+  soft
+  soil
   song
   south
   space
@@ -17149,8 +17230,10 @@ set final_compound_word
   spoon
   spot
   spout
+  spray
   spread
   spring
+  spun
   spur
   square
   stack
@@ -17168,6 +17251,7 @@ set final_compound_word
   stein
   step
   stick
+  stitch
   stock
   stone
   stool
@@ -17178,17 +17262,24 @@ set final_compound_word
   strasse
   stream
   string
+  stroke
   struck
+  structure
   stuff
+  sucker
   suit
+  surface
+  swain
   tack
   tail
   take
   taken
   tale
   talk
+  tape
   teenth
   teeth
+  telling
   thing
   thirsty
   thorn
@@ -17198,10 +17289,12 @@ set final_compound_word
   thrift
   throat
   throb
+  through
   thrower
   tide
   timber
   time
+  tint
   toe
   tooth
   top
@@ -17215,13 +17308,16 @@ set final_compound_word
   trap
   tree
   truck
+  tube
   type
   vale
   valle
   valley
+  vane
   view
   ville
   wagon
+  waiter
   wald
   walk
   wall
@@ -17230,6 +17326,7 @@ set final_compound_word
   watch
   water
   watt
+  wave
   wax
   way
   weal
@@ -17238,6 +17335,7 @@ set final_compound_word
   weather
   web
   weed
+  week
   weight
   well
   whack
@@ -17258,6 +17356,7 @@ set final_compound_word
   wire
   wise
   wit
+  wives
   wold
   wolde
   wolf
@@ -17267,13 +17366,16 @@ set final_compound_word
   woogie
   word
   work
+  worker
   world
   worm
+  worn
   wort
   worth
   worthy
   wright
   write
+  wurst
   yard
   year
   young
@@ -17281,6 +17383,7 @@ set final_compound_word
 set initial_compound_word
   above
   afore
+  afro
   after
   air
   alder
@@ -17289,6 +17392,7 @@ set initial_compound_word
   apple
   baby
   back
+  bally
   bank
   battle
   belly
@@ -17302,25 +17406,37 @@ set initial_compound_word
   bow
   brain
   break
+  breast
   brick
   bridge
   broad
   buck
   bull
+  business
   butter
   candle
+  candy
   care
+  carry
+  cheese
   child
   chimney
+  china
+  choke
+  cloud
   cock
   cockle
   cold
   copy
   corn
   corner
+  corral
+  counter
+  country
   cow
   cross
   crowd
+  cumber
   cyber
   dark
   data
@@ -17343,29 +17459,40 @@ set initial_compound_word
   europe
   every
   eye
+  feather
+  feed
+  fiber
   file
   finger
   fire
+  five
   flag
+  flap
   flash
   flint
   fly
   foot
   forever
+  fortune
   fox
+  frame
   free
   friend
   front
   frost
   gate
   gender
+  gentle
+  geode
   gerry
   glen
   globe
   god
   gold
   good
+  goose
   grand
+  grease
   green
   ground
   gun
@@ -17376,22 +17503,30 @@ set initial_compound_word
   hard
   hare
   head
+  health
   heart
   heather
   hedge
+  herein
   high
+  holly
+  holy
   home
   honey
   horse
   hot
   house
   ice
+  idle
   inner
   iron
+  jelly
   key
   kilo
+  knee
   lady
   land
+  laser
   letter
   life
   light
@@ -17400,14 +17535,17 @@ set initial_compound_word
   long
   low
   make
+  meadow
   meat
   mega
   middle
   milli
   mirror
   money
+  monkey
   moon
   moor
+  mouse
   musk
   nail
   needle
@@ -17416,26 +17554,37 @@ set initial_compound_word
   nose
   note
   orange
+  other
   outer
+  over
   paper
+  penny
   pig
+  pike
   pillow
   pin
+  plasma
   play
+  pork
   quarter
   quick
   rain
+  rattle
   rein
   ridge
   river
   road
+  root
   rose
   rosen
   round
+  saddle
+  sales
   saw
   school
   screw
   sea
+  shadow
   share
   ship
   shirt
@@ -17444,15 +17593,20 @@ set initial_compound_word
   show
   side
   silver
+  single
   sky
   slip
   smart
   smoke
+  snake
   snow
   some
   sound
   sour
+  south
   space
+  spider
+  spring
   stand
   star
   steam
@@ -17469,14 +17623,23 @@ set initial_compound_word
   tail
   take
   task
+  their
+  thence
   thread
+  through
   thunder
+  tide
   time
   tooth
   top
+  track
+  tumble
   turbo
   turn
   type
+  ultra
+  under
+  vain
   vander
   view
   voice
@@ -17491,6 +17654,7 @@ set initial_compound_word
   whip
   white
   whole
+  whore
   willow
   wind
   window
@@ -17539,6 +17703,7 @@ set not_compound
   bankruptcy
   barometer
   barrack
+  beauchamp
   beefish
   bequeathing
   berthing
@@ -17621,11 +17786,14 @@ set not_compound
   cornucopia
   cosgrove
   cossack
+  counterfeit
   courbache
   cowardice
   cowrie
+  cresap
   crinoline
   crispin
+  criticaster
   cromwell
   crystalline
   cuneiform
@@ -17704,6 +17872,8 @@ set not_compound
   goddard
   godiva
   goldenseal
+  goldfede
+  goldinge
   goldoni
   graffish
   grandesque
@@ -17720,8 +17890,10 @@ set not_compound
   handsome
   harrogate
   havilland
+  healthamerica
   hexameter
   hiccup
+  hillike
   hillock
   holiday
   holland
@@ -17759,8 +17931,10 @@ set not_compound
   kimball
   kissack
   kissick
+  lancaster
   lanyard
   larboard
+  lassetter
   legitimate
   lightning
   lisburn
@@ -17799,6 +17973,7 @@ set not_compound
   misinform
   mistake
   mistaken
+  mondragon
   mooneyhan
   mosgrove
   mouthing
@@ -17813,12 +17988,14 @@ set not_compound
   oafish
   outfish
   overfish
+  overture
   pallid
   panache
   parameter
   partake
   pastime
   pauline
+  pennebake
   pentameter
   penultimate
   perform
@@ -17857,6 +18034,7 @@ set not_compound
   purport
   pursuit
   quebeck
+  quelpart
   racketeering
   raffish
   recline
@@ -17882,6 +18060,7 @@ set not_compound
   roundelay
   ruffly
   russaw
+  sallust
   sandblasted
   sawtelle
   sawyer
@@ -17893,6 +18072,7 @@ set not_compound
   sealant
   season
   seasonal
+  seersucker
   seething
   selfish
   selfly
@@ -17927,6 +18107,7 @@ set not_compound
   starboard
   starken
   starvation
+  stedfast
   steinacher
   steinard
   steinber
@@ -17942,7 +18123,9 @@ set not_compound
   stiffly
   stockade
   stolid
+  stratocaster
   stubborn
+  studebake
   subside
   succubus
   suffolk
@@ -17976,13 +18159,16 @@ set not_compound
   transform
   transparent
   transport
+  traweek
   tricycle
   trombone
   tuppence
   ultimate
+  underling
   uniform
   unselfish
   ursuline
+  vainglorious
   vanbelle
   vancleaf
   vaseline
