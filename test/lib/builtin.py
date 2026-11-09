@@ -36,13 +36,13 @@ winning over the cut.
 A reading that ends in a letter said by name, nginx's engine X among them,
 is held to keeping the dot of a file name after it, nginx.conf as engine X
 dot conf, and to reading a sentence's full stop and a comma after it as the
-same reading written out does, and Ms. Bennet as M S. Bennet is, the stop an
-initial's and not a sentence's end.
+same reading written out does, a stop with a space after it included.
 
-A main entry written with its full stop, as Mr. and Mrs. are in both
+A main entry written with its full stop, as Mr., Mrs. and Ms. are in both
 Englishes, is held to taking the stop that follows the word with a space
 after it, so that Mr. Darcy reads as a caller's entry for Mr does with the
-stop not there at all, and to leaving a stop that ends the text alone.
+stop not there at all, and to leaving a stop that ends the text alone; and
+ms, whose small letters would answer Ms, is held to milliseconds.
 
 What a word is read as is asked of eciGeneratePhonemes, which says it plainly;
 one check holds the samples as well, so that what the synthesiser is handed
@@ -324,9 +324,9 @@ def dot_checks(dll):
           b"`[.1dat]" in read(dll, b"zorbq.conf", entries=mine))
     # Only a file name's dot, with a letter or digit after it: before a
     # space the rules still tell an initial from a sentence's end.
-    check("Ms. Bennet is not cut in two",
-          read(dll, b"Ms. Bennet left.")
-          == read(dll, b"M S. Bennet left.", builtin=0))
+    check("and a stop with a space after it is left to the rules",
+          read(dll, b"We run nginx. Bennet left.")
+          == read(dll, b"We run engine X. Bennet left."))
 
 
 def title_checks(dll, have):
@@ -334,7 +334,8 @@ def title_checks(dll, have):
     # caller's entry for the word and the text without the stop.
     for text, word, says in (
             (b"Mr. Darcy bowed.", b"Mr", b"mister"),
-            (b"I saw Mr. and Mrs. Jones.", b"Mrs", b"`[.1mI.0sxz]")):
+            (b"I saw Mr. and Mrs. Jones.", b"Mrs", b"`[.1mI.0sxz]"),
+            (b"Mr. Darcy met Ms. Bennet.", b"Ms", b"`[.1mIz]")):
         mine = [(MAIN, b"Mr", b"mister"), (MAIN, word, says)]
         check("%s reads without a sentence's end" % text.decode(),
               read(dll, text)
@@ -349,6 +350,9 @@ def title_checks(dll, have):
           read(dll, b"Mr Darcy bowed.")
           == read(dll, b"Mr Darcy bowed.", builtin=0,
                   entries=[(MAIN, b"Mr", b"mister")]))
+    check("and ms is still milliseconds",
+          read(dll, b"It took 5 ms.")
+          == read(dll, b"It took 5 milliseconds.", builtin=0))
     if BRITISH in have:
         check("British English reads its titles as well",
               read(dll, b"Mr. Darcy bowed.", lang=BRITISH)
