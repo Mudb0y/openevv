@@ -16726,6 +16726,7 @@ set final_compound_word
   bacher
   back
   bag
+  bait
   ball
   band
   bank
@@ -16738,6 +16739,7 @@ set final_compound_word
   bean
   bear
   beard
+  beast
   beat
   beck
   bee
@@ -16747,16 +16749,19 @@ set final_compound_word
   berger
   bergh
   berry
+  bike
   bill
   bird
   blade
   blanket
+  blast
   bleed
   block
   blood
   board
   boat
   body
+  bomb
   bone
   book
   boot
@@ -16769,6 +16774,7 @@ set final_compound_word
   bow
   bowl
   boy
+  brain
   branch
   bread
   break
@@ -16815,12 +16821,14 @@ set final_compound_word
   chuck
   church
   clad
+  class
   claw
   clerk
   cliff
   cliffe
   clock
   cloth
+  cloud
   club
   coach
   coal
@@ -16882,6 +16890,7 @@ set final_compound_word
   fire
   fish
   flake
+  flow
   flower
   flown
   fly
@@ -16898,10 +16907,12 @@ set final_compound_word
   friend
   front
   fruit
+  game
   garden
   gear
   girl
   give
+  glass
   glen
   god
   goer
@@ -16944,9 +16955,12 @@ set final_compound_word
   hollow
   holtz
   hook
+  hopper
   horn
   horne
+  horse
   horst
+  host
   hound
   house
   how
@@ -17054,6 +17068,7 @@ set final_compound_word
   pool
   pop
   port
+  post
   pot
   power
   pox
@@ -17061,6 +17076,7 @@ set final_compound_word
   print
   proof
   puff
+  punk
   quake
   quarter
   rack
@@ -17089,9 +17105,11 @@ set final_compound_word
   scotch
   scrape
   screen
+  script
   seed
   seer
   shaft
+  share
   sheet
   shell
   shield
@@ -17168,6 +17186,7 @@ set final_compound_word
   take
   taken
   tale
+  talk
   teenth
   teeth
   thing
@@ -17250,6 +17269,7 @@ set final_compound_word
   work
   world
   worm
+  wort
   worth
   worthy
   wright
@@ -17264,6 +17284,7 @@ set initial_compound_word
   after
   air
   alder
+  alley
   any
   apple
   baby
@@ -17294,20 +17315,25 @@ set initial_compound_word
   cock
   cockle
   cold
+  copy
   corn
   corner
   cow
   cross
+  crowd
   cyber
+  dark
   data
   day
   dead
+  death
   demi
   dog
   door
   double
   down
   drake
+  dream
   ear
   earth
   egg
@@ -17317,6 +17343,7 @@ set initial_compound_word
   europe
   every
   eye
+  file
   finger
   fire
   flag
@@ -17327,13 +17354,16 @@ set initial_compound_word
   forever
   fox
   free
+  friend
   front
   frost
   gate
+  gender
   gerry
   glen
   globe
   god
+  gold
   good
   grand
   green
@@ -17346,6 +17376,7 @@ set initial_compound_word
   hard
   hare
   head
+  heart
   heather
   hedge
   high
@@ -17373,16 +17404,20 @@ set initial_compound_word
   mega
   middle
   milli
+  mirror
   money
+  moon
   moor
   musk
   nail
+  needle
   news
   night
   nose
   note
   orange
   outer
+  paper
   pig
   pillow
   pin
@@ -17411,9 +17446,11 @@ set initial_compound_word
   silver
   sky
   slip
+  smart
   smoke
   snow
   some
+  sound
   sour
   space
   stand
@@ -17422,7 +17459,9 @@ set initial_compound_word
   stein
   step
   stock
+  stone
   stop
+  storm
   story
   strong
   sugar
@@ -17431,6 +17470,7 @@ set initial_compound_word
   take
   task
   thread
+  thunder
   time
   tooth
   top
@@ -17460,6 +17500,7 @@ set initial_compound_word
   wood
   word
   work
+  world
   worm
   yard
   yellow
@@ -17505,6 +17546,8 @@ set not_compound
   bestower
   betrothing
   birthing
+  blasingame
+  blassingame
   bluffly
   bootham
   boothwyn
@@ -17563,6 +17606,10 @@ set not_compound
   compress
   conform
   confront
+  conscript
+  conscripted
+  conscripting
+  conscripts
   constrain
   consummate
   conundrum
@@ -17628,6 +17675,7 @@ set not_compound
   eveline
   farthing
   fifish
+  fillingame
   flagella
   flagellate
   flagellation
@@ -17655,6 +17703,8 @@ set not_compound
   glennon
   goddard
   godiva
+  goldenseal
+  goldoni
   graffish
   grandesque
   grandiloquence
@@ -17698,6 +17748,7 @@ set not_compound
   inverkeithing
   ironical
   ironically
+  isinglass
   jackeline
   jackqueline
   jacqueline
@@ -17748,6 +17799,7 @@ set not_compound
   misinform
   mistake
   mistaken
+  mooneyhan
   mosgrove
   mouthing
   mulholland
@@ -17830,6 +17882,7 @@ set not_compound
   roundelay
   ruffly
   russaw
+  sandblasted
   sawtelle
   sawyer
   saxophone
@@ -17851,6 +17904,7 @@ set not_compound
   showman
   sidereal
   slipperette
+  smartaleck
   smoothing
   sniffish
   sniffly
@@ -17909,6 +17963,7 @@ set not_compound
   thermometer
   threshold
   thrombus
+  thunderous
   tiffish
   toffish
   topeka
@@ -17945,6 +18000,7 @@ set not_compound
   windsor
   wingate
   wolfish
+  woodchopper
   workaholic
   worthing
   wreathing
