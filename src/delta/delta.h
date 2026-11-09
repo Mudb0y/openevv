@@ -1319,6 +1319,8 @@ void *vins_sync(delta_state *d, uint8_t f, int32_t l, int32_t r);
    registers against one of its lookup sets. */
 int setdlookup(delta_state *d, int32_t from, int32_t to, void *set,
                int32_t arg);
+int set_has_text(delta_state *d, int32_t set, const char *text);
+int act_has_text(delta_state *d, int32_t n, const char *text);
 int vproject(delta_state *d, int32_t t, int32_t left, int32_t right, uint8_t f);
 
 /* The block the runtime reports to. It belongs to whoever embedded the

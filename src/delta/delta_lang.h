@@ -210,6 +210,17 @@ typedef struct delta_builtin_dict {
     delta_wordset           coda;
     delta_wordset           kept;
     delta_wordset           pieces;
+    /* The lookup sets that hold the language's compound halves, by number:
+       first halves, second halves and the words never divided. A word with
+       a capital inside it whose two parts these recognise is left whole for
+       the rules. Nought for a language that names none. With them, the
+       second halves the rules say weak, ending in a null, before which a
+       capital is still a cut, and the dictionary of prefixes the rules
+       stress the root after, by number, or less than nought for none: a
+       first part that is one is cut as well. */
+    int32_t                 compound[3];
+    const char *const      *weak;
+    int32_t                 prefixes;
 } delta_builtin_dict;
 
 /* Every language linked into this program, ending with a null, and the

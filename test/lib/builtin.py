@@ -16,7 +16,12 @@ The dictionary also splits a word with a capital inside it that nothing
 holds into the words it is made of, NixOS as Nix OS. That is held to reading
 exactly as the parts written apart do, with a name beginning such as Mc, a
 plural of capitals and a word a root volume holds left whole, and British
-English, which carries only two titles, splitting all the same.
+English, which carries only two titles, splitting all the same. A compound
+whose halves the compound lists hold, PowerShell, is held to being left
+whole for the rules, and to being cut all the same before a weak half,
+after a prefix the rules stress the root after, where the lists divide it
+elsewhere too, where a part is too short and where a dictionary holds a
+part.
 
 A main entry is a whole word, and one written in phones used to leave a
 possessive's ending outside its brackets to be spelled out. The possessive
@@ -268,19 +273,44 @@ def split_checks(dll, have):
         check("%s is left whole" % word.decode(),
               read(dll, word) == read(dll, word, builtin=0))
     check("a word a root volume holds is left for the root lookup",
-          read(dll, b"TeamTalk") == read(dll, b"teamtalk")
-          and read(dll, b"TeamTalk") != read(dll, b"Team Talk"))
+          read(dll, b"FedEx") == read(dll, b"fedex")
+          and read(dll, b"FedEx") != read(dll, b"Fed Ex"))
     mine = [(ROOT, b"zorbfoo", b"door")]
     check("and so is one the caller's root volume holds",
           read(dll, b"ZorbFoo", entries=mine)
           == read(dll, b"zorbfoo", entries=mine)
           and read(dll, b"ZorbFoo") == read(dll, b"Zorb Foo"))
+    for word in (b"PowerShell", b"PowerShells", b"PowerShell's"):
+        check("%s, whose halves the compound lists hold, is left whole for "
+              "the rules" % word.decode(),
+              read(dll, word) == read(dll, word, builtin=0)
+              and read(dll, word) != read(dll, word[:5] + b" " + word[5:]))
+    for word, parts, why in (
+            (b"SpiderMan", b"Spider Man", "before a weak half"),
+            (b"BioWare", b"Bio Ware", "after a prefix the rules stress the "
+                                      "root after"),
+            (b"DeathKnight", b"Death Knight", "where the lists divide it "
+                                              "elsewhere too"),
+            (b"toString", b"to String", "where a part is shorter than any "
+                                        "half")):
+        check("but %s is cut %s" % (word.decode(), why),
+              read(dll, word) == read(dll, parts))
+    mine = [(ROOT, b"zorb", b"door")]
+    check("and so is one with a part a dictionary holds",
+          read(dll, b"SoundZorb", entries=mine)
+          == read(dll, b"Sound Zorb", entries=mine)
+          and read(dll, b"SoundZorb") == read(dll, b"SoundZorb", builtin=0))
     if BRITISH in have:
         check("British English, which carries no entries, splits as well",
               read(dll, b"NixOS", lang=BRITISH)
               == read(dll, b"Nix OS", lang=BRITISH)
               and read(dll, b"NixOS", lang=BRITISH)
               != read(dll, b"NixOS", lang=BRITISH, builtin=0))
+        check("and leaves a compound whole as well",
+              read(dll, b"PowerShell", lang=BRITISH)
+              == read(dll, b"PowerShell", lang=BRITISH, builtin=0)
+              and read(dll, b"PowerShell", lang=BRITISH)
+              != read(dll, b"Power Shell", lang=BRITISH))
 
 
 def cut_checks(dll, have):

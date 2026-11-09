@@ -22,6 +22,15 @@ lang/<tag>/dictionary holds it as text:
       normaliser writes in its place before any dictionary is asked, and a
       word with the letter in it is filed under what is written: English's
       niño as ninyo. A word written that way already keeps its own reading
+  compound
+      if it is there, it names the lookup sets that hold the language's
+      compound halves -- first, last and never, each with the name the
+      language's .sets file gives it -- and a word with a capital inside it
+      whose two parts they recognise is left whole for the rules rather than
+      split: SoundCloud is said as one word stressed as a compound. A line
+      weak and words names second halves the rules say weak, before which a
+      capital is still a cut, and a line prefixes and a dictionary the
+      prefixes the rules stress the root after, which cut a word too
   sayable, pieces
       if sayable is there, a word in small letters that no dictionary holds
       and that the language could not say is cut into words, chunks it can
@@ -243,6 +252,45 @@ def read_pieces(lang):
             if l.strip() and not l.startswith("#")]
 
 
+COMPOUND = ("first", "last", "never")
+
+
+def read_compound(lang):
+    """The numbers of the sets dictionary/compound names, first halves,
+    second halves and words never divided, and the second halves it says
+    are weak; or None where it is not there."""
+    path = os.path.join(lang, "dictionary", "compound")
+    if not os.path.exists(path):
+        return None
+    tag = os.path.basename(os.path.normpath(lang))
+    sets, dicts = {}, {}
+    for line in open(os.path.join(lang, tag + ".sets"), encoding="utf-8"):
+        f = line.split()
+        if len(f) >= 4 and f[:2] == ["at", "set"] and f[3].endswith("_setentries"):
+            sets[f[3][:-len("_setentries")]] = int(f[2])
+        if len(f) >= 4 and f[:2] == ["at", "action"] and f[3].endswith("_actentries"):
+            dicts[f[3][:-len("_actentries")]] = int(f[2])
+    named, weak, prefixes = {}, [], -1
+    for n, line in enumerate(open(path, encoding="utf-8"), 1):
+        f = line.split()
+        if not f or f[0].startswith("#"):
+            continue
+        if f[0] == "weak" and len(f) > 1:
+            weak += [w.encode("ascii") for w in f[1:]]
+            continue
+        if f[0] == "prefixes" and len(f) == 2 and f[1] in dicts:
+            prefixes = dicts[f[1]]
+            continue
+        if len(f) != 2 or f[0] not in COMPOUND or f[1] not in sets:
+            sys.exit("builtindict: %s line %d is not first, last or never "
+                     "and a set %s.sets names, weak and words, or prefixes "
+                     "and a dictionary it names" % (path, n, tag))
+        named[f[0]] = sets[f[1]]
+    if set(named) != set(COMPOUND):
+        sys.exit("builtindict: %s names %s" % (path, ", ".join(sorted(named))))
+    return [named[k] for k in COMPOUND], weak, prefixes
+
+
 def wordset(name, words, lines):
     """A set as the engine reads it: one block of text, each word ended by a
     null and in byte order, and where every sixteenth word begins."""
@@ -311,6 +359,14 @@ def write(lang):
         lines.append("    0")
         lines.append("};")
         lines.append("")
+    compound = read_compound(lang)
+    if compound and compound[1]:
+        lines.append("static const char *const %s_builtin_weak[] = {" % tag)
+        for w in compound[1]:
+            lines.append("    %s," % literal(w))
+        lines.append("    0")
+        lines.append("};")
+        lines.append("")
     say = read_sayable(lang)
     sets = ["{ 0, 0, 0 }"] * 4
     if say:
@@ -332,6 +388,10 @@ def write(lang):
     lines.append("    %s," % ("%s_builtin_whole" % tag if whole else "0"))
     for st in sets:
         lines.append("    %s," % st)
+    if compound:
+        lines.append("    { %s }," % ", ".join(str(c) for c in compound[0]))
+        lines.append("    %s," % ("%s_builtin_weak" % tag if compound[1] else "0"))
+        lines.append("    %d," % compound[2])
     lines.append("};")
     text = "\n".join(lines) + "\n"
     if os.path.exists(path) and open(path).read() == text:

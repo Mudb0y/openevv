@@ -1080,6 +1080,119 @@ static int split_held(delta_state *d, const delta_builtin_dict *b,
     return 0;
 }
 
+/* Whether the compound lists recognise a division of a word in small
+   letters before its letter at: the part before it as a first half, or the
+   part from it, or that part less a plural s, as a second. */
+static int split_divides(delta_state *d, const delta_builtin_dict *b,
+                         char *low, size_t at, size_t end)
+{
+    char c = low[at];
+    int  yes;
+
+    if (set_has_text(d, b->compound[1], low + at))
+        return 1;
+    if (low[end - 1] == 's' && end - at > 3) {
+        low[end - 1] = 0;
+        yes = set_has_text(d, b->compound[1], low + at);
+        low[end - 1] = 's';
+        if (yes)
+            return 1;
+    }
+    low[at] = 0;
+    yes = set_has_text(d, b->compound[0], low);
+    low[at] = c;
+    return yes;
+}
+
+/* Whether a dictionary has a word for one part, in small letters, as it is
+   or less a plural s. The rules read a compound's halves by their letters
+   alone, so a part the dictionary says for them -- leather, garage,
+   research -- would lose that inside one. */
+static int split_part_held(delta_state *d, const delta_builtin_dict *b,
+                           char *part, size_t n)
+{
+    int held;
+
+    if (main_says(d, part) != 0 || split_rooted(d, b, part))
+        return 1;
+    if (n < 4 || part[n - 1] != 's')
+        return 0;
+    part[n - 1] = 0;
+    held = main_says(d, part) != 0 || split_rooted(d, b, part);
+    part[n - 1] = 's';
+    return held;
+}
+
+/* A word of two parts, each a capital or small letter and then small
+   letters, is a compound written with a capital at the join when the
+   language's compound lists recognise it there -- SoundCloud, PowerShell,
+   WordPress -- and is left whole for the rules, which divide it at the
+   capital and stress it as one word, as they do the same word in small
+   letters. One part found in its list is enough, as it is for the rules. It
+   is cut as before where the rules might divide it elsewhere: where a list
+   recognises another division too, which made DeathKnight deathk night;
+   where a part is shorter than any half the lists hold, which made toString
+   one word said tah-string; where the rules never divide the word; where
+   the second part is one the language names as said weak at the end of a
+   compound, so that SpiderMan keeps its man; where a dictionary says
+   either part; and where the first part is a prefix the rules stress the
+   root after, which made BioWare bio-WARE. A plural or possessive ending is
+   looked through. */
+static int split_compound(delta_state *d, const delta_builtin_dict *b,
+                          const char *w)
+{
+    char   low[UD_LAST_ROOM];
+    size_t n = strlen(w), end = n, at = 0, i;
+    const char *const *p;
+
+    if (b->compound[0] == 0 || n >= sizeof low)
+        return 0;
+    if (n > 2 && w[n - 2] == '\'' && w[n - 1] == 's')
+        end = n - 2;
+    for (i = 0; i < end; i++) {
+        unsigned char c = (unsigned char)w[i];
+
+        if (split_upper(c)) {
+            if (i > 0 && at != 0)
+                return 0;
+            if (i > 0)
+                at = i;
+            low[i] = (char)(c + 0x20);
+        } else if (split_lower(c))
+            low[i] = (char)c;
+        else
+            return 0;
+    }
+    low[end] = 0;
+    if (at < 3 || end - at < 3)
+        return 0;
+
+    for (p = b->weak; p != 0 && *p != 0; p++)
+        if (strcmp(low + at, *p) == 0
+            || (strncmp(low + at, *p, end - at - 1) == 0
+                && strlen(*p) == end - at - 1 && low[end - 1] == 's'))
+            return 0;
+    if (set_has_text(d, b->compound[2], low))
+        return 0;
+    if (low[end - 1] == 's') {
+        low[end - 1] = 0;
+        i = set_has_text(d, b->compound[2], low);
+        low[end - 1] = 's';
+        if (i)
+            return 0;
+    }
+    if (!split_divides(d, b, low, at, end))
+        return 0;
+    for (i = 3; i + 3 <= end; i++)
+        if (i != at && split_divides(d, b, low, i, end))
+            return 0;
+    if (split_part_held(d, b, low + at, end - at))
+        return 0;
+    low[at] = 0;
+    return !split_part_held(d, b, low, at)
+           && !act_has_text(d, b->prefixes, low);
+}
+
 static int32_t builtin_split(delta_state *d, int32_t l, int32_t r)
 {
     DeltaLang                *lang = DT_LANG(d);
@@ -1147,7 +1260,7 @@ static int32_t builtin_split(delta_state *d, int32_t l, int32_t r)
         out[k++] = w[i];
     }
     out[k] = 0;
-    if (cuts == 0 || i < n || split_held(d, b, w))
+    if (cuts == 0 || i < n || split_held(d, b, w) || split_compound(d, b, w))
         return UD_NOT_FOUND;
 
 cut:

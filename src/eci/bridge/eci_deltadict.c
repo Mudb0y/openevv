@@ -193,6 +193,64 @@ int setdlookup(delta_state *d, int32_t from, int32_t to, void *set,
     return bs(E_STORE(set), E_WIDTH(set) * E_SETN(set), buf);
 }
 
+/* A word given as text in the codes a statement's first field names its
+   letters by, the way insert_string puts one into the spine; a letter it has
+   no name for, or a word too long, answers no. */
+static int text_codes(uint8_t stmt, const char *text, uint8_t *buf)
+{
+    const delta_fielddesc *fd = vstmtbl[stmt].fields;
+    const char *const     *names = (const char *const *)fd->values;
+    size_t                 n;
+
+    if (fd->kind != -1)
+        return 0;
+    for (n = 0; text[n] != 0; n++) {
+        int16_t j;
+
+        if (n >= BUF_ROOM)
+            return 0;
+        for (j = 0; j < fd->nvalues; j++)
+            if (names[j][0] == text[n] && names[j][1] == 0)
+                break;
+        if (j >= fd->nvalues)
+            return 0;
+        buf[n] = (uint8_t)j;
+    }
+    buf[n] = 0;
+    return 1;
+}
+
+/* Is a word given as text one of a set's entries? */
+int set_has_text(delta_state *d, int32_t set, const char *text)
+{
+    const uint8_t *desc;
+    uint8_t        buf[BUF_BYTES];
+
+    if (set <= 0 || set >= d->nsets)
+        return 0;
+    desc = EVV_AT(uint8_t *, d->sets) + set * 0x24;
+    if (E_WIDTH(desc) != 1 || !text_codes(E_STMT(desc), text, buf))
+        return 0;
+    return bs(E_STORE(desc), E_WIDTH(desc) * E_SETN(desc), buf);
+}
+
+/* Is it one of a dictionary's words? */
+int act_has_text(delta_state *d, int32_t n, const char *text)
+{
+    const uint8_t *entry;
+    const uint8_t *value;
+    uint8_t        buf[BUF_BYTES];
+
+    if (n < 0 || n >= d->nactions)
+        return 0;
+    entry = EVV_AT(uint8_t *, d->act_table) + n * 0x28;
+    if (!text_codes(E_STMT(entry), text, buf))
+        return 0;
+    return bs2((const int16_t *)E_STORE(entry),
+               E_STORE(entry) + E_ACTN(entry) * 2, E_ACTN(entry), buf,
+               &value);
+}
+
 /* And what does the dictionary say about it? Nought for not found. */
 const uint8_t *actdlookup(delta_state *d, int32_t l, int32_t r,
                           const void *entry)

@@ -1,0 +1,20 @@
+# The lookup sets that hold the compound halves, by the names the language's
+# .sets file gives them. A word with a capital inside it whose two parts
+# these recognise is a compound written with a capital at the join, and is
+# left whole for the rules rather than read as two words: SoundCloud is said
+# as one word stressed as a compound, as soundcloud is.
+#
+# The rules say man and men weak at the end of a compound, as fireman and
+# postman are said, but a name that writes Man with a capital means the
+# word: SpiderMan, AntMan. A capital before a weak half is still a cut.
+#
+# After a prefix in nonlex_prefixes the rules stress the root, as in
+# photographic, but a name that writes the prefix as its own word means it
+# to be stressed: BioWare, PhotoScape. A capital after one is still a cut.
+# tools/module/builtindict.py reads it.
+
+first initial_compound_word
+last final_compound_word
+never not_compound
+weak man men
+prefixes nonlex_prefixes
