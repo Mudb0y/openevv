@@ -1,7 +1,7 @@
 # The text normaliser as ETI Eloquence 6.1 reads it in British English: the
 # cases of eti-norm.txt that its British engine and ours read alike.
 0x10001	-1	Windows10 is out.
-0x10001	-1	teamtalk5 is out.
+0x10001	-1	skype5 is out.
 0x10001	-1	Call this(thing) now.
 0x10001	-1	Call sum(x) now.
 0x10001	-1	Each friend(s) came.

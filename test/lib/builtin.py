@@ -79,7 +79,7 @@ PHONEME_BUFFER = 1
 
 #: Words the dictionary US English carries holds, each with the entry it
 #: holds, written the way a caller would load it.
-CARRIED_ROOT = (b"teamtalk", b"`[.1tim.2tck]")
+CARRIED_ROOT = (b"debian", b"`[.1dE.0bi.0Xn]")
 CARRIED_MAIN = (b"Allrecipes", b"all recipes")
 CARRIED_PHONES = (b"TeX", b"`[.1tEk]")
 CARRIED_ABBR = (b"WWII", b"world war two")
@@ -245,7 +245,7 @@ def reading_checks(dll):
           and on == read(dll, abbr, builtin=0, abbreviations=True,
                          entries=[(ABBR, abbr, means)]))
 
-    sentence = b"We met on teamtalk and talked."
+    sentence = b"We use debian and like it."
     r = Reader(dll)
     first = r.read(sentence)
     dll.eciSetParam(r.h, BUILTIN, 0)
@@ -268,7 +268,7 @@ def split_checks(dll, have):
         check("%s is left whole" % word.decode(),
               read(dll, word) == read(dll, word, builtin=0))
     check("a word a root volume holds is left for the root lookup",
-          read(dll, b"TeamTalk") == read(dll, CARRIED_ROOT[0])
+          read(dll, b"TeamTalk") == read(dll, b"teamtalk")
           and read(dll, b"TeamTalk") != read(dll, b"Team Talk"))
     mine = [(ROOT, b"zorbfoo", b"door")]
     check("and so is one the caller's root volume holds",
@@ -397,7 +397,7 @@ def possessive_checks(dll):
 
 
 def sample_checks(dll):
-    text = "We met on teamtalk."
+    text = "We use debian."
 
     def said(builtin, entries=()):
         v = langs.Voice(dll, ENGLISH)

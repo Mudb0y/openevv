@@ -4,7 +4,7 @@
 # Words typed against digits or a bracket, which 6.1 reads as words where 4.3
 # spelled them, and the short runs it reads as words too.
 0x10000	-1	Windows10 is out.
-0x10000	-1	teamtalk5 is out.
+0x10000	-1	skype5 is out.
 0x10000	-1	Call this(thing) now.
 0x10000	-1	Call sum(x) now.
 0x10000	-1	Each friend(s) came.
