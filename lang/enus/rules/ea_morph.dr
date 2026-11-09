@@ -195,11 +195,11 @@ label L1 was at_0xcc
   push reg r6
   call backtrack_function arity 2 depth 5
   alu decl none reg r0
-  cmp cmpl imm 123 reg r0
+  cmp cmpl imm 150 reg r0
   popreg r1
   popreg r1
   branch ja to L132
-  switch reg r0 to L2 L3 L4 L5 L7 L9 L10 L11 L12 L13 L14 L15 L16 L17 L18 L19 L21 L22 L24 L25 L26 L27 L28 L29 L30 L31 L32 L33 L37 L38 L39 L40 L41 L42 L43 L44 L45 L46 L47 L48 L49 L50 L51 L52 L53 L54 L55 L56 L57 L58 L59 L60 L61 L62 L63 L64 L65 L66 L67 L68 L69 L70 L71 L72 L73 L74 L75 L76 L77 L78 L79 L80 L81 L129 L82 L83 L84 L85 L86 L87 L88 L89 L90 L91 L92 L93 L94 L95 L96 L97 L98 L99 L100 L101 L102 L103 L104 L105 L106 L107 L108 L109 L110 L111 L112 L113 L114 L115 L116 L117 L130 L118 L132 L127 L34 L35 L34 L119 L120 L122 L34 L34 L34 L134
+  switch reg r0 to L2 L3 L4 L5 L7 L9 L10 L11 L12 L13 L14 L15 L16 L17 L18 L19 L21 L22 L24 L25 L26 L27 L28 L29 L30 L31 L32 L33 L37 L38 L39 L40 L41 L42 L43 L44 L45 L46 L47 L48 L49 L50 L51 L52 L53 L54 L55 L56 L57 L58 L59 L60 L61 L62 L63 L64 L65 L66 L67 L68 L69 L70 L71 L72 L73 L74 L75 L76 L77 L78 L79 L80 L81 L129 L82 L83 L84 L85 L86 L87 L88 L89 L90 L91 L92 L93 L94 L95 L96 L97 L98 L99 L100 L101 L102 L103 L104 L105 L106 L107 L108 L109 L110 L111 L112 L113 L114 L115 L116 L117 L130 L118 L132 L127 L34 L35 L34 L119 L120 L122 L34 L34 L34 L134 L135 L136 L137 L138 L139 L140 L141 L142 L143 L144 L145 L146 L147 L148 L149 L150 L151 L152 L153 L154 L155 L156 L157 L158 L159 L160 L161
 label L2 was $X1$99797
   push reg r6
   call ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_1_ZZstring399 arity 1 depth 4
@@ -717,6 +717,141 @@ label L132 was $fail_clean$99767
 label L133 was $L100943
 label L134 was $arm$L134
   push sym string_216
+  push reg r6
+  call ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_4 arity 2 depth 5
+  jump to L124
+label L135 was $arm$L135
+  push sym string_217
+  push reg r6
+  call ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_5 arity 2 depth 5
+  jump to L124
+label L136 was $arm$L136
+  push sym string_218
+  push reg r6
+  call ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_7 arity 2 depth 5
+  jump to L124
+label L137 was $arm$L137
+  push sym string_219
+  push reg r6
+  call ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_4 arity 2 depth 5
+  jump to L124
+label L138 was $arm$L138
+  push sym string_220
+  push reg r6
+  call ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_4 arity 2 depth 5
+  jump to L124
+label L139 was $arm$L139
+  push sym string_221
+  push reg r6
+  call ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_6 arity 2 depth 5
+  jump to L124
+label L140 was $arm$L140
+  push sym string_222
+  push reg r6
+  call ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_4 arity 2 depth 5
+  jump to L124
+label L141 was $arm$L141
+  push sym string_223
+  push reg r6
+  call ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_6 arity 2 depth 5
+  jump to L124
+label L142 was $arm$L142
+  push sym string_224
+  push reg r6
+  call ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_5 arity 2 depth 5
+  jump to L124
+label L143 was $arm$L143
+  push sym string_225
+  push reg r6
+  call ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_5 arity 2 depth 5
+  jump to L124
+label L144 was $arm$L144
+  push sym string_226
+  push reg r6
+  call ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_5 arity 2 depth 5
+  jump to L124
+label L145 was $arm$L145
+  push sym string_227
+  push reg r6
+  call ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_6 arity 2 depth 5
+  jump to L124
+label L146 was $arm$L146
+  push sym string_228
+  push reg r6
+  call ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_4 arity 2 depth 5
+  jump to L124
+label L147 was $arm$L147
+  push sym string_229
+  push reg r6
+  call ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_6 arity 2 depth 5
+  jump to L124
+label L148 was $arm$L148
+  push sym string_230
+  push reg r6
+  call ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_5 arity 2 depth 5
+  jump to L124
+label L149 was $arm$L149
+  push sym string_231
+  push reg r6
+  call ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_4 arity 2 depth 5
+  jump to L124
+label L150 was $arm$L150
+  push sym string_232
+  push reg r6
+  call ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_5 arity 2 depth 5
+  jump to L124
+label L151 was $arm$L151
+  push sym string_233
+  push reg r6
+  call ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_5 arity 2 depth 5
+  jump to L124
+label L152 was $arm$L152
+  push sym string_234
+  push reg r6
+  call ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_4 arity 2 depth 5
+  jump to L124
+label L153 was $arm$L153
+  push sym string_235
+  push reg r6
+  call ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_4 arity 2 depth 5
+  jump to L124
+label L154 was $arm$L154
+  push sym string_236
+  push reg r6
+  call ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_5 arity 2 depth 5
+  jump to L124
+label L155 was $arm$L155
+  push sym string_237
+  push reg r6
+  call ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_5 arity 2 depth 5
+  jump to L124
+label L156 was $arm$L156
+  push sym string_238
+  push reg r6
+  call ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_4 arity 2 depth 5
+  jump to L124
+label L157 was $arm$L157
+  push sym string_239
+  push reg r6
+  call ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_4 arity 2 depth 5
+  jump to L124
+label L158 was $arm$L158
+  push sym string_240
+  push reg r6
+  call ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_4 arity 2 depth 5
+  jump to L124
+label L159 was $arm$L159
+  push sym string_241
+  push reg r6
+  call ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_7 arity 2 depth 5
+  jump to L124
+label L160 was $arm$L160
+  push sym string_242
+  push reg r6
+  call ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_5 arity 2 depth 5
+  jump to L124
+label L161 was $arm$L161
+  push sym string_243
   push reg r6
   call ZZ_lprp_load_vvg_0014_0015__insert_2pt_s_2_4 arity 2 depth 5
   jump to L124

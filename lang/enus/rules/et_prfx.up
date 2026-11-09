@@ -69,6 +69,18 @@ end
 # choice to go on looking for a longer one should what follows fail. What
 # follows a prefix found is 6.1's own. A prefix in the set needs its sound in
 # nonlex_prefixes in enus.dict, which is what the rule lays down for it.
+#
+# A form in set combining_form is taken off only where what follows it is
+# more than one syllable, as one_eng_syllable judges it, and not one of the
+# endings in set combining_form_ending; elsewhere it is passed over as if
+# not found. The rules stress the root after a prefix taken off, and
+# Merriam-Webster stresses the form before a root of one syllable
+# (HEK-suh-pod, EK-tuh-derm) and before -plasty and -mancy, and the linking
+# vowel before -graphy, -metry, -logy and the like (krip-TOG-ruh-fee,
+# kro-NOM-uh-tree), all of which the letter rules already do.
+# 6.1's thirteen are taken off wherever they are found, as 6.1 does: its
+# words with a short root, telegram and thermostat, are in
+# prefix_1stress_nouns and need it.
 
 rule strip_scientific_prefixes takes 1
   instead
@@ -84,6 +96,8 @@ rule strip_scientific_prefixes takes 1
   local h_rdx
   local h_rsi
   local csci bytes 8
+  local sci_short
+  local sci_linking
   local s1531b2
   local s15338a
   local s15339f
@@ -143,9 +157,38 @@ rule strip_scientific_prefixes takes 1
   call lpta_rpta_loadp h_rsi h_rdx
   set h_rsi to 1
   call setd_lookup h_rsi 512
+  if answer is 0
+    go to sci_found
+  end
+  set h_rsi to addr g668
+  set h_rdx to addr csci
+  call lpta_rpta_loadp h_rsi h_rdx
+  set h_rsi to 1
+  call setd_lookup h_rsi 514
   if answer is not 0
     go to sci_try
   end
+  set h_rsi to addr csci
+  set h_rdx to addr g678
+  call one_eng_syllable h_rsi h_rdx
+  set sci_short to answer
+  set h_rsi to addr csci
+  set h_rdx to addr g678
+  call lpta_rpta_loadp h_rsi h_rdx
+  set h_rsi to 1
+  call setd_lookup h_rsi 513
+  set sci_linking to answer
+  set h_rsi to addr csci
+  call lpta_loadp h_rsi
+  set h_rdx to 1
+  call setscan_r h_rdx
+  if sci_short is 0
+    go to sci_try
+  end
+  if sci_linking is 0
+    go to sci_try
+  end
+  place sci_found
   set h_rsi to 3
   call bspush_ca_scan h_rsi
   set h_rcx to h_r13

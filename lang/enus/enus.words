@@ -14584,11 +14584,15 @@ set no_scientific_prefix_strip
   audiometer
   cardioid
   cardiolog
+  chloroform
+  chromosom
   electrocut
   electrode
   electrolog
   electrolysis
   electronic
+  heliopol
+  hexagon
   hydrogen
   hydrograph
   hydrolog
@@ -14597,6 +14601,9 @@ set no_scientific_prefix_strip
   hydronium
   hydropathy
   hydrox
+  idiot
+  lithotript
+  mesopotam
   neurolog
   neuronal
   neurone
@@ -14605,6 +14612,8 @@ set no_scientific_prefix_strip
   neurotic
   nitrogen
   oxygen
+  pneumocyst
+  pneumon
   radioed
   radioing
   radiol
@@ -14614,6 +14623,7 @@ set no_scientific_prefix_strip
   teleol
   telephony
   telex
+  tetramer
   thermograph
   thermometer
   thermometr
@@ -26077,3 +26087,98 @@ set scientific_prefix
   ribo
   tele
   thermo
+
+set combining_form_ending
+  cracies
+  cracy
+  gamous
+  gamy
+  genous
+  gonies
+  gony
+  grapher
+  graphers
+  graphies
+  graphist
+  graphists
+  graphy
+  latries
+  latrous
+  latry
+  logies
+  logist
+  logists
+  logous
+  logy
+  lyses
+  lysis
+  mancies
+  mancy
+  meter
+  meters
+  metries
+  metrist
+  metrists
+  metry
+  nomer
+  nomers
+  nomies
+  nomy
+  nymous
+  nymy
+  pathies
+  pathist
+  pathists
+  pathy
+  phagist
+  phagous
+  phagy
+  phonous
+  phony
+  plasties
+  plasty
+  scopies
+  scopist
+  scopists
+  scopy
+  sophist
+  sophists
+  sophy
+  stomies
+  stomy
+  tomies
+  tomist
+  tomists
+  tomy
+  trophy
+  tropous
+  tropy
+
+set combining_form
+  angio
+  anthropo
+  biblio
+  chloro
+  chromo
+  chrono
+  crypto
+  cyto
+  ecto
+  gastro
+  helio
+  hemi
+  hepta
+  hexa
+  idio
+  immuno
+  litho
+  meso
+  morpho
+  octo
+  paleo
+  phono
+  phyto
+  pneumo
+  spectro
+  tetra
+  xeno
