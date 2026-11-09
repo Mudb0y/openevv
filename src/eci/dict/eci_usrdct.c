@@ -778,6 +778,22 @@ static const delta_dict_entry *builtin_find(const delta_builtin_dict *b,
     return 0;
 }
 
+/* A capital of the code page the entries are written in, as its small
+   letter, or nought for anything else: the accented capitals as well as
+   A to Z, so that École starting a sentence finds école. */
+static unsigned char builtin_small(unsigned char c)
+{
+    if (c >= 'A' && c <= 'Z')
+        return (unsigned char)(c - 'A' + 'a');
+    if (c >= 0xc0 && c <= 0xde && c != 0xd7)
+        return (unsigned char)(c + 0x20);
+    if (c == 0x8a || c == 0x8c || c == 0x8e)
+        return (unsigned char)(c + 0x10);
+    if (c == 0x9f)
+        return 0xff;
+    return 0;
+}
+
 /* The first word of a sentence arrives with a capital nobody wrote into its
    entry, so a main entry written in small letters is found for a word whose
    only capital is its first letter: Kubectl starting a sentence is kubectl.
@@ -791,13 +807,13 @@ static const delta_dict_entry *builtin_find_main(const delta_builtin_dict *b,
     char                    low[UD_LAST_ROOM];
     size_t                  n;
 
-    if (e != 0 || word[0] < 'A' || word[0] > 'Z')
+    if (e != 0 || builtin_small((unsigned char)word[0]) == 0)
         return e;
     for (n = 1; word[n] != 0; n++)
-        if ((word[n] >= 'A' && word[n] <= 'Z') || n + 1 >= sizeof low)
+        if (builtin_small((unsigned char)word[n]) != 0 || n + 1 >= sizeof low)
             return 0;
     memcpy(low, word, n + 1);
-    low[0] = (char)(low[0] - 'A' + 'a');
+    low[0] = (char)builtin_small((unsigned char)low[0]);
     return builtin_find(b, UD_MAIN, low);
 }
 

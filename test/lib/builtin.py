@@ -44,6 +44,10 @@ after it, so that Mr. Darcy reads as a caller's entry for Mr does with the
 stop not there at all, and to leaving a stop that ends the text alone; and
 ms, whose small letters would answer Ms, is held to milliseconds.
 
+A word written with an accent is held to reading as its main entry does,
+which a root entry for it never could, and its accented capital at the
+start of a sentence to finding the entry in small letters.
+
 What a word is read as is asked of eciGeneratePhonemes, which says it plainly;
 one check holds the samples as well, so that what the synthesiser is handed
 is known to follow.
@@ -360,6 +364,21 @@ def title_checks(dll, have):
                       entries=[(MAIN, b"Mr", b"mister")]))
 
 
+def accent_checks(dll):
+    # A main entry is matched before the normaliser makes an accented letter
+    # plain, which a root entry never is; and its accented capital at the
+    # front of a sentence is the small letter's.
+    word, says = "affich\u00e9".encode("cp1252"), b"`[.2A.0fX.1Se]"
+    check("affich\u00e9 reads as its main entry loaded by a caller",
+          read(dll, word) == read(dll, word, builtin=0,
+                                  entries=[(MAIN, word, says)])
+          and read(dll, word) != read(dll, word, builtin=0))
+    low, cap = "\u00e9cole".encode("cp1252"), "\u00c9cole".encode("cp1252")
+    check("and \u00c9cole as \u00e9cole",
+          read(dll, cap) == read(dll, low)
+          and read(dll, cap) != read(dll, cap, builtin=0))
+
+
 def possessive_checks(dll):
     word, says = CARRIED_PHONES
     mine = word + b"'s"
@@ -421,6 +440,7 @@ def main(path):
     cut_checks(dll, have)
     dot_checks(dll)
     title_checks(dll, have)
+    accent_checks(dll)
     sample_checks(dll)
     if BRITISH in have:
         word = CARRIED_ROOT[0]
