@@ -808,7 +808,8 @@ codepoints:
 #
 # `tables-check' writes the C from each text into a directory of its own and
 # holds it against the tree, byte for byte. That is the one to believe, and it
-# wants no objects. `tables-write' does it for real, which is how a language
+# wants no objects. Where a language has its sets as words too, <tag>.words,
+# it holds those to the C as well. `tables-write' does it for real, which is how a language
 # that was authored rather than lifted gets built.
 TEMPLATE ?= itit
 
@@ -828,6 +829,8 @@ tables-check:
 	    python3 tools/module/settings.py regenerate $$t && \
 	    python3 tools/module/link.py regenerate $$t && \
 	    python3 tools/module/sets.py regenerate $$t && \
+	    { [ ! -f lang/$$t/$$t.words ] || \
+	      python3 tools/module/setwords.py check $$t; } && \
 	    python3 tools/rules/consts.py regenerate $$t || exit 1; \
 	done
 

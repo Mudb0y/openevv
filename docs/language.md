@@ -12,6 +12,7 @@ A language module is the rules and five other things: the variables the machine 
     lang/enus/enus.sets         the sets and the dictionary actions, 9,750
     lang/enus/enus.consts       the bytes the rules name, 445
     lang/<tag>/<tag>.dict       the words, which tools/module/dict.py writes
+    lang/enus/enus.words        the sets as words, which tools/module/setwords.py writes
 
     make tables-dump      writes the four
     make tables-check     the C from each, held against the tree
@@ -32,6 +33,8 @@ writes `lang/plpl/plpl.dict`. Italian declares 13 dictionaries with 892 entries 
 The names and the roots also say where a word is stressed, and the file shows it as `stress` and a pattern after the action number wherever a word's own arm states one: a digit a syllable, 1 for the main stress, 2 for a secondary one and 0 for none, counted back from the last syllable, so 20100 is Appalachians and 1 is a word stressed on its last syllable. A word added, or moved onto an action of its own because what it says changed, is given an arm of its own rather than one a removed word left behind -- that arm would keep the removed word's stress -- and is stressed by the rules unless it asks. `tools/module/lexicon64.py` reads the words of 6.1's dictionaries out of Apple's module beside it, which is how the two can be set side by side.
 
 Two things about the sets are worth knowing before touching them. Its text is lifted from the C in the tree and not from IBM's objects, on purpose: the dictionary's three arrays in that file are laid down by `tools/module/dict.py` out of the words, so the objects hold what the dictionary said before anything was ever added to it. Running the sets lifter over that file is the one thing this repository tells you not to do, and this is why. And its numbers are the language: English declares 511 sets and 28 dictionary actions in 274 kilobytes of entries where Italian declares 153 and 13 in 77.
+
+Every one of those sets is a list of words, sorted by the alphabet's codes and searched by halving, and the rules ask whether a run of letters is in one by its name: the words a compound may start with and the words it may end with, the words that look like a compound and are not, the endings, prefixes and homographs. `lang/enus/enus.words` holds English's as words, one a line under a `set` line, written in the order of the alphabet; `tools/module/setwords.py build enus` lays a set the file changes down again in the C, sorted as the engine searches, and then `tools/module/sets.py dump enus` writes `enus.sets` after it, as after a dictionary change, rather than `make tables-dump`, which writes the other text forms out of the C as well and does not give them back as they are. A set that still fits where it lay stays there; one that has grown past the next has the whole store laid down again, every set in the order it lay, so that no edit leaves a dead copy behind. `make tables-check` holds the words to the C. A word may be in a set twice, which does the search no harm, and IBM's own list of nouns has sabbatical twice.
 
 The statement table is the same shape in every language and that is a measurement rather than an assumption: ten types each, with 57 fields in Italian and both Spanishes, 58 in the two Englishes, 61 in German, 63 in Canadian French and 65 in French.
 
