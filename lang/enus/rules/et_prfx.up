@@ -60,6 +60,15 @@ end
 # chemo, electro, hydro, neuro, nitro, radio, ribo, tele and more, so a word
 # built on one is read as the prefix and the root rather than guessed whole:
 # neuroscience was nuh-RAH-shunts.
+#
+# 6.1 tested its thirteen one string at a time, each a choice point of its
+# own, so a prefix could only be added by threading another into the chain.
+# This one reads them from set scientific_prefix in lang/enus/enus.words: it
+# steps the scan over the word a letter at a time and asks the set whether
+# the letters from the word's start are one, and where they are it plants a
+# choice to go on looking for a longer one should what follows fail. What
+# follows a prefix found is 6.1's own. A prefix in the set needs its sound in
+# nonlex_prefixes in enus.dict, which is what the rule lays down for it.
 
 rule strip_scientific_prefixes takes 1
   instead
@@ -74,9 +83,8 @@ rule strip_scientific_prefixes takes 1
   local h_rcx
   local h_rdx
   local h_rsi
+  local csci bytes 8
   local s1531b2
-  local s1532c1
-  local s153321
   local s15338a
   local s15339f
   local s1533e8
@@ -90,6 +98,8 @@ rule strip_scientific_prefixes takes 1
   set h_rsi to addr c100
   call push_ptr_init h_rsi
   set h_rsi to addr c120
+  call push_ptr_init h_rsi
+  set h_rsi to addr csci
   call push_ptr_init h_rsi
   set cf0 to 65532
   set h_rdx to sym eti_null
@@ -116,136 +126,36 @@ rule strip_scientific_prefixes takes 1
     go to p15347a
   end
   place p153197
+  set h_r13 to h_r14
+  place sci_try
+  call advance_tok
+  set s1531b2 to answer
+  if s1531b2 is not 0
+    set unwind to h_r13
+    backtrack
+  end
+  place sci_check
+  set h_rsi to 5
+  set h_rdx to addr csci
+  call savescptr h_rsi h_rdx
+  set h_rsi to addr g668
+  set h_rdx to addr csci
+  call lpta_rpta_loadp h_rsi h_rdx
+  set h_rsi to 1
+  call setd_lookup h_rsi 512
+  if answer is not 0
+    go to sci_try
+  end
   set h_rsi to 3
   call bspush_ca_scan h_rsi
-  set h_rsi to 1
-  set h_rdx to 5
-  set h_rcx to sym eti_s_1be8b5
-  call test_string_s h_rsi h_rdx h_rcx
-  set s1531b2 to answer
-  set h_rcx to h_r14
-  if s1531b2 is not 0
-    go to p15347a
-  end
-  place p1531c2
-  go to p15341e
-  place p1531f9
-  place t1531f9_3 on 3
-  set h_r13 to unwind
-  set h_rsi to 5
-  call bspush_ca_scan h_rsi
-  set h_rcx to sym eti_s_1be8ba
-  go to p153318
-  place p153210
-  place t153210_5 on 5
-  set h_r13 to unwind
-  set h_rsi to 6
-  call bspush_ca_scan h_rsi
-  set h_rcx to sym eti_s_1be8c0
-  go to p1532f1
-  place p153227
-  place t153227_6 on 6
-  set h_r13 to unwind
-  set h_rsi to 7
-  call bspush_ca_scan h_rsi
-  set h_rcx to sym eti_s_1be8c5
-  set h_rsi to 1
-  set h_rdx to 7
-  go to p15331d
-  place p153243
-  place t153243_7 on 7
-  set h_r13 to unwind
-  set h_rsi to 8
-  call bspush_ca_scan h_rsi
-  set h_rcx to sym eti_s_1be8cc
-  go to p1532f1
-  place p15325a
-  place t15325a_8 on 8
-  set h_r13 to unwind
-  set h_rsi to 9
-  call bspush_ca_scan h_rsi
-  set h_rcx to sym eti_s_1be8d1
-  go to p1532f1
-  place p153271
-  place t153271_9 on 9
-  set h_r13 to unwind
-  set h_rsi to 10
-  call bspush_ca_scan h_rsi
-  set h_rcx to sym eti_s_1be8d6
-  go to p1532f1
-  place p153285
-  place t153285_10 on 10
-  set h_r13 to unwind
-  set h_rsi to 11
-  call bspush_ca_scan h_rsi
-  set h_rsi to 12
-  call bspush_ca_scan h_rsi
-  go to p1532d1
-  place p15329d
-  place t15329d_11 on 11
-  set h_r13 to unwind
-  set h_rsi to 14
-  call bspush_ca_scan h_rsi
-  set h_rcx to sym eti_s_1be8e0
-  go to p15330a
-  place p1532b1
-  place t1532b1_12 on 12
-  set h_r13 to unwind
-  set h_rcx to sym eti_s_1be8db
-  set h_rsi to 1
-  set h_rdx to 2
-  call test_string_s h_rsi h_rdx h_rcx
-  set s1532c1 to answer
-  set h_rsi to h_r13
-  if s1532c1 is not 0
-    set unwind to h_rsi
-    backtrack
-  end
-  place p1532d1
-  place t1532d1_13 on 13
-  set h_r13 to unwind
-  set h_rcx to sym eti_s_1be8dd
-  set h_rsi to 1
-  set h_rdx to 3
-  go to p15331d
-  place p1532df
-  place t1532df_14 on 14
-  set h_r13 to unwind
-  set h_rsi to 15
-  call bspush_ca_scan h_rsi
-  set h_rcx to sym eti_s_1be8e4
-  place p1532f1
-  set h_rsi to 1
-  set h_rdx to 5
-  go to p15331d
-  place p1532f8
-  place t1532f8_15 on 15
-  set h_r13 to unwind
-  set h_rsi to 16
-  call bspush_ca_scan h_rsi
-  set h_rcx to sym eti_s_1be8e9
-  place p15330a
-  set h_rsi to 1
-  set h_rdx to 4
-  go to p15331d
-  place p153311
-  place t153311_16 on 16
-  set h_r13 to unwind
-  set h_rcx to sym eti_s_1be8ed
-  place p153318
-  set h_rsi to 1
-  set h_rdx to 6
-  place p15331d
-  call test_string_s h_rsi h_rdx h_rcx
-  set s153321 to answer
   set h_rcx to h_r13
-  set h_rsi to h_r13
-  if s153321 is not 0
-    set unwind to h_rsi
-    backtrack
-  end
-  place p153334
   go to p15341e
+  place sci_longer on 3
+  set h_r13 to unwind
+  go to sci_try
+  place sci_moved on 5
+  set h_r13 to unwind
+  go to sci_check
   place p153339
   place t153339_18 on 18
   set h_r13 to unwind

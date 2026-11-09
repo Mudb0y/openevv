@@ -23,6 +23,10 @@ sorts them as the engine needs. A character the alphabet does not spell as
 one ordinary letter is written in brackets, as `tools/module/dict.py' writes
 it in <tag>.dict. A remark starts with #.
 
+A set the words file names that the language does not declare yet is
+added after the last one, under the next number, keyed by the input
+statement as every set is; a rule asks it by that number.
+
 Building with nothing changed writes nothing. A set that changed is laid
 down where it was if it still fits there, and its table record says its new
 size and count, so the change shows in the C as the one set. One that has
@@ -49,6 +53,10 @@ lex = sibling("module/lexicon")
 sets_mod = sibling("module/sets")
 
 ENTRY = 0x24
+
+# The statement whose first field's alphabet a set's keys are spelled in:
+# the input one, in every language.
+INPUT = 1
 
 HEAD = """# The lookup sets %(tag)s declares, as words. Written by
 # tools/module/setwords.py out of lang/%(tag)s/delta_sets_%(tag)s.c and read
@@ -146,41 +154,45 @@ def read_words(tag):
     return out
 
 
+def keys_of(words, a, once):
+    got = []
+    for text, where in words:
+        try:
+            codes = tuple(lex.codes_of(text, a, once))
+        except ValueError as e:
+            raise SystemExit("setwords: %s: %s" % (where, e))
+        if 0 in codes or not codes:
+            raise SystemExit("setwords: %s: %r cannot be a key"
+                             % (where, text))
+        # A word twice does no harm to the search, and IBM's nouns
+        # hold sabbatical twice.
+        got.append(codes)
+    return [list(k) for k in sorted(got)]
+
+
 def wanted(tag, m, alpha):
-    """Each set's keys as the words file says them, in the engine's order."""
+    """Each set's keys as the words file says them, in the engine's order,
+    and the sets it names that the language does not declare yet, in the
+    order it names them."""
     words = read_words(tag)
     have = {name for _s, name, _o in m["sets"]["at"]}
-    for name in words:
-        if name not in have:
-            raise SystemExit("setwords: no set called %s in %s"
-                             % (name[:-len("_setentries")], tag))
     out = {}
     for slot, name, stmt, keys in sets_of(m, alpha):
         if name not in words:
             raise SystemExit("setwords: the words file has no set %s"
                              % name[:-len("_setentries")])
         a = alpha[stmt]
-        once = lex.unique_names(a)
-        got = []
-        for text, where in words[name]:
-            try:
-                codes = tuple(lex.codes_of(text, a, once))
-            except ValueError as e:
-                raise SystemExit("setwords: %s: %s" % (where, e))
-            if 0 in codes or not codes:
-                raise SystemExit("setwords: %s: %r cannot be a key"
-                                 % (where, text))
-            # A word twice does no harm to the search, and IBM's nouns
-            # hold sabbatical twice.
-            got.append(codes)
-        out[slot] = (name, [list(k) for k in sorted(got)], keys)
-    return out
+        out[slot] = (name, keys_of(words[name], a, lex.unique_names(a)), keys)
+    a = alpha[INPUT]
+    new = [(name, keys_of(words[name], a, lex.unique_names(a)))
+           for name in words if name not in have]
+    return out, new
 
 
 def build(tag, write=True):
     alpha = alphabet(tag)
     m = model(tag)
-    want = wanted(tag, m, alpha)
+    want, new = wanted(tag, m, alpha)
     store = bytes(m["sets"]["store"])
     table = bytearray(m["set_table"])
     at = list(m["sets"]["at"])
@@ -215,6 +227,26 @@ def build(tag, write=True):
             blob = blobs.get(slot, store[off:off + size])
             at[slot] = (slot, name, len(out))
             out += blob
+    if new:
+        # A set the language does not declare yet goes after the last one,
+        # under the next number, keyed by the input statement as every set
+        # is, and the rules name it by that number. Its blob goes at the end
+        # of the store.
+        room = m.get("link", {}).get("set_room", 0) // ENTRY
+        if len(at) + len(new) > room:
+            raise SystemExit("setwords: %s has room for %d sets"
+                             % (tag, room))
+        for name, keys in new:
+            out += bytes((-len(out)) % 4)
+            blob = b"".join(bytes(k) + b"\0" for k in keys)
+            entry = bytearray(ENTRY)
+            struct.pack_into("<iii", entry, 8, INPUT, len(keys), len(blob))
+            at.append((len(at), name, len(out)))
+            table += entry
+            out += blob
+            changed.append(name[:-len("_setentries")])
+            print("setwords: %s: set %s is new, number %d"
+                  % (tag, name[:-len("_setentries")], len(at) - 1))
     if not changed:
         print("setwords: %s: every set is as the words file says" % tag)
         return 0

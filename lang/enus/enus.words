@@ -26062,3 +26062,18 @@ set three_letter_domain_names
   net
   ORG
   org
+
+set scientific_prefix
+  audio
+  cardio
+  chemo
+  deoxy
+  electro
+  hydro
+  neuro
+  nitro
+  oxy
+  radio
+  ribo
+  tele
+  thermo

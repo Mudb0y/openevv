@@ -1173,7 +1173,10 @@ static const uint8_t set_table[] = {
     1,0,0,0,11,0,0,0,99,0,0,0,237,245,2,0,
     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
     0,0,0,0,1,0,0,0,8,0,0,0,32,0,0,0,
-    80,246,2,0,0,0,0,0,0,0,0,0,0,0,0,0
+    80,246,2,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,1,0,0,0,13,0,0,0,
+    78,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0
 };
 
 static const uint8_t act_table[] = {
@@ -13562,7 +13565,12 @@ static const uint8_t setent_store[] = {
     9,34,0,42,7,47,0,42,7,49,0,42,8,50,0,43,
     7,41,0,43,8,34,0,43,10,32,0,45,6,45,0,45,
     6,49,0,45,10,42,0,46,8,36,0,46,10,41,0,46,
-    51,42,0,46,51,46,0,47,6,45,0,52,8,43,0
+    51,42,0,46,51,46,0,47,6,45,0,52,8,43,0,0,
+    1,5,13,3,4,0,2,19,2,12,26,24,4,0,4,29,
+    30,0,12,1,24,13,3,4,0,12,16,2,20,4,0,13,
+    2,4,29,30,0,16,30,13,24,4,0,21,2,5,24,4,
+    0,21,3,26,24,4,0,24,1,13,3,4,0,24,3,11,
+    4,0,26,2,19,2,0,26,16,2,24,20,4,0
 };
 
 /* Where each one starts in it. */
@@ -14079,6 +14087,7 @@ static const uint8_t *const setent_all[] = {
     setent_store + 196476,   /* y_pronounced_i_setentries */
     setent_store + 196528,   /* y_pronounced_I_setentries */
     setent_store + 196628,   /* three_letter_domain_names_setentries */
+    setent_store + 196992,   /* scientific_prefix_setentries */
 };
 
 /* The actions, as they lie. */
@@ -19112,7 +19121,7 @@ void enus_link_new(delta_state *d)
     d->lang_b = 2;
     d->lfnames = EVV_REF(delta_low_copy(lfnames, sizeof lfnames));
     d->nlfnames = 13;
-    d->nsets = 512;
+    d->nsets = 513;
     d->dictfile = EVV_REF(delta_low_copy(dictfile, sizeof dictfile));
     d->nactions = 28;
 
