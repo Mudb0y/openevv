@@ -23,6 +23,8 @@ On Linux the same names are in `libeci.so.1`, with `libeci.so` beside it and `ec
 
 Every library here carries all twelve languages: US and British English, German, Castilian and American Spanish, French and Canadian French, Italian, Japanese, Polish, Finnish and Brazilian Portuguese. `eciGetAvailableLanguages` answers all of them, US English is what a new instance speaks, and `eciSetParam(h, eciLanguageDialect, ...)` on an instance that is not speaking changes it. All twelve can be alive in one process at once, each saying what it says alone.
 
+`openevv-<version>-sapi5-setup.exe` installs the engine as a Windows voice, so Narrator, the speech control panel and any program that speaks through SAPI can use it: eight voices for each of the twelve languages, for sixty-four and thirty-two bit programs alike. Its settings are in the Start menu and behind the Settings button a program shows for a voice.
+
 `evvspeak.exe` is the speak window: type something, pick one of the eight voices, set the rate in words a minute, and hear it. `evv.exe` is the same engine on the command line. Both are one file, sixty-four bit, and want nothing installed.
 
 `openevv-0.6.2.nvda-addon` is the engine as a synthesiser for NVDA, listed there as OpenEVV. It carries both bitnesses and loads the engine into NVDA's own process, so nothing else needs installing. Every language is offered as a voice, and a document that says part of itself is in another language is read in it. Cancelling speech waits for the utterance in flight to finish synthesising, which is a fraction of a second for a line and longer for a long chat message.

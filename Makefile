@@ -1419,6 +1419,104 @@ $(BUILD)/libevv-win32$(SUF).a: $(OBJECTSWIN32) $(RULESTAMP)
 	@$(ARWIN32) rcs $@ $(OBJECTSWIN32)
 	@echo "built $@ from $(words $(OBJECTSWIN32)) objects"
 
+# The SAPI 5 voice: the engine as a voice every Windows program that speaks
+# can choose, Narrator and the speech control panel among them. It is C++
+# because COM is, and it loads eci.dll by name rather than linking the
+# engine, so it builds in seconds and wants none of the rules: what it
+# speaks with is whichever library is beside it. sapi5/sapiddk.h is the part
+# of SAPI mingw does not ship.
+#
+# A SAPI program can only load a voice of its own bitness, so there are two,
+# and `make sapi5-stage' puts both in one folder with the libraries they
+# load, laid out as the installer lays them out. docs/sapi5.md is the rest.
+CXXWIN      ?= x86_64-w64-mingw32-g++
+CXXWIN32    ?= i686-w64-mingw32-g++
+SAPI5DIR    := $(BUILD)/sapi5
+SAPI5OBJ    := $(BUILD)/objsapi5
+SAPI5HDRS   := $(wildcard sapi5/*.h) include/eci.h
+SAPI5VOICE  := $(addprefix sapi5/,engine.cpp languages.cpp settings.cpp \
+                 text.cpp dialog.cpp guids.cpp voice.cpp tokenui.cpp server.cpp)
+SAPI5CONFIG := $(addprefix sapi5/,config.cpp dialog.cpp settings.cpp \
+                 engine.cpp languages.cpp)
+SAPI5TEST   := $(addprefix sapi5/,voice_test.cpp engine.cpp languages.cpp \
+                 guids.cpp)
+# Windows 7 and later, which is what NormalizeString and RegGetValue want.
+SAPI5FLAGS  := -O2 -std=gnu++17 -Wall -Wno-unknown-pragmas -Iinclude -Isapi5 \
+               -DUNICODE -D_UNICODE -DWIN32_LEAN_AND_MEAN -DNOMINMAX \
+               -D_WIN32_WINNT=0x0601 $(CXXFLAGS)
+# Static, so that each is one file: a voice is loaded into whatever program
+# wants to speak, and that program cannot be asked to carry a runtime.
+# --kill-at publishes the four COM names plain on thirty-two bits.
+SAPI5LINK   := -static -static-libgcc -static-libstdc++ -Wl,--kill-at
+SAPI5LIBS   := -lole32 -loleaut32 -luuid -ladvapi32 -lnormaliz
+
+.PHONY: sapi5 sapi5-32 sapi5-stage
+sapi5: $(SAPI5DIR)/openevv_sapi5.dll $(SAPI5DIR)/openevv_config.exe \
+       $(SAPI5DIR)/voice_test.exe
+sapi5-32: $(SAPI5DIR)/openevv_sapi5_x86.dll $(SAPI5DIR)/openevv_config32.exe \
+          $(SAPI5DIR)/voice_test32.exe
+
+$(SAPI5OBJ)/voice.res: sapi5/voice.rc sapi5/dialog.rc sapi5/resource.h
+	@mkdir -p $(SAPI5OBJ)
+	@$(WINDRES) $(RCDEFS) -I sapi5 sapi5/voice.rc -O coff -o $@
+
+$(SAPI5OBJ)/voice32.res: sapi5/voice.rc sapi5/dialog.rc sapi5/resource.h
+	@mkdir -p $(SAPI5OBJ)
+	@$(WINDRES32) $(RCDEFS) -I sapi5 sapi5/voice.rc -O coff -o $@
+
+$(SAPI5OBJ)/config.res: sapi5/config.rc sapi5/dialog.rc sapi5/resource.h sapi5/config.manifest
+	@mkdir -p $(SAPI5OBJ)
+	@$(WINDRES) -I sapi5 sapi5/config.rc -O coff -o $@
+
+$(SAPI5OBJ)/config32.res: sapi5/config.rc sapi5/dialog.rc sapi5/resource.h sapi5/config.manifest
+	@mkdir -p $(SAPI5OBJ)
+	@$(WINDRES32) -I sapi5 sapi5/config.rc -O coff -o $@
+
+$(SAPI5DIR)/openevv_sapi5.dll: $(SAPI5VOICE) sapi5/openevv_sapi5.def $(SAPI5OBJ)/voice.res $(SAPI5HDRS)
+	@mkdir -p $(SAPI5DIR)
+	@$(CXXWIN) $(SAPI5FLAGS) -shared $(SAPI5VOICE) sapi5/openevv_sapi5.def \
+	   $(SAPI5OBJ)/voice.res $(SAPI5LINK) $(SAPI5LIBS) -o $@
+	@echo "built $@"
+
+$(SAPI5DIR)/openevv_sapi5_x86.dll: $(SAPI5VOICE) sapi5/openevv_sapi5.def $(SAPI5OBJ)/voice32.res $(SAPI5HDRS)
+	@mkdir -p $(SAPI5DIR)
+	@$(CXXWIN32) $(SAPI5FLAGS) -shared $(SAPI5VOICE) sapi5/openevv_sapi5.def \
+	   $(SAPI5OBJ)/voice32.res $(SAPI5LINK) -Wl,--enable-stdcall-fixup \
+	   $(SAPI5LIBS) -o $@
+	@echo "built $@"
+
+$(SAPI5DIR)/openevv_config.exe: $(SAPI5CONFIG) $(SAPI5OBJ)/config.res $(SAPI5HDRS)
+	@mkdir -p $(SAPI5DIR)
+	@$(CXXWIN) $(SAPI5FLAGS) -municode -mwindows $(SAPI5CONFIG) \
+	   $(SAPI5OBJ)/config.res $(SAPI5LINK) $(SAPI5LIBS) -lcomctl32 -o $@
+	@echo "built $@"
+
+$(SAPI5DIR)/openevv_config32.exe: $(SAPI5CONFIG) $(SAPI5OBJ)/config32.res $(SAPI5HDRS)
+	@mkdir -p $(SAPI5DIR)
+	@$(CXXWIN32) $(SAPI5FLAGS) -municode -mwindows $(SAPI5CONFIG) \
+	   $(SAPI5OBJ)/config32.res $(SAPI5LINK) $(SAPI5LIBS) -lcomctl32 -o $@
+	@echo "built $@"
+
+$(SAPI5DIR)/voice_test.exe: $(SAPI5TEST) $(SAPI5HDRS)
+	@mkdir -p $(SAPI5DIR)
+	@$(CXXWIN) $(SAPI5FLAGS) $(SAPI5TEST) $(SAPI5LINK) $(SAPI5LIBS) -o $@
+	@echo "built $@"
+
+$(SAPI5DIR)/voice_test32.exe: $(SAPI5TEST) $(SAPI5HDRS)
+	@mkdir -p $(SAPI5DIR)
+	@$(CXXWIN32) $(SAPI5FLAGS) $(SAPI5TEST) $(SAPI5LINK) $(SAPI5LIBS) -o $@
+	@echo "built $@"
+
+# Both voices, both libraries and the papers, in the folder layout the
+# installer installs: each voice finds its engine in eci-x86_64 or eci-x86
+# beside itself. sapi5/installer/openevv.iss packs this folder.
+sapi5-stage: sapi5 sapi5-32 $(BUILD)/eci.dll $(BUILD)/eci32.dll
+	@mkdir -p $(SAPI5DIR)/eci-x86_64 $(SAPI5DIR)/eci-x86
+	@cp $(BUILD)/eci.dll $(SAPI5DIR)/eci-x86_64/eci.dll
+	@cp $(BUILD)/eci32.dll $(SAPI5DIR)/eci-x86/eci.dll
+	@cp LICENSE NOTICE $(SAPI5DIR)/
+	@echo "staged $(SAPI5DIR)"
+
 # The NVDA add-on: the engine as a synthesiser for the screen reader, loaded
 # into its own process. Both libraries go in, because a reader is one bitness
 # or the other and the one that loads in process has to match, so `make nvda'

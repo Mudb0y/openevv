@@ -1,0 +1,7 @@
+; The four names a COM in-process server publishes, and nothing else.
+LIBRARY openevv_sapi5
+EXPORTS
+	DllGetClassObject   PRIVATE
+	DllCanUnloadNow     PRIVATE
+	DllRegisterServer   PRIVATE
+	DllUnregisterServer PRIVATE

@@ -40,6 +40,12 @@ Two ways to check it, and both are worth having. `make win-dlltest` builds `buil
 
 The library exports every name IBM's own `eci.obj` publishes and nothing besides -- seventy-one, checked by diffing the two export tables.
 
+## The SAPI 5 voice
+
+    make sapi5-stage
+
+That builds the engine as a Windows voice, in both word sizes, and lays it out with both libraries in `build/sapi5`; `sapi5/installer/openevv.iss` packs that folder into an installer on Windows. Any program that speaks through Windows can then use it -- Narrator, the speech control panel, anything written against SAPI -- with eight voices for every language the library has. It loads `eci.dll` by name from `eci-x86_64` or `eci-x86` beside itself rather than linking the engine, so it is the same library everything here is checked against. `docs/sapi5.md` is the whole account: what it does with what SAPI asks, how it is built with a C++ mingw, and what proves it.
+
 ## The NVDA add-on
 
     make nvda
