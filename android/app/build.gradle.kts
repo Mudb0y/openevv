@@ -1,11 +1,11 @@
 import org.gradle.internal.os.OperatingSystem
 import java.util.Properties
 
-// Every language module openevv has. US English is named first because the
+// Every language module the engine has. US English is named first because the
 // engine gives that one to a caller who asks for no language in particular,
 // and the settings screen's preview is such a caller.
 val ALL_LANGUAGES = listOf(
-	"enus", "engb", "eses", "esus", "frfr", "frca", "dede", "itit", "plpl", "jajp"
+	"enus", "engb", "eses", "esus", "frfr", "frca", "dede", "itit", "fifi", "ptbr", "plpl", "jajp"
 )
 
 plugins {
@@ -34,30 +34,18 @@ val keystore = rootProject.file("keystore.properties").takeIf { it.exists() }?.l
 	Properties().apply { where.inputStream().use { stream -> load(stream) } }
 }
 
-// The engine is built by its own Makefile rather than by CMake, because that
-// Makefile writes the language rules with Python before it compiles them and
-// nothing here has a reason to reimplement that.
+// The engine is built by the tree's own Makefile rather than by CMake, because
+// that Makefile writes the language rules with Python before it compiles them
+// and nothing here has a reason to reimplement that.
 val buildNative by tasks.registering(Exec::class) {
 	group = "build"
-	description = "Cross-compiles the openevv engine and the JNI bridge for each ABI."
-	val engine = rootProject.layout.projectDirectory.dir("native/openevv")
+	description = "Cross-compiles the OpenEVV engine and the JNI bridge for each ABI."
 	val script = rootProject.layout.projectDirectory.file("native/build-native.sh")
-	// Deliberately not the engine's own sources. The script patches them, so a
-	// task declaring them would be rewriting its own inputs every time it ran
-	// and would never settle: the first build after any change fails and the
-	// next one succeeds. What decides the output is the submodule's commit, the
-	// patches laid on it, and the files named here. Editing native/openevv by
-	// hand wants --rerun-tasks. The patches are a file tree rather than a
-	// directory so that the build still works if they are ever all upstreamed
-	// and the directory goes, since git does not carry an empty one.
-	inputs.files(rootProject.fileTree("native/patches"))
-	inputs.file(rootProject.layout.projectDirectory.file("native/android.mk"))
-	inputs.file(rootProject.layout.projectDirectory.file(".gitmodules"))
-	inputs.file(script)
-	inputs.file(layout.projectDirectory.file("src/main/cpp/evv_jni.c"))
-	inputs.property("abis", abis)
-	inputs.property("rules", rulesForm)
-	inputs.property("langs", languages)
+	// Never up to date as far as Gradle knows. What the libraries are made from
+	// is the whole engine, and the Makefile already knows which of it changed
+	// and rebuilds only that, which a list of inputs here could only ever
+	// approximate.
+	outputs.upToDateWhen { false }
 	outputs.dir(nativeOut)
 	val shell = if (OperatingSystem.current().isWindows) {
 		val git = System.getenv("PROGRAMFILES")?.let { file("$it/Git/bin/bash.exe") }
@@ -73,11 +61,6 @@ val buildNative by tasks.registering(Exec::class) {
 	val ndkEnv = System.getenv("ANDROID_NDK_HOME") ?: System.getenv("ANDROID_NDK_ROOT") ?: ""
 	if (ndkEnv.isNotEmpty()) {
 		environment("ANDROID_NDK_HOME", ndkEnv)
-	}
-	doFirst {
-		if (!engine.file("Makefile").asFile.exists()) {
-			throw GradleException("native/openevv is empty. Run: git submodule update --init --recursive")
-		}
 	}
 }
 

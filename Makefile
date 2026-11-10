@@ -384,6 +384,22 @@ $(BUILD)/$(SONAME): lib/eci_api.c $(OBJECTSPIC) $(RULESTAMP)
 	@ln -sf $(SONAME) $(BUILD)/libeci$(LIBSUF).so
 	@echo "built $@ and the libeci$(LIBSUF).so beside it"
 
+# The same objects for a program that links them into a shared object of its
+# own, which is the Android voice in android/: android/native/build-native.sh
+# runs this with the NDK's clang as CC and links what it names beside its JNI
+# bridge, as the library above is linked. The names go in a file rather than
+# on a command line, since a Windows host's command line is shorter than the
+# list, and the file names exactly this build's objects, so one left behind by
+# a source since taken away is not linked in.
+.PHONY: android-objects
+android-objects: $(OBJECTSPIC) $(OBJDIRPIC)/eci_api.o
+	$(file >$(OBJDIRPIC)/objects.rsp,$(OBJECTSPIC) $(OBJDIRPIC)/eci_api.o)
+	@echo $(OBJDIRPIC)/objects.rsp
+
+$(OBJDIRPIC)/eci_api.o: lib/eci_api.c $(HEADERS)
+	@mkdir -p $(OBJDIRPIC)
+	@$(CCACHE) $(CC) $(CFLAGSPIC) -c $< -o $@
+
 # And the harness that proves it: it links against nothing, loads the library
 # by name, asks for each published name by string and speaks. Being the same
 # source as the Windows one is the point -- a name exported from one and not

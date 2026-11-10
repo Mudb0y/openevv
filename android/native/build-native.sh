@@ -1,23 +1,24 @@
 #!/usr/bin/env bash
-# Builds libevvjni.so out of native/openevv, one file per ABI.
+# Builds libevvjni.so out of this tree's engine, one file per ABI.
 #
-# The engine comes out of its own Makefile, which writes the language rules
-# with Python and then compiles them; that work is per language rather than per
-# ABI, so the first ABI pays for it and the rest do not. What this adds is the
-# JNI bridge and the published ECI names, linked into one shared object so
-# there is no soname for Android's packaging to trip over.
+# The engine comes out of the tree's own Makefile, which writes the language
+# rules with Python and then compiles them; that work is per language rather
+# than per ABI, so the first ABI pays for it and the rest do not. What this
+# adds is the JNI bridge, linked with the engine and its published ECI names
+# into one shared object so there is no soname for Android's packaging to trip
+# over.
 
 set -euo pipefail
 
 here=$(cd "$(dirname "$0")" && pwd)
-root=$(cd "$here/.." && pwd)
-engine="$here/openevv"
+android=$(cd "$here/.." && pwd)
+engine=$(cd "$android/.." && pwd)
 
 ABIS=${ABIS:-"arm64-v8a armeabi-v7a x86_64"}
 API=${API:-21}
 RULES=${RULES:-c}
-LANGS=${LANGS:-lang/enus lang/engb lang/eses lang/esus lang/frfr lang/frca lang/dede lang/itit lang/plpl lang/jajp}
-OUT=${OUT:-"$root/app/build/native/jniLibs"}
+LANGS=${LANGS:-lang/enus lang/engb lang/eses lang/esus lang/frfr lang/frca lang/dede lang/itit lang/fifi lang/ptbr lang/plpl lang/jajp}
+OUT=${OUT:-"$android/app/build/native/jniLibs"}
 JOBS=${JOBS:-$(nproc 2>/dev/null || echo 4)}
 
 # The engine writes its rules with Python, and every language module's text is
@@ -33,17 +34,6 @@ if [ -z "$NDK" ]; then
 fi
 NDK=${NDK//\\//}
 OUT=${OUT//\\//}
-
-# Git Bash hands a native program its arguments with the paths converted, but
-# it cannot convert what is inside a response file, so those are written the
-# way the compiler reads them.
-winpath() {
-	if command -v cygpath >/dev/null 2>&1; then
-		cygpath -m "$1"
-	else
-		printf '%s' "$1"
-	fi
-}
 
 case "$(uname -s)" in
 	Linux*)  hosttag=linux-x86_64 ;;
@@ -72,43 +62,6 @@ if [ ! -x "$clang" ]; then
 	echo "no clang at $clang" >&2
 	exit 1
 fi
-if [ ! -f "$engine/Makefile" ]; then
-	echo "native/openevv is empty; run: git submodule update --init --recursive" >&2
-	exit 1
-fi
-
-# What the engine needs before it is right on this architecture. Each is a bug
-# in openevv rather than a change for Android, and each is written up in its
-# own file; the submodule stays as upstream left it.
-for patch in "$here"/patches/*.patch; do
-	[ -e "$patch" ] || continue
-	if git -C "$engine" apply --reverse --check "$patch" >/dev/null 2>&1; then
-		continue
-	fi
-	if ! git -C "$engine" apply --whitespace=nowarn "$patch"; then
-		# Two builds racing here both see it unapplied and both try it. The
-		# loser has nothing left to do rather than nothing to say.
-		if git -C "$engine" apply --reverse --check "$patch" >/dev/null 2>&1; then
-			continue
-		fi
-		echo "could not apply $(basename "$patch") to native/openevv" >&2
-		exit 1
-	fi
-	echo "applied $(basename "$patch")"
-done
-
-# Every directory the engine's headers sit in, the same set its Makefile builds
-# its own include path from. They stay relative because the link below runs
-# from the engine's own directory.
-incs="-Iinclude"
-for l in $LANGS; do
-	incs="$incs -I$l -Irom/${l##*/}"
-done
-for d in "$engine"/src "$engine"/src/*/ "$engine"/src/*/*/; do
-	[ -d "$d" ] || continue
-	rel=${d#"$engine"/}
-	incs="$incs -I${rel%/}"
-done
 
 triple_for() {
 	case "$1" in
@@ -124,62 +77,33 @@ for abi in $ABIS; do
 	triple=$(triple_for "$abi")
 	build="build/android-$abi"
 	echo "==> $abi ($triple)"
-	# Two flags the engine's own Makefile never needs and this build cannot do
-	# without.
-	#
 	# -fsigned-char, because a plain char is signed on x86 and unsigned on ARM,
 	# and this engine is x86 code transcribed: it reads bytes out of its tables
 	# and compares them as numbers, so where the original saw -114 an ARM build
-	# would see 142 and the comparison would go the other way. This is
-	# precautionary rather than a fix for anything seen. Turning it on changed
-	# no sample of the text tried here, and openevv's own 881-case gate has
-	# never been run on ARM, so it stays as the safer of the two.
+	# would see 142 and the comparison would go the other way. Turning it on
+	# changed no sample of the text tried, so it is the safer of the two rather
+	# than the fix for anything heard.
 	#
-	# -fPIC, because the objects end up inside a shared object, which none of
-	# the engine's own builds are.
-	#
-	# What is deliberately absent is --gc-sections, with the -ffunction-sections
-	# and -fdata-sections that feed it. The engine reaches a language's rules,
-	# constants and tables through tables of addresses rather than by name, so
-	# the linker cannot see what is live: dropping the unreferenced left the
-	# engine speaking most text and faulting in the pitch rules on some of it,
-	# with a null node reference in visleft. The engine's own shared library
-	# target does not use them either.
-	common=(
-		-C "$engine"
-		-f Makefile
-		-f "$here/android.mk"
-		RULES="$RULES"
-		LANGS="$LANGS"
-		BUILD="$build"
-		CC="$clang --target=$triple"
-		CFLAGS="-fPIC -fvisibility=hidden -fsigned-char"
-	)
-	"$make" "${common[@]}" -j"$JOBS" android-objects
-	objdir=$("$make" "${common[@]}" -s android-objdir)
-	# A response file, because the object list is longer than a Windows command
-	# line takes.
-	rsp="$engine/$build/objects.rsp"
-	: > "$rsp"
-	for o in "$engine/$objdir"/*.o; do
-		winpath "$o" >> "$rsp"
-		echo >> "$rsp"
-	done
-	# The Delta machine keeps addresses in 32-bit values, so a 64-bit build
-	# wants the low arena the engine's Makefile turns on for itself.
-	arena=""
-	case "$abi" in
-		arm64-v8a|x86_64) arena="-DEVV_ARENA=1" ;;
-	esac
+	# The Makefile's own library flags do the rest: position independent code,
+	# only the published names visible, and with the rules compiled every
+	# function in a section of its own, so that the link below can drop the
+	# bytecode nothing reads.
+	rsp=$("$make" -C "$engine" -s -j"$JOBS" \
+		RULES="$RULES" \
+		LANGS="$LANGS" \
+		BUILD="$build" \
+		CC="$clang --target=$triple" \
+		CFLAGS="-fsigned-char" \
+		android-objects | tee /dev/stderr | tail -n 1)
 	mkdir -p "$OUT/$abi"
 	( cd "$engine" && "$clang" --target="$triple" \
-		-O2 -std=gnu99 -w -fPIC -fvisibility=hidden -fsigned-char \
+		-O2 -std=gnu99 -fPIC -fvisibility=hidden -fsigned-char \
 		-Werror=int-conversion -Werror=incompatible-pointer-types \
-		$arena -DECI_STATIC $incs \
+		-Iinclude \
 		-shared \
-		"$root/app/src/main/cpp/evv_jni.c" \
-		lib/eci_api.c \
-		"@$build/objects.rsp" \
+		"$android/app/src/main/cpp/evv_jni.c" \
+		"@$rsp" \
+		-Wl,--gc-sections \
 		-Wl,-z,max-page-size=16384 \
 		-lm -llog \
 		-o "$OUT/$abi/libevvjni.so" )

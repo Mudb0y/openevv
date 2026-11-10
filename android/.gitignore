@@ -13,10 +13,6 @@ local.properties
 captures/
 output-metadata.json
 
-# The engine is built out of the submodule in place, so its objects and
-# libraries land inside it.
-native/openevv/build/
-
 # Signing
 *.jks
 *.keystore
