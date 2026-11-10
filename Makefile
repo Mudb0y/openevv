@@ -127,6 +127,13 @@ RULECODE := $(foreach l,$(LANGS), \
               $(l)/delta_rules_$(notdir $(l)).h \
               $(l)/delta_rules_shim_$(notdir $(l)).c)
 
+# The dictionary each language carries, written out of lang/<tag>/dictionary
+# by tools/module/builtindict.py, and three empty volumes for a language that
+# has no such directory. Made for every language and named here rather than
+# found by the wildcard below, for the same reason as RULECODE: on a fresh
+# clone it is not there yet.
+BUILTIN := $(foreach l,$(LANGS),$(l)/delta_builtin_$(notdir $(l)).c)
+
 # Each language has both forms of its rules beside it: the empty table that
 # leaves every rule as bytecode, and the C the decompiler writes. One of the
 # two is linked per language, never both.
@@ -220,9 +227,9 @@ PORT ?= posix
 PORTOUT := %/port_win32.c $(if $(filter none,$(PORT)),%/port_posix.c)
 SOURCES := $(filter-out $(PORTOUT), \
              $(foreach d,$(SRCDIRS),$(wildcard $(d)/*.c))) \
-           $(filter-out $(STALE) $(GENERATED) $(STUBS) $(RULECODE), \
+           $(filter-out $(STALE) $(GENERATED) $(STUBS) $(RULECODE) $(BUILTIN), \
              $(sort $(foreach l,$(LANGS),$(wildcard $(l)/*.c)))) \
-           $(filter %.c,$(RULECODE)) \
+           $(filter %.c,$(RULECODE)) $(BUILTIN) \
            $(ROMS) $(RULESRC) $(LANGLIST)
 
 # Every header, because a struct that changed shape and an object that was
@@ -322,7 +329,7 @@ ALL_CFLAGS := $(OPT) $(ALIAS) -std=gnu99 $(INCS) $(WARN) $(LOW) $(TRIM) $(ROMDEF
 OBJDIR  := $(BUILD)/obj-$(RULES)/$(subst $(space),-,$(TAGS))
 OBJECTS := $(patsubst %.c,$(OBJDIR)/%.o,$(notdir $(SOURCES)))
 
-.PHONY: all probe so so32 sotest phonemes dict dictfile objects stubs rules missing install install-lib clean evv32 probe32 instances interrupt landing rate rates voices wide inikeys stopthread pieces prims ipa xmltok ssml romcan romprims speechd speechd-install speechd-enable-test speechd-test speechd-test-all say-test
+.PHONY: all probe so so32 sotest phonemes dict dictfile objects stubs rules missing install install-lib clean evv32 probe32 instances interrupt landing landsaves rate rates voices wide inikeys stopthread pieces prims ipa xmltok ssml romcan romprims speechd speechd-install speechd-enable-test speechd-test speechd-test-all say-test
 all: $(BUILD)/evv $(BUILD)/openevv-say
 
 $(BUILD)/evv: cli/evv.c $(BUILD)/libevv$(SUF).a $(RULESTAMP)
@@ -567,13 +574,13 @@ speechd-test: $(BUILD)/sd_openevv$(SUF) $(BUILD)/evv
 	   python3 test/speechd.py $(BUILD)/sd_openevv$(SUF) speechd/openevv.conf
 
 # And with every language in it, which is the configuration a release ships.
-# Ten are linked and nine are advertised: Japanese builds and speaks but its
+# Twelve are linked and eleven are advertised: Japanese builds and speaks but its
 # text is not UTF-8 in any of its three code sets, and speechd/openevv.c says
 # why it is deliberately not offered. So the count is stated rather than taken
 # from LANGS, and a language that stopped being advertised would fail here.
 speechd-test-all:
-	@$(MAKE) RULES=$(RULES) SPEECHD_LANGUAGES=9 \
-	   LANGS="lang/enus lang/engb lang/dede lang/eses lang/esus lang/frfr lang/frca lang/itit lang/plpl lang/jajp" \
+	@$(MAKE) RULES=$(RULES) SPEECHD_LANGUAGES=11 \
+	   LANGS="lang/enus lang/engb lang/dede lang/eses lang/esus lang/frfr lang/frca lang/itit lang/plpl lang/jajp lang/fifi lang/ptbr" \
 	   speechd-test
 
 # A dictionary read in from a file, which nothing else here does: cli/probe.c
@@ -597,6 +604,18 @@ landing: $(BUILD)/landing
 
 $(BUILD)/landing: test/harness/landing.c $(BUILD)/libevv.a
 	@$(CC) $(ALL_CFLAGS) test/harness/landing.c $(BUILD)/libevv.a -lpthread -lm -o $@
+	@echo "built $@"
+
+# Whether a landing puts back every register the calling convention makes a
+# function hand back. It builds the landing on its own rather than out of the
+# engine, so it costs seconds; `win-landsaves' is the one that matters, since
+# Windows is where the convention asks for more than the general registers.
+landsaves: $(BUILD)/landsaves
+	@$(BUILD)/landsaves
+
+$(BUILD)/landsaves: test/harness/landsaves.c src/port/evv_land.c src/port/evv_land.h
+	@mkdir -p $(BUILD)
+	@$(CC) $(ALL_CFLAGS) test/harness/landsaves.c src/port/evv_land.c -o $@
 	@echo "built $@"
 
 # A stop from a thread that is not the one speaking, which is what a screen
@@ -924,6 +943,18 @@ $(foreach l,$(LANGS),$(eval $(call entry_record,$(l))))
 $(foreach l,$(LANGS),$(eval $(call \
     $(if $(wildcard $(l)/rules),rulecode_from_text,rulecode_lifted),$(l))))
 
+# The directories are prerequisites too: a file taken out of one leaves no
+# prerequisite newer than the target, but it does change the directory.
+define builtin_for
+$(1)/delta_builtin_$(notdir $(1)).c: tools/module/builtindict.py \
+    $(wildcard $(1)/dictionary $(1)/dictionary/*.dic \
+               $(1)/dictionary/split $(1)/dictionary/fold \
+               $(1)/dictionary/sayable $(1)/dictionary/pieces)
+	@python3 tools/module/builtindict.py write $(1)
+	@touch $$@
+endef
+$(foreach l,$(LANGS),$(eval $(call builtin_for,$(l))))
+
 # The rules as C. Thirteen megabytes written out of the bytecode beside it,
 # so it is made here rather than kept in the tree, where every change to the
 # decompiler would rewrite the whole of it.
@@ -1111,10 +1142,10 @@ crashers32: $(BUILD)/evv32
 .PHONY: words words-record
 # Every language with a list, which is all of them but Polish and Japanese.
 words:
-	@bash test/words.sh check enus engb dede eses esus frfr frca itit
+	@bash test/words.sh check enus engb dede eses esus frfr frca itit fifi ptbr
 
 words-record:
-	@bash test/words.sh record enus engb dede eses esus frfr frca itit
+	@bash test/words.sh record enus engb dede eses esus frfr frca itit fifi ptbr
 
 .PHONY: matrix matrix-record
 matrix:
@@ -1239,22 +1270,24 @@ CFLAGSWIN  := $(OPT) $(ALIAS) -std=gnu99 $(INCS) $(WARN) -DEVV_ARENA=1 \
 # as the releases' do, and need neither.
 LDFLAGSWIN := -static $(MINGW64_LDFLAGS)
 
-# The same list for Windows, and RULECODE is named here for the same reason
-# it is named above: a wildcard answers with what is on disk when the Makefile
-# is read, and on a fresh clone the three files a build writes out of
-# lang/<tag>/rules are not there yet. This list had been left to the wildcard,
+# The same list for Windows, and RULECODE and BUILTIN are named here for the
+# same reason they are named above: a wildcard answers with what is on disk
+# when the Makefile is read, and on a fresh clone the files a build writes out
+# of lang/<tag> are not there yet. This list had been left to the wildcard,
 # so a first build of a clean checkout linked without the bytecode array, the
 # rule count and the symbol table, and failed with four undefined references
-# that a second build would not reproduce.
+# that a second build would not reproduce. BUILTIN was then added to the list
+# above and not to this one, and every Windows link in CI failed the same way
+# while every local build, with the files already on disk, passed.
 SOURCESWIN := $(filter-out %/port_posix.c, \
                 $(foreach d,$(SRCDIRS),$(wildcard $(d)/*.c))) \
-              $(filter-out $(STALE) $(GENERATED) $(STUBS) $(RULECODE), \
+              $(filter-out $(STALE) $(GENERATED) $(STUBS) $(RULECODE) $(BUILTIN), \
                 $(sort $(foreach l,$(LANGS),$(wildcard $(l)/*.c)))) \
-              $(filter %.c,$(RULECODE)) \
+              $(filter %.c,$(RULECODE)) $(BUILTIN) \
               $(ROMS) $(RULESRC) $(LANGLIST)
 OBJECTSWIN := $(patsubst %.c,$(OBJDIRWIN)/%.o,$(notdir $(SOURCESWIN)))
 
-.PHONY: win win-probe win-dlltest win-stopthread
+.PHONY: win win-probe win-dlltest win-stopthread win-landsaves
 win: $(BUILD)/evv.exe $(BUILD)/evvspeak.exe $(BUILD)/eci.dll
 
 # The cross-thread stop, for Windows, because that is where it used to fault:
@@ -1265,6 +1298,16 @@ win-stopthread: $(BUILD)/stopthread$(SUF).exe
 
 $(BUILD)/stopthread$(SUF).exe: test/harness/stopthread.c $(BUILD)/libevv-win$(SUF).a
 	@$(CCWIN) $(CFLAGSWIN) test/harness/stopthread.c $(BUILD)/libevv-win$(SUF).a $(LDFLAGSWIN) -o $@
+	@echo "built $@"
+
+# A landing on Windows has to put back xmm6 to xmm15 and both control words as
+# well as the general registers, and none of that is visible to a Linux run.
+win-landsaves: $(BUILD)/landsaves.exe
+	@wine $(BUILD)/landsaves.exe
+
+$(BUILD)/landsaves.exe: test/harness/landsaves.c src/port/evv_land.c src/port/evv_land.h
+	@mkdir -p $(BUILD)
+	@$(CCWIN) $(CFLAGSWIN) test/harness/landsaves.c src/port/evv_land.c $(LDFLAGSWIN) -o $@
 	@echo "built $@"
 
 # The probe, for Windows, which is how a fault there gets localised: it says

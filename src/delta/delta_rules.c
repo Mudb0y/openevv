@@ -52,7 +52,7 @@ enum {
     OP_CALL, OP_JUMP, OP_BRANCH, OP_CMP, OP_ALU2, OP_ALU1, OP_LOAD,
     OP_STORE, OP_SWITCH, OP_MAP, OP_RETURN, OP_SCALE, OP_ADDK, OP_MUL,
     OP_DIV, OP_WIDEN, OP_SETCC, OP_PUSH, OP_SETARG, OP_POPN, OP_POPREG,
-    OP_FTOL
+    OP_FTOL, OP_MULDIV
 };
 
 /* The argument area is kept as it was rather than worked out per call. The
@@ -621,6 +621,19 @@ static void step(interp *st)
         }
         code = *p++;
         reg_write(st, code, (int32_t)acc);
+        break;
+    }
+
+    /* What a rule lifted from 6.1 does its decimal arithmetic with, in
+       whole numbers: delta_muldiv in delta.h. */
+    case OP_MULDIV: {
+        int round = *p++;
+        int32_t a = operand_read(st, &p, 4, 1);
+        int32_t b = operand_read(st, &p, 4, 1);
+        int32_t c = operand_read(st, &p, 4, 1);
+        unsigned char code = *p++;
+
+        reg_write(st, code, delta_muldiv(a, b, c, round));
         break;
     }
 

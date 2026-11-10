@@ -41,7 +41,7 @@
 0x10001	-1	com
 0x10001	-1	Go to www.example.com now.
 0x10001	-1	Write to john.smith@mail.co.uk please.
-0x10001	-1	Edit /etc/nixos/configuration.nix now.
+0x10001	-1	Edit /etc/nixos/notes.txt now.
 0x10001	-1	Run setup.exe twice.
 0x10001	-1	ftp://files.example.net/pub is old.
 0x10001	-1	The file is report_2024-final.pdf here.

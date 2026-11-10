@@ -264,6 +264,8 @@ def main():
             "en-US": "The quick brown fox.",
             "es-ES": "El pingüino está aquí.",
             "es-MX": "El pingüino está aquí.",
+            "fi-FI": "Hyvää yötä, Jyväskylä.",
+            "pt-BR": "Açúcar e café em São Paulo.",
             "fr-CA": "L'été à Montréal.",
             "fr-FR": "L'été à Paris.",
             "it-IT": "Perché è così.",
@@ -429,12 +431,128 @@ def main():
             "the wideband voice through Speech Dispatcher is not the one "
             f"evv makes ({len(audio)} versus {len(direct) - 44} PCM bytes)"
         )
+
+        # Its filters hand each sample over nine milliseconds late, and the
+        # end of a run has to push the last of it out: left inside, the end
+        # of every utterance was heard under the start of the next, and
+        # after a stop that was the stopped speech, the tail of one typed
+        # letter under the next. b opens on its own silence, so its first
+        # ten milliseconds have to be quiet after an utterance that ended
+        # and after one that was stopped, and its last two have to be quiet
+        # because its own tail came out with it.
+        for interrupt in (None, "STOP"):
+            spoken = text if interrupt is None else " ".join([text] * 20)
+            module.speak(spoken, interrupt=interrupt)
+            audio, _, _, event = module.speak("b")
+            assert event == "702 END"
+            opening = struct.unpack("<220h", audio[:440])
+            closing = struct.unpack("<44h", audio[-88:])
+            assert max(abs(x) for x in opening) < 32, (
+                "the wideband voice began b with the end of what was said "
+                f"before it ({max(abs(x) for x in opening)} after "
+                f"{'a stop' if interrupt else 'an end'})"
+            )
+            assert max(abs(x) for x in closing) < 32, (
+                "the wideband voice kept the end of b back "
+                f"({max(abs(x) for x in closing)} in its last 2 ms)"
+            )
     finally:
         result = module.close()
         os.unlink(wideConfig)
         os.rmdir(wideDir)
     assert result == 0
-    print("speechd: protocol, voices, settings, audio, marks, stop, pause and the wideband voice passed")
+
+    print("speechd: what Speech Dispatcher keeps for the synthesiser",
+          flush=True)
+    # With its own symbol processing Speech Dispatcher asks for punctuation
+    # mode none and leaves in the text what it keeps for the synthesiser,
+    # which the module had been throwing away with what it does not: so
+    # "(unread)" and "artist - album" ran on unpaused, 3-5 was three five and
+    # $5.50 had no dollars. Each is spoken by a module of its own, so that it
+    # is the module's first utterance as evv's is; on the left what has to
+    # reach the engine as it is written, on the right what has to reach it
+    # without the symbol, because the engine would name it.
+    def first_utterance(text):
+        module = ModuleProcess(binary, config)
+        try:
+            module.send("INIT\n")
+            module.expect(b"299-OpenEVV initialized\n")
+            module.expect(b"299 OK LOADED SUCCESSFULLY\n")
+            module.command_with_data(
+                "AUDIO",
+                ["audio_output_method=server"],
+                b"207 OK RECEIVING AUDIO SETTINGS\n",
+            )
+            module.expect(b"203 OK AUDIO INITIALIZED\n")
+            module.set(punctuation_mode="none", voice="male1",
+                       language="en-US", synthesis_voice="NULL")
+            audio, _, _, event = module.speak(text)
+            assert event == "702 END"
+            return audio
+        finally:
+            assert module.close() == 0
+
+    def evv(text):
+        return subprocess.check_output(
+            [directBinary, "-v", "1", "-o", "-", text])[44:]
+
+    for text, reaches in (
+        ("Inbox (unread) now.", "Inbox (unread) now."),
+        ("See [optional] here.", "See [optional] here."),
+        ("Pick <one> now.", "Pick <one> now."),
+        ("Beatles - Abbey Road.", "Beatles - Abbey Road."),
+        ("Ages 3-5 only.", "Ages 3-5 only."),
+        ("It costs $5.50 today.", "It costs $5.50 today."),
+        ("Set $HOME now.", "Set $HOME now."),
+        # A shell prompt, whose dollar Speech Dispatcher leaves for the
+        # synthesiser to read at every level below all.
+        ("stas at Precision:~$ ls", "stas at Precision: $ ls"),
+        ("Go ( back ) now.", "Go   back   now."),
+        ("If a > b then.", "If a   b then."),
+        # A name Speech Dispatcher writes in front of the symbol it names.
+        ("Inbox left paren(unread now.", "Inbox left paren unread now."),
+    ):
+        assert first_utterance(text) == evv(reaches), (
+            f"in punctuation mode none the engine was not given {reaches!r}"
+        )
+
+    print("speechd: an old BuiltInDictionary line", flush=True)
+    # The line once turned off the dictionary US English carries, and a
+    # configuration may still have it. It is read and ignored now, so the
+    # module has to start and say teamtalk -- which that dictionary has and
+    # the rules say otherwise -- as evv says it with the dictionary in.
+    dictText = "We met on teamtalk."
+    withDict = subprocess.check_output([
+        directBinary, "-v", "1", "-o", "-", dictText,
+    ])
+    plainDir = tempfile.mkdtemp()
+    plainConfig = os.path.join(plainDir, "openevv.conf")
+    with open(plainConfig, "w", encoding="utf-8") as out:
+        out.write("BuiltInDictionary 0\n")
+    module = ModuleProcess(binary, plainConfig)
+    try:
+        module.send("INIT\n")
+        module.expect(b"299-OpenEVV initialized\n")
+        module.expect(b"299 OK LOADED SUCCESSFULLY\n")
+        module.command_with_data(
+            "AUDIO",
+            ["audio_output_method=server"],
+            b"207 OK RECEIVING AUDIO SETTINGS\n",
+        )
+        module.expect(b"203 OK AUDIO INITIALIZED\n")
+        module.set(voice="male1", language="en-US", synthesis_voice="NULL")
+        audio, _, _, event = module.speak(dictText)
+        assert event == "702 END"
+        assert audio == withDict[44:], (
+            "an old BuiltInDictionary line changed what the module says "
+            f"({len(audio)} versus {len(withDict) - 44} PCM bytes from evv)"
+        )
+    finally:
+        result = module.close()
+        os.unlink(plainConfig)
+        os.rmdir(plainDir)
+    assert result == 0
+    print("speechd: protocol, voices, settings, audio, marks, stop, pause, the wideband voice and an old dictionary line passed")
 
 
 if __name__ == "__main__":

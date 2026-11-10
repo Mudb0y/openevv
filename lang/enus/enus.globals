@@ -112,3 +112,16 @@ word 1
 # which set_global_constants sets to two and one; and whether a slash was
 # read as per, with the one it is compared against.
 short 6
+
+# One of ours: where the number after a hyphen begins when that hyphen is one
+# of a chain of them, so that the hyphen after that number is read as one of
+# the chain too. hyphen_in_chain in et_numbr.up sets it and reset_sent_vars
+# clears it.
+long 1
+name long 39 hyphen_chain_next
+
+# Seven that 6.1 declares and 4.3 never had, which its money rules lifted into
+# et_numbr.up compare against: a thirteenth kind of currency, where both number
+# the first eleven alike, and six kinds of dollar. set_global_constants sets
+# them to 6.1's values.
+short 7

@@ -1,0 +1,7 @@
+Kello on kolme ja ulkona sataa lunta.
+Tohtori Virtanen maksoi 1234,56 euroa 3. toukokuuta 2026 kello 19.45.
+Osoite on www.esimerkki.fi/polku?q=1 ja puhelin 09 123 4567.
+Testi 1 2 3, ABC XYZ, yhdys-sana-testi ja ISOT KIRJAIMET.
+Yksi sana rivilla. Ja viela yksi; lisaksi "teksti lainausmerkeissa" keskella.
+Lentokonesuihkuturbiinimoottoriapumekaanikkoaliupseerioppilas, Kuopio ja 42 % luvusta 3,14159.
+Han sanoi: ala tee sita! Sitten (sivumennen sanoen) 1/2 + 3/4 = 5/4; katso s. 12.

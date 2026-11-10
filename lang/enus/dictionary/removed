@@ -1,0 +1,406 @@
+# Entries taken out of US English's dictionary, one a line: the volume, a
+# tab, the word, a tab, what the entry said, a tab, and why. The build does
+# not read this. It is the record that keeps a word out: a later change the
+# community makes to one of these words is reported by
+# tools/measure/dictgate.py rather than taken, and
+# tools/measure/published.py proposes nothing for them. Published means
+# Merriam-Webster's first-listed form for an ordinary word, the person's or
+# the place's own for a name, and Wiktionary or the CMU Pronouncing
+# Dictionary where nothing better has the word; CMU supports the rules is
+# what CMU alone said, before anything better was asked, and is the reason
+# for the capitals, which spelled ordinary words a letter at a time.
+
+main	ACT	ay cea tea	CMU supports the rules
+main	AG	ay jee	CMU supports the rules
+main	ALS	ay ell ess	CMU supports the rules
+main	AMI	ay em igh	CMU supports the rules
+main	AMS	ay em ess	CMU supports the rules
+main	AST	ay ess tea	CMU supports the rules
+main	AT	ay tea	CMU supports the rules
+main	ATA	ay tea ay	CMU supports the rules
+main	AVI	ay vee igh	CMU supports the rules
+main	BEV	bea ee vee	CMU supports the rules
+main	CAI	cea ay igh	CMU supports the rules
+main	DEA	dee ee ay	CMU supports the rules
+main	DOE	dee oe ee	CMU supports the rules
+main	DOI	dee oe igh	CMU supports the rules
+main	DOT	dee oe tea	CMU supports the rules
+main	EB	ee bea	CMU supports the rules
+main	EDI	ee dee igh	CMU supports the rules
+main	EEG	ee ee jee	CMU supports the rules
+main	ENT	ee en tea	CMU supports the rules
+main	ER	ee ar	CMU supports the rules
+main	EV	ee vee	CMU supports the rules
+main	EVA	ee vee ay	CMU supports the rules
+main	exe	ee eks ee	Wiktionary lists the rules' reading and not the entry's
+main	FE	eff ee	CMU supports the rules
+main	FIDE	fee day	CMU supports the rules
+main	GNU	`[.0gx.1nu]	CMU supports the rules
+main	HUD	aitch yue dee	CMU supports the rules
+main	IDE	igh dee ee	CMU supports the rules
+main	KANZ	keigh ay en zee	CMU supports the rules
+main	KERA	keigh ee ar eigh	CMU supports the rules
+main	KIDS	keigh eye dee ess	CMU supports the rules
+main	KNOW	keigh en oh doubleyou	CMU supports the rules
+main	KOJI	keigh oh jay eye	CMU supports the rules
+main	KOTO	keigh oh tea oh	CMU supports the rules
+main	KOTZ	keigh oh tea zee	CMU supports the rules
+main	KUSA	keigh yue ess ay	CMU supports the rules
+main	KUT	keigh yue tea	CMU supports the rules
+main	LA	ell ay	CMU supports the rules
+main	LE	ell ee	CMU supports the rules
+main	LED	ell ee dee	CMU supports the rules
+main	MA	em ay	CMU supports the rules
+main	MAO	em ay oe	CMU supports the rules
+main	MIC	em igh cea	CMU supports the rules
+main	NA	en ay	CMU supports the rules
+main	ODE	oe dee ee	CMU supports the rules
+main	OTA	oe tea ay	CMU supports the rules
+main	PA	pea ay	CMU supports the rules
+main	SEO	ess ee oe	CMU supports the rules
+main	TI	tea igh	CMU supports the rules
+main	TIA	tea igh ay	CMU supports the rules
+main	UHL	yue aitch ell	CMU supports the rules
+main	VO	vee oe	CMU supports the rules
+main	WESS	doubleyou ee ess ess	CMU supports the rules
+main	WHO	doubleyou aitch oe	CMU supports the rules
+main	WILL	doubleyou eye ell ell	CMU supports the rules
+main	WITH	doubleyou eye tea aiche	CMU supports the rules
+root	abdallah	`[.1Ab.0dx.0lx]	CMU Pronouncing Dictionary lists the rules' reading and not the entry's; first æbˈdæl.ə
+root	achille	`[.0x.1Sil]	the rules say it as Italian aˈkille, a guess does: əˈkɪ.li
+root	aden	`[.1a.0FXn]	the rules say it as Wiktionary does: /ˈeɪ.dən/
+root	adia	`[.0x.1di.0x]	the rules say it as CMU Pronouncing Dictionary, a guess does: ˈɑ.di.ə
+root	adolf	`[.1A.2dclf]	Merriam-Webster / established English reading AY-dolf lists the rules' reading and not the entry's; first ˈeɪ.dɑlf
+root	adonian	`[.0x.1da.0ni.0Xn]	Wiktionary lists the rules' reading and not the entry's
+root	agathokakological	`[.2A.0gx.2To.2kA.0kx.1la.0JX.0kxl]	Wiktionary lists the rules' reading and not the entry's
+root	agnelli	`[.2A.1nyE.0li]	the rules are CMU's; en.wikipedia.org/wiki/Gianni_Agnelli, a guess gives ɑnˈjɛ.li
+root	aguirre	`[.0x.1gi.0ri]	the rules are CMU's; Spanish aˈɣire, a guess gives ɑˈgiɹ.eɪ
+root	aisha	`[.1a.2i.0SH]	Wiktionary lists the rules' reading and not the entry's; first /aɪˈiːʃə/
+root	akhtar	`[.1Ak.2tar]	neither says it as BookBrowse author pronunciation Ayad Akhtar AHK-tar does, ˈɑk.tɑɹ; ours in root.dic
+root	alitalia	`[.2cl.0I.1tA.0lyx]	neither says it as Wiktionary does, /ˌɑːlɪˈtɑːliə/; ours in root.dic
+root	allahabad	`[.1a.0lx.0hx.2bad]	Wiktionary lists the rules' reading and not the entry's
+root	alsop	`[.1cl.2sap]	neither says it as en.wikipedia.org/wiki/Marin_Alsop does, ˈɔl.səp; ours in root.dic
+root	amador	`[.1a.0mx.2dcr]	en.wikipedia.org/wiki/Amador_County,_California lists the rules' reading and not the entry's; first ˈæ.məˌdɔɹ
+root	americaness	`[.0x.2me.0rX.0kx.1nEs]	Wiktionary lists the rules' reading and not the entry's
+root	andres	`[.1an.2dres]	neither says it as Spanish Andrés anˈdɾes does, ɑnˈdɹɛs; ours in root.dic
+root	angeline	`[.1An.0JX.2lYn]	the rules say it as CMU Pronouncing Dictionary AN-juh-leen, a guess does: ˈæn.dʒə.lin
+root	ansatz	`[.1an.2sats]	Wiktionary lists the rules' reading and not the entry's
+root	apodeictic	`[.2A.0px.1dIk.0tXk]	Wiktionary lists the rules' reading and not the entry's
+root	apophis	`[.0x.1po.0fXs]	Wiktionary lists the rules' reading and not the entry's
+root	appendiceal	`[.0x.2pEn.0dX.1si.0xl]	Wiktionary lists the rules' reading and not the entry's
+root	applicative	`[.1Ap.0lX.0kx.0FXv]	Wiktionary lists the rules' reading and not the entry's
+root	arboriculture	`[.1ar.0bxr.0X.2kHl.0CR]	Wiktionary lists the rules' reading and not the entry's
+root	asimov	`[.1A.0zX.2mcf]	the rules say it as en.wikipedia.org/wiki/Isaac_Asimov does: ˈæ.zɪˌmɔv
+root	avril	`[.0xv.1ril]	Wiktionary lists the rules' reading and not the entry's; first /ˈævɹɪl/
+root	ayo	`[.1Y.0o]	the rules say it as Wiktionary does: /ˈeɪ.(j)oʊ/
+root	baber	`[.1ba.0bR]	the rules say it as no authority found, a guess does: ˈbeɪ.bɚ
+root	bacchius	`[.0bx.1kY.0xs]	Wiktionary lists the rules' reading and not the entry's
+root	ballmer	`[.1bc.0mR]	neither says it as en.wikipedia.org/wiki/Steve_Ballmer does, ˈbɔl.mɚ; ours in root.dic
+root	ballonet	`[.2bAl.0x.1ne]	Wiktionary lists the rules' reading and not the entry's
+root	barbe	`[.1bar.0bi]	Merriam-Webster lists the rules' reading and not the entry's; first ˈbärb
+root	bataan	`[.0bx.1tAn]	Wiktionary lists the rules' reading and not the entry's; first /bætɑˈʔɑn/
+root	batista	`[.2ba.1ti.0stx]	neither says it as en.wikipedia.org/wiki/Fulgencio_Batista does, bəˈti.stə; ours in root.dic
+root	battalion	`[.0bx.1tA.0li.0Xn]	Merriam-Webster lists the rules' reading and not the entry's; first bə-ˈtal-yən
+root	beaux	`[.1boz]	the rules say it as Wiktionary does: /bəʊ/
+root	beelzebub	`[.2bi.1El.0zx.2bHb]	Wiktionary lists the rules' reading and not the entry's
+root	bejan	`[.1be.0JXn]	Wiktionary lists the rules' reading and not the entry's
+root	belafonte	`[.2bEl.0x.1fan.2te]	en.wikipedia.org/wiki/Harry_Belafonte lists the rules' reading and not the entry's; first ˌbɛl.əˈfɑn.ti
+root	benigno	`[.0bX.1ni.0no]	neither says it as en.wikipedia.org/wiki/Benigno_Aquino_III does, bɛˈnig.noʊ; ours in root.dic
+root	berens	`[.1ber.0Xnz]	CMU supports the rules
+root	biros	`[.1bIr.0oz]	Cambridge US ˈbaɪ.roʊ lists the rules' reading and not the entry's; first ˈbaɪ.ɹoʊz
+root	bonilla	`[.2bo.1ni.0x]	neither says it as en.wikipedia.org/wiki/Bobby_Bonilla does, boʊˈni.jə; ours in root.dic
+root	borrel	`[.0bx.1rEl]	Wiktionary lists the rules' reading and not the entry's
+root	branwen	`[.1bran.0wXn]	Wiktionary lists the rules' reading and not the entry's
+root	buddleia	`[.2bHd.1li.0x]	Wiktionary lists the rules' reading and not the entry's
+root	buenos	`[.1bO.0nXs]	the rules say it as en.wikipedia.org/wiki/Buenos_Aires does: ˈbweɪ.nəs
+root	bushido	`[.1bU.0SX.2do]	Wiktionary lists the rules' reading and not the entry's
+root	caliphal	`[.1kel.0X.0fxl]	Wiktionary lists the rules' reading and not the entry's
+root	canistel	`[.2kA.0nX.1stEl]	Wiktionary lists the rules' reading and not the entry's
+root	cantabria	`[.2kan.1ta.0bri.0x]	Wiktionary lists the rules' reading and not the entry's
+root	caracara	`[.2ker.0x.1ker.0x]	Wiktionary lists the rules' reading and not the entry's
+root	carcinomata	`[.2kar.0sX.1no.0mx.0Fx]	Wiktionary lists the rules' reading and not the entry's
+root	castilla	`[.2ka.1sti.0lyx]	neither says it as en.wikipedia.org/wiki/Vinny_Castilla does, kɑˈsti.jə; ours in root.dic
+root	celtiberian	`[.2sEl.0tX.1ber.0i.0Xn]	Wiktionary lists the rules' reading and not the entry's
+root	chabot	`[.1SA.0bo]	the rules say it as Wiktionary does: /ʃəˈboʊ/
+root	charango	`[.0Sx.1raG.0go]	Wiktionary lists the rules' reading and not the entry's
+root	chasse	`[.1Sas]	neither says it as Wiktionary does, /ʃɑˈseɪ/; ours in root.dic
+root	civitates	`[.2sI.0vX.1te.0tiz]	Wiktionary lists the rules' reading and not the entry's
+root	clara	`[.1kla.0rx]	Wiktionary lists the rules' reading and not the entry's; first /ˈklɛəɹə/
+root	cockamamie	`[.1ka.0kx.2me.0mi]	Merriam-Webster lists the rules' stress and not the entry's; first ˌkä-kə-ˈmā-mē
+root	cognoscence	`[.2kag.1na.0sXns]	Wiktionary lists the rules' reading and not the entry's
+root	concentrative	`[.1kan.0sXn.0trx.0FXv]	Wiktionary lists the rules' reading and not the entry's
+root	consortia	`[.0kXn.1scr.0ti.0x]	the rules say it as Wiktionary does: /kənˈsoɹʃə/
+root	conyers	`[.1ka.0ni.0Rz]	the rules say it as general usage KON-yərz does: ˈkɑn.jɚz
+root	cuomo	`[.2ku.1o.0mo]	en.wikipedia.org/wiki/Andrew_Cuomo lists the rules' reading and not the entry's; first ˈkwoʊ.moʊ
+root	dalian	`[.0dal.1yan]	neither says it as Wiktionary does, /dɑːliˈæn/; ours in root.dic
+root	danalite	`[.1de.0nx.2lYt]	Wiktionary lists the rules' reading and not the entry's
+root	danseuse	`[.0dan.1sUz]	Wiktionary lists the rules' reading and not the entry's
+root	declinature	`[.0dX.1klY.0nx.0CR]	Wiktionary lists the rules' reading and not the entry's
+root	deepak	`[.1di.2pHk]	neither says it as en.wikipedia.org/wiki/Deepak_Chopra /ˈdiːpɑːk/ does, ˈdi.pɑk; ours in root.dic
+root	defalcate	`[.0dX.1fAl.2ket]	Wiktionary lists the rules' reading and not the entry's
+root	delavirdine	`[.2dEl.0x.1vR.2din]	Wiktionary lists the rules' reading and not the entry's
+root	desertful	`[.0dX.1zRt.0fxl]	Wiktionary lists the rules' reading and not the entry's
+root	dhivehi	`[.1di.2ve.0hi]	Wiktionary lists the rules' reading and not the entry's
+root	docetic	`[.2do.1si.0FXk]	Wiktionary lists the rules' reading and not the entry's
+root	duarte	`[.0du.1ar.0ti]	the rules say it as Spanish/Portuguese surname, a guess does: ˈdwɑɹ.teɪ
+root	dulce	`[.1dHl.0se]	neither says it as Merriam-Webster does, ˈdül-ˌsā; ours in root.dic
+root	dunite	`[.1dH.2nYt]	the rules say it as Merriam-Webster does: ˈdü-ˌnīt
+root	echard	`[.1Ek.2hard]	Merriam-Webster lists the rules' reading and not the entry's; first ˈeˌkärd
+root	emptor	`[.1Emp.2tcr]	the rules say it as Merriam-Webster does: ˈem(p)tər
+root	empusa	`[.2Em.1pu.0zx]	Wiktionary lists the rules' reading and not the entry's
+root	erdos	`[.1R.2dRS]	neither says it as aperiodical.com/2013/03/porl-air-dursh-a-public-service-announcement/  does, ˈɛɹ.dɚʃ; ours in root.dic
+root	escapologist	`[.0X.2ske.1pal.0x.0JXst]	Wiktionary lists the rules' reading and not the entry's
+root	escapology	`[.0X.2ske.1pal.0x.0Ji]	Wiktionary lists the rules' reading and not the entry's
+root	esperanto	`[.2Es.0px.1ran.0to]	Wiktionary lists the rules' reading and not the entry's
+root	esteban	`[.2E.1stE.2ban]	the rules say it as Wikipedia Esteban: English tends to ˈɛstəbæn does: ˈɛ.stə.bɑn
+root	exaptation	`[.2Eg.2zAp.1te.0SXn]	Wiktionary lists the rules' reading and not the entry's
+root	exegetes	`[.2Ek.0sX.1Ji.0Fiz]	Wiktionary lists the rules' reading and not the entry's
+root	fabio	`[.1fA.0bi.0o]	the rules say it as Italian [ˈfaːbjo] does: ˈfɑ.bi.oʊ
+root	floriferous	`[.2flc.1rI.0fx.0rxs]	Wiktionary lists the rules' reading and not the entry's
+root	fodor	`[.1fo.2dcr]	the rules say it as en.wikipedia.org/wiki/Fodor%27s /ˈfoʊdərz/ does: ˈfoʊ.ɾɚ
+root	forethoughtful	`[.2fcr.1Tct.0fxl]	Merriam-Webster lists the rules' stress and not the entry's; first ˈfȯr-ˌthȯt-fəl
+root	froehlich	`[.1fre.0lXk]	the rules say it as no authority found, a guess does: ˈfɹoʊ.lɪk
+root	fugazy	`[.2fu.1ga.0zi]	neither says it as listserv.linguistlist.org/pipermail/ads-l/2015-April/136658.html /fiU  does, ˌfjuˈgeɪ.zi; ours in root.dic
+root	gadhafi	`[.0kx.1da.0fi]	the rules say it as en.wikipedia.org/wiki/Muammar_Gaddafi /ɡəˈdɑːfi/ does: gəˈdɑ.fi
+root	gaeta	`[.2gY.1e.0Fx]	neither says it as Merriam-Webster gä-ˈā-tä does, gɑˈeɪ.tə; ours in root.dic
+root	galangal	`[.1gA.0lxG.2gAl]	Wiktionary lists the rules' reading and not the entry's
+root	gateau	`[.0gA.1to]	the rules say it as merriam-webster.com/dictionary/gateau does: gɑˈtoʊ
+root	gautama	`[.1gc.0Fx.0mx]	Wiktionary lists the rules' reading and not the entry's
+root	gavial	`[.1gA.0vi.0xl]	Wiktionary lists the rules' reading and not the entry's
+root	generale	`[.2JE.0nx.1ra.0le]	the rules are CMU's; no source, a guess gives ʒeɪ.neɪˈɹɑl
+root	generalissimo	`[.2JEn.0rx.1lI.0sX.0mo]	neither says it as Merriam-Webster does, ˌje-nə-rə-ˈli-sə-ˌmō; ours in root.dic
+root	gif	`[.1JIf]	the rules say it as merriam-webster.com/dictionary/GIF lists first, ˈgif; the entry said its second, ˈjif
+root	gladius	`[.1gle.0Fi.0xs]	Wiktionary lists the rules' reading and not the entry's
+root	glatt	`[.1glat]	Wiktionary lists the rules' reading and not the entry's
+root	glissade	`[.0glX.1sad]	Wiktionary lists the rules' reading and not the entry's
+root	glyburide	`[.0glY.1byu.2rYd]	Wiktionary lists the rules' reading and not the entry's
+root	glyphosate	`[.1glY.0fx.2set]	Wiktionary lists the rules' reading and not the entry's
+root	golgotha	`[.1gHl.0gx.0Tx]	Wiktionary lists the rules' reading and not the entry's
+root	greenwich	`[.1grI.0nXC]	Wiktionary lists the rules' reading and not the entry's; first /ˈɡɹɛnɪt͡ʃ/
+root	grote	`[.1gro.0ti]	the rules say it as usual American does: ˈgɹoʊt
+root	grygiel	`[.1grY.0gxl]	the rules are CMU's; no source found, a guess gives ˈgɹɪ.gəl
+root	guido	`[.1gi.0Fo]	the rules say it as Wiktionary does: /ˈɡwidoʊ/
+root	guillen	`[.1gi.0Xn]	neither says it as en.wikipedia.org/wiki/Guill%C3%A9n does, giˈjɛn; ours in root.dic
+root	guinn	`[.1gwIn]	the rules say it as no source found, a guess does: ˈgɪn
+root	gunnar	`[.1ga.0nR]	the rules are CMU's; Merriam-Webster gives ˈgu̇-ˌnär
+root	gunther	`[.1gUn.0tR]	the rules say it as Wiktionary does: /ˈɡʌnθɚ/
+root	gustavus	`[.2gu.1sta.0vxs]	neither says it as dictionary.com/browse/gustavus does, gəˈsteɪ.vəs; ours in root.dic
+root	gutierrez	`[.2gu.0ti.1er.2Ez]	the rules are CMU's; en.wikipedia.org/wiki/Guti%C3%A9rrez gives ˌgu.ɾiˈɛɹ.əz
+root	hadassah	`[.0hx.1da.0sx]	Wiktionary lists the rules' reading and not the entry's
+root	hakeem	`[.0hA.1kim]	the rules say it as en.wikipedia.org/wiki/Hakeem_Jeffries does: hɑˈkim
+root	hassan	`[.1hA.0sXn]	the rules, chosen by ear; no authoritative English source, a guess gives həˈsɑn
+root	hechinger	`[.1hE.0SIG.0R]	the rules are CMU's; no source found, a guess gives ˈhɛ.kɪŋ.ɚ
+root	hemphill	`[.1hEm.0pxl]	neither says it as usual American does, ˈhɛm.fɪl; ours in root.dic
+root	hilal	`[.0hX.1lAl]	Wiktionary lists the rules' reading and not the entry's
+root	hindutva	`[.0hXn.1dut.0vx]	Wiktionary lists the rules' reading and not the entry's
+root	homeoteleuton	`[.2ho.0mi.0o.1tEl.0yX.2tan]	Wiktionary lists the rules' reading and not the entry's
+root	importunity	`[.2Im.2pcr.1tu.0nX.0Fi]	Wiktionary lists the rules' reading and not the entry's
+root	intelsat	`[.1In.0txl.2sAt]	dictionary.com/browse/intelsat lists the rules' reading and not the entry's; first ɪnˈtɛlˌsæt
+root	ishihara	`[.2i.0Si.1har.0x]	dictionary.com/browse/ishihara-test lists the rules' reading and not the entry's; first ˌɪʃiˈhɑɹə
+root	issa	`[.1i.0sx]	the rules say it as Wiktionary does: /ˈɪsə/
+root	jainism	`[.1JY.2nI.0zxm]	the rules say it as Wiktionary does: /ˈd͡ʒeɪnɪzm̩/
+root	janel	`[.0Jx.1nEl]	CMU supports the rules
+root	javier	`[.2ha.0vi.1R]	the rules say it as en.wikipedia.org/wiki/Javier_(name) does: ˌhɑviˈɛɹ
+root	jimenez	`[.2hi.1mE.2nEs]	the rules are CMU's; dictionary.com/browse/jimenez gives ˌhiˈmɛnɛz
+root	joachim	`[.2hu.0a.1kim]	neither says it as merriam-webster.com/dictionary/Joachim does, joʊˈɑkɪm; ours in root.dic
+root	jorgensen	`[.1ycr.0gXn.0sXn]	the rules say it as en.wikipedia.org/wiki/Christine_Jorgensen does: ˈdʒɔɹɡənsən
+root	judeo	`[.2Ju.1di.0o]	the rules say it as merriam-webster.com/dictionary/Judeo-Christian does: dʒuˈdeɪoʊ
+root	juilliard	`[.1Jul.2yard]	the rules say it as en.wikipedia.org/wiki/Juilliard_School does: ˈdʒuliɑɹd
+root	kahan	`[.1kan]	the rules say it as no source found, a guess does: kəˈhɑn
+root	kalashnikov	`[.0kx.1lAS.0nX.2kaf]	the rules say it as Wiktionary does: /kəˈlæʃnəˌkɑv/
+root	keisling	`[.1ki.0slIG]	the rules say it as no source found, a guess does: ˈkaɪslɪŋ
+root	kerman	`[.0kR.1man]	no source fetched lists the rules' reading and not the entry's; first ˈkɚmən
+root	klippel	`[.0klX.1pEl]	en.wikipedia.org/wiki/Klippel%E2%80%93Feil_syndrome lists the rules' reading and not the entry's; first ˈklɪpəl
+root	kobayashi	`[.2ko.0bY.1a.0Si]	the rules say it as merriam-webster.com/dictionary/Kobayashi does: ˌkoʊbɑˈjɑʃi
+root	koruna	`[.1kc.0rx.0na]	Wiktionary lists the rules' reading and not the entry's
+root	kowtow	`[.2kW.1tW]	Merriam-Webster lists the rules' stress and not the entry's; first ˈkau̇-ˌtau̇
+root	kunz	`[.1kuns]	the rules are CMU's; merriam-webster.com/dictionary/kunzite, a guess gives ˈkʊnts
+root	kursk	`[.1kUrsk]	Wiktionary lists the rules' reading and not the entry's
+root	kwangju	`[.2kwaGg.1Ju]	the rules say it as merriam-webster.com/dictionary/Gwangju does: ˈkwɑŋdʒu
+root	kyrgyzstan	`[.2kR.0gX.1stAn]	Wiktionary lists the rules' reading and not the entry's
+root	lachlan	`[.1la.0klXn]	the rules say it as Wiktionary does: /ˈlæklən/
+root	lassa	`[.1lA.0sx]	the rules say it as dictionary.com/browse/lassa-fever does: ˈlɑsə
+root	lazulite	`[.1lA.0ZX.2lYt]	Merriam-Webster lists the rules' reading and not the entry's; first ˈla-zyü-ˌlīt
+root	lessor	`[.2lE.1scr]	Wiktionary lists the rules' reading and not the entry's
+root	leuprolide	`[.0lu.1pro.2lYd]	Wiktionary lists the rules' reading and not the entry's
+root	likud	`[.0lI.1kUd]	neither says it as dictionary.com/browse/likud does, lɪˈkud; ours in root.dic
+root	lise	`[.1li.0sx]	the rules are CMU's; en.wikipedia.org/wiki/Lise_Meitner, a guess gives ˈlizə
+root	logotype	`[.1lc.0gx.2tYp]	Wiktionary lists the rules' reading and not the entry's
+root	losch	`[.1loS]	the rules say it as no source found, a guess does: ˈlɑʃ
+root	lubavitcher	`[.2lu.1ba.0vX.0CR]	the rules say it as merriam-webster.com/dictionary/Lubavitcher does: ˈlu.bə.ˌvɪ.tʃɚ
+root	lunati	`[.0lX.1ne.2FY]	the rules say it as no source found, a guess does: luˈnɑ.ɾi
+root	lydic	`[.1lY.0FXk]	the rules say it as no source found, a guess does: ˈlɪ.ɾɪk
+root	mahathir	`[.1mA.0hx.2tir]	the rules are CMU's; languagehat.com/mahathir/, a guess gives məˈhɑ.tiɹ
+root	manama	`[.0mx.1nA.0mx]	Wiktionary lists the rules' reading and not the entry's
+root	mandalit	`[.2mAn.0dx.1lit]	the rules are CMU's; en.wikipedia.org/wiki/Mandalit_del_Barco gives ˌmɑn.dɑˈlit
+root	mansuetude	`[.1mAn.0swX.2tud]	Wiktionary lists the rules' reading and not the entry's
+root	masseuse	`[.2mA.1suz]	Wiktionary lists the rules' reading and not the entry's
+root	maurizio	`[.2mc.1rI.0tsi.0o]	neither says it as en.wikipedia.org/wiki/Maurizio does, ˌmaʊˈɹit.si.oʊ; ours in root.dic
+root	mccallum	`[.0mX.1kcl.0xm]	the rules say it as usual pronunciation of the surname does: məˈkæl.əm
+root	mceachern	`[.0mX.1kAT.0rXn]	the rules are CMU's; Gaelic Mac Eachainn, a guess gives məˈkɛ.kɚn
+root	mensch	`[.1mEnC]	the rules say it as Merriam-Webster does: ˈmen(t)sh
+root	mesenteric	`[.2mE.0zXn.1ter.0Xk]	the rules say it as dictionary.com/browse/mesenteric does: ˌmɛ.sənˈtɛɹ.ɪk
+root	metatron	`[.0mX.1tAt.0rXn]	Wiktionary lists the rules' reading and not the entry's
+root	methimazole	`[.0mX.1TY.0mx.2zol]	Wiktionary lists the rules' reading and not the entry's
+root	microglia	`[.2mY.1kra.0gli.0x]	Wiktionary lists the rules' reading and not the entry's
+root	millinery	`[.1mIl.0X.2ne.0ri]	Wiktionary lists the rules' reading and not the entry's
+root	modigliani	`[.2mo.0di.0li.1a.0ni]	neither says it as dictionary.com/browse/modigliani does, ˌmoʊ.dilˈjɑ.ni; ours in root.dic
+root	moline	`[.1mo.0lXn]	the rules say it as Merriam-Webster does: mə-ˈlēn
+root	monosemy	`[.0mx.1na.0sX.0mi]	Wiktionary lists the rules' reading and not the entry's
+root	morphemic	`[.2mcr.1fi.0mXk]	Wiktionary lists the rules' reading and not the entry's
+root	mostar	`[.1ma.2star]	the rules say it as dictionary.com/browse/mostar does: ˈmoʊ.stɑɹ
+root	mullally	`[.0mx.1lW.0li]	the rules say it as no source found, a guess does: ˈmʌl.ə.li
+root	multimeter	`[.2mHl.1tI.0mX.0FR]	Wiktionary lists the rules' reading and not the entry's
+root	mundanity	`[.2mHn.1de.0nX.0Fi]	Wiktionary lists the rules' reading and not the entry's
+root	murdaugh	`[.1mR.2dck]	the rules say it as Wiktionary does: /ˈmɜː(ɹ)dɔː/
+root	nagy	`[.1ncJ]	neither says it as Wiktionary does, /ˈnæɡi/; ours in root.dic
+root	nakasone	`[.2na.0kx.1so.0ne]	the rules say it as Merriam-Webster does: ˌnä-kə-ˈsō-nē
+root	naypyidaw	`[.1nE.0pyi.2dc]	Wiktionary lists the rules' reading and not the entry's
+root	nidor	`[.1nY.2dcr]	Wiktionary lists the rules' reading and not the entry's
+root	nitrosyl	`[.2nY.1tro.0sxl]	Wiktionary lists the rules' reading and not the entry's
+root	novity	`[.1no.0vX.0Fi]	Wiktionary lists the rules' reading and not the entry's
+root	nuku'alofa	`[.2nu.2ku.0X.1la.0fx]	Wiktionary lists the rules' reading and not the entry's
+root	olivier	`[.0x.1li.0vi.0e]	the rules are CMU's; en.wikipedia.org/wiki/Laurence_Olivier gives əˈlɪ.vi.eɪ
+root	onshore	`[.2an.1Scr]	Merriam-Webster lists the rules' stress and not the entry's; first ˈȯn-ˌshȯr
+root	orthotist	`[.2cr.1Ta.0FXst]	Wiktionary lists the rules' reading and not the entry's
+root	ouabain	`[.0wa.1be.0Xn]	Wiktionary lists the rules' reading and not the entry's
+root	outlawry	`[.1Wt.2lar.0i]	the rules say it as Dictionary.com outlawry ˈaʊtˌlɔ ri does: ˈaʊtˌlɔ.ɹi
+root	outsoar	`[.1Wt.2scr]	Merriam-Webster lists the rules' stress and not the entry's; first ˌau̇t-ˈsȯr
+root	oviduct	`[.1o.0vX.2dHkt]	Wiktionary lists the rules' reading and not the entry's
+root	painstaking	`[.1pen.2zte.0kIG]	the rules say it as Merriam-Webster does: ˈpān-ˌstā-kiŋ
+root	pantofle	`[.2pAn.1to.0fxl]	Wiktionary lists the rules' reading and not the entry's
+root	panza	`[.1pan.0zx]	the rules say it as en.wikipedia.org/wiki/Sancho_Panza does: ˈpæn.zə
+root	paraguayan	`[.2pe.0rx.1gwe.0Xn]	the rules, chosen by ear; Wiktionary gives /ˈpæɹ.ə.ɡwaɪən/
+root	paraleipsis	`[.2per.0x.1lIp.0sXs]	Wiktionary lists the rules' reading and not the entry's
+root	parergon	`[.0px.1rR.2gan]	Wiktionary lists the rules' reading and not the entry's
+root	paschal	`[.1pAs.0kxl]	CMU supports the rules
+root	pavlov	`[.1pAv.2laf]	the rules say it as Dictionary.com pavlov ˈpæv lɒv, -lɔf does: ˈpæv.lɑv
+root	pavlovian	`[.2pAv.1la.0vi.0Xn]	the rules say it as Wiktionary does: /pævˈloʊvi.ən/
+root	pennebaker	`[.1pI.0nX.2be.0kR]	neither says it as en.wikipedia.org/wiki/D._A._Pennebaker does, ˈpɛ.nɪˌbeɪ.kɚ; ours in root.dic
+root	peshawar	`[.0pX.1Sa.0wR]	Wiktionary lists the rules' reading and not the entry's
+root	phalanstery	`[.1fAl.0Xn.2ster.0i]	Wiktionary lists the rules' reading and not the entry's
+root	phidian	`[.1fY.0di.0Xn]	Merriam-Webster lists the rules' reading and not the entry's; first ˈfidēən
+root	phosphatidyl	`[.2fas.0fx.1tY.0Fxl]	Wiktionary lists the rules' reading and not the entry's
+root	phratry	`[.1fre.0tri]	Wiktionary lists the rules' reading and not the entry's
+root	pileus	`[.1pY.0li.0xs]	Wiktionary lists the rules' reading and not the entry's
+root	plage	`[.1plaZ]	Wiktionary lists the rules' reading and not the entry's
+root	pommel	`[.1pH.0mxl]	Wiktionary lists the rules' reading and not the entry's
+root	portillo	`[.2pcr.1ti.0o]	en.wikipedia.org/wiki/Michael_Portillo lists the rules' reading and not the entry's; first pɔɹˈtɪ.loʊ
+root	poussin	`[.2pu.1sEn]	neither says it as en.wikipedia.org/wiki/Nicolas_Poussin does, puˈsæ̃; ours in root.dic
+root	praziquantel	`[.2pre.0zX.1kwan.0txl]	Wiktionary lists the rules' reading and not the entry's
+root	prima	`[.1prY.0mx]	the rules say it as Merriam-Webster does: ˈprēmə
+root	proclus	`[.1pro.0klxs]	Wiktionary lists the rules' reading and not the entry's
+root	provosty	`[.1pro.0vxs.0ti]	Wiktionary lists the rules' reading and not the entry's
+root	puccinia	`[.0pXk.1sI.0ni.0x]	Wiktionary lists the rules' reading and not the entry's
+root	puglia	`[.1pu.0li.0x]	the rules are CMU's; Dictionary.com Puglia ˈpu ljɑ gives ˈpu.ljə
+root	quefrency	`[.1kwE.0frXn.0si]	Wiktionary lists the rules' reading and not the entry's
+root	quinquagenary	`[.0kwXG.1kwa.0JX.2ner.0i]	Wiktionary lists the rules' reading and not the entry's
+root	raison	`[.1re.0zan]	the rules are CMU's; Dictionary.com raison d'être ˈreɪ zoʊn ˈdɛ trə gives ˈɹeɪ.zoʊn
+root	ramune	`[.0ra.1mu.0ne]	neither says it as Wiktionary does, /ˈɹɑmʊˌneɪ/; ours in root.dic
+root	remonstrate	`[.0rX.1man.2stret]	Wiktionary lists the rules' reading and not the entry's
+root	retsina	`[.1rEt.0sX.0nx]	Wiktionary lists the rules' reading and not the entry's
+root	reynard	`[.1re.2nard]	Merriam-Webster lists the rules' reading and not the entry's; first ˈrā-nərd
+root	riccio	`[.1rI.0Ci.0o]	the rules say it as no source found, a guess does: ˈɹi.tʃi.oʊ
+root	rishon	`[.1ri.2San]	Wiktionary lists the rules' reading and not the entry's
+root	robeson	`[.1rob.0sXn]	the rules say it as Wiktionary does: /ˈɹoʊ.bɪ.sʌn/
+root	roessler	`[.1ro.0zlR]	the rules say it as en.wikipedia.org/wiki/Roessler, a guess does: ˈɹoʊs.lɚ
+root	rostov	`[.1ra.2staf]	neither says it as dictionary.com/browse/rostov does, ɹəˈstɔf; ours in root.dic
+root	rothschild	`[.1rcT.2CYld]	the rules say it as Wiktionary does: /ˈɹɒθs.t͡ʃaɪld/
+root	ruelle	`[.2ru.1wEl]	the rules say it as Wiktionary does: /ɹuːˈɛl/
+root	sacha	`[.1sa.0Sx]	neither says it as en.wikipedia.org/wiki/Sacha_Baron_Cohen does, ˈsæ.ʃə; ours in root.dic
+root	salvatore	`[.2sAl.0vx.1tc.2re]	the rules, chosen by ear; no source found, a guess gives ˌsæl.vəˈtɔɹ.i
+root	sardanapalus	`[.2sar.0Fx.1na.0px.0lxs]	Wiktionary lists the rules' reading and not the entry's
+root	sassanid	`[.0sx.1sa.0nXd]	Wiktionary lists the rules' reading and not the entry's
+root	sayed	`[.1se.0Xd]	the rules are CMU's; no source found, a guess gives ˈsɑ.jɛd
+root	schrage	`[.1Sra.0gx]	the rules say it as no source found, a guess does: ˈʃɹeɪdʒ
+root	schulman	`[.1SUl.0mxn]	the rules say it as no source found, a guess does: ˈʃul.mən
+root	schuyler	`[.1SY.0lR]	the rules say it as Wiktionary does: /ˈskaɪ.lɚ/
+root	septuagenary	`[.2sEp.0tu.0x.1JE.0nxr.0i]	Wiktionary lists the rules' reading and not the entry's
+root	setiform	`[.1sE.0FX.2fcrm]	Wiktionary lists the rules' reading and not the entry's
+root	sevilla	`[.0sX.1vi.0x]	the rules are CMU's; no authoritative source found, a guess gives sɪˈvi.jə
+root	shako	`[.1SA.0ko]	Wiktionary lists the rules' reading and not the entry's
+root	shawshank	`[.1Sc.2SAG]	the rules say it as common usage does: ˈʃɔ.ʃæŋk
+root	sheikh	`[.1Sek]	the rules say it as Merriam-Webster does: ˈshēk
+root	shui	`[.1Swi]	the rules are CMU's; dictionary.com/browse/feng-shui, a guess gives ˈʃweɪ
+root	siamang	`[.1si.0x.2mAG]	Wiktionary lists the rules' reading and not the entry's
+root	simard	`[.0sX.1mard]	the rules are CMU's; no source found, a guess gives siˈmɑɹ
+root	simulfix	`[.1sY.0mxl.2fIks]	Wiktionary lists the rules' reading and not the entry's
+root	sitatunga	`[.2sI.0Fx.1tUG.0gx]	Wiktionary lists the rules' reading and not the entry's
+root	smollett	`[.0smx.1lEt]	Wiktionary lists the rules' reading and not the entry's
+root	smotrich	`[.1smot.0rXC]	Wiktionary lists the rules' reading and not the entry's
+root	sonja	`[.1so.0ni.0x]	the rules say it as common usage does: ˈsoʊn.jə
+root	soong	`[.1scG]	neither says it as dictionary.com/browse/Soong does, ˈsʊŋ; ours in root.dic
+root	sorel	`[.0sx.1rEl]	the rules say it as Merriam-Webster does: ˈsȯrəl
+root	spiegel	`[.1Spi.0gxl]	the rules say it as usage of Evan Spiegel and Spiegel catalog does: ˈspi.gəl
+root	spirulina	`[.2spYr.0X.1lY.0nx]	Wiktionary lists the rules' reading and not the entry's
+root	squilgee	`[.1skwi.0Ji]	Wiktionary lists the rules' reading and not the entry's
+root	stanislav	`[.2sta.0nX.1slaf]	the rules say it as en.wiktionary.org/wiki/Stanislav, a guess does: ˈstæ.nɪˌslɑv
+root	stearin	`[.1sti.0x.0rXn]	Wiktionary lists the rules' reading and not the entry's
+root	steatolysis	`[.2sti.0x.1tal.0X.0sXs]	Wiktionary lists the rules' reading and not the entry's
+root	stigmata	`[.1stIg.0mx.0tx]	the rules say it as Wiktionary does: /stɪɡˈmɑːtə/
+root	stromboli	`[.1stram.0bx.0li]	the rules say it as Merriam-Webster does: sträm-ˈbō-lē
+root	sturm	`[.1StUrm]	the rules say it as no source found, a guess does: ˈstɚm
+root	suarez	`[.2su.1ar.2Ez]	the rules say it as dictionary.com/browse/Suarez does: ˈswɑ.ɹɛz
+root	subitize	`[.1sub.0X.2tYz]	Wiktionary lists the rules' reading and not the entry's
+root	sublate	`[.1sHb.2let]	Merriam-Webster lists the rules' stress and not the entry's; first ˌsə-ˈblāt
+root	sundae	`[.1sHn.0di]	the rules say it as Merriam-Webster does: ˈsən-(ˌ)dā
+root	sundarbans	`[.1sHn.0dR.2banz]	Wiktionary lists the rules' reading and not the entry's
+root	sunnite	`[.1su.2nYt]	Wiktionary lists the rules' reading and not the entry's
+root	suslik	`[.1su.0slXk]	Wiktionary lists the rules' reading and not the entry's
+root	susurrus	`[.0sU.1sR.0xs]	Wiktionary lists the rules' reading and not the entry's
+root	sycorax	`[.1sI.0kx.2rAks]	Wiktionary lists the rules' reading and not the entry's
+root	syrupy	`[.1sR.0X.0pi]	Wiktionary lists the rules' reading and not the entry's
+root	talmud	`[.1tcl.2mUd]	the rules say it as Wiktionary does: /ˈtælmʊd/
+root	tanqueray	`[.1tAG.0kx.2re]	the rules are CMU's; Smithsonian transcriptions of old ads: TANKER-RAY gives ˈtæŋ.kɚˌɹeɪ
+root	tantric	`[.1tan.0trXk]	the rules say it as Wiktionary does: /ˈtæntɹɪk/
+root	tapetal	`[.0tx.1pi.0Fxl]	Wiktionary lists the rules' reading and not the entry's
+root	tavernier	`[.2tA.0vR.0ni.1e]	the rules are CMU's; en.wikipedia.org/wiki/Bertrand_Tavernier, a guess gives ˌtæ.vɚˈnjeɪ
+root	telles	`[.1tE.0liz]	the rules are CMU's; own knowledge, a guess gives ˈtɛ.lɪs
+root	tevye	`[.1tE.0vi.0x]	the rules are CMU's; en.wikipedia.org/wiki/Tevye gives ˈtɛv.jə
+root	thanatophidia	`[.2TA.0nx.0tx.1fI.0Fi.0x]	Wiktionary lists the rules' reading and not the entry's
+root	thede	`[.1Ti.0Fi]	the rules say it as Wiktionary does: /θiːd/
+root	theroux	`[.0Tx.1ro]	the rules say it as en.wikipedia.org/wiki/Paul_Theroux does: θəˈɹu
+root	thunberg	`[.1tun.2bRg]	the rules say it as Wiktionary does: /ˈθʌnˌbɜɹɡ/
+root	tianjin	`[.2tiHn.1JIn]	neither says it as dictionary.com tyahn-jin ˈtjɑnˈdʒɪn does, ˌtjɑnˈdʒɪn; ours in root.dic
+root	tien	`[.1ti.0Xn]	the rules say it as Merriam-Webster Tien Shan ˈtyen, a guess does: ˈtjɛn
+root	tijuana	`[.2ti.0x.1wa.0nx]	the rules say it as Wiktionary does: /tiˈ(h)wɑnə/
+root	titone	`[.1ti.2ton]	the rules are CMU's; own knowledge, a guess gives tɪˈtoʊ.ni
+root	tombolo	`[.1tam.0bx.2lo]	Wiktionary lists the rules' reading and not the entry's
+root	tonemic	`[.2to.1ni.0mXk]	Wiktionary lists the rules' reading and not the entry's
+root	tonkin	`[.2taG.1kIn]	Merriam-Webster lists the rules' stress and not the entry's; first ˈtäŋ-kən
+root	tourniquet	`[.1tur.0nX.2ke]	Merriam-Webster lists the rules' reading and not the entry's; first ˈtu̇r-ni-kət
+root	trahan	`[.0trx.1han]	Wiktionary lists the rules' reading and not the entry's
+root	transnistria	`[.2trAnz.1ni.0stri.0x]	Wiktionary lists the rules' reading and not the entry's
+root	trethewey	`[.1trE.0Tx.2we]	neither says it as bookbrowse.com/authors/author_pronunciations/ TREH-thoo-wee, publisher does, ˈtɹɛ.θu.wi; ours in root.dic
+root	triclosan	`[.2trY.1klo.2sAn]	Wiktionary lists the rules' reading and not the entry's
+root	trigonal	`[.2trY.1go.0nxl]	Wiktionary lists the rules' reading and not the entry's
+root	triptyque	`[.2trIp.1tik]	Wiktionary lists the rules' reading and not the entry's
+root	trophoblast	`[.1tro.0fx.2blAst]	Wiktionary lists the rules' reading and not the entry's
+root	trophoplast	`[.1tro.0fx.2plAst]	Wiktionary lists the rules' reading and not the entry's
+root	turandot	`[.1tu.0rxn.2dot]	neither says it as Cambridge ˈtʊə.ræn.dɒt reported in search results does, ˈtʊɹ.ənˌdɑt; ours in root.dic
+root	uemura	`[.0yX.1mUr.0x]	the rules say it as own knowledge, a guess does: ˌu.ɛˈmu.ɹɑ
+root	ululation	`[.2Hl.0yX.1le.0SXn]	Wiktionary lists the rules' reading and not the entry's
+root	uropygial	`[.2yur.0x.1pY.0Ji.0xl]	Wiktionary lists the rules' reading and not the entry's
+root	urrea	`[.2c.1re.0x]	neither says it as BookBrowse author pronunciation oo-RAY-ah does, ˌuˈɹeɪ.ɑ; ours in root.dic
+root	vadim	`[.2vA.1dim]	the rules say it as Roger Vadim French ʁɔʒe vadim does: vɑˈdim
+root	vichy	`[.1vI.0Si]	the rules say it as Wiktionary does: /ˈviːʃi/
+root	villeneuve	`[.2vI.0lx.1nUv]	neither says it as en.wikipedia.org/wiki/Denis_Villeneuve does, vɪlˈnʊv; ours in root.dic
+root	virologist	`[.2vY.1ral.0x.0JXst]	the rules say it as Wiktionary does: /vɪˈɹɒlədʒɪst/
+root	volgograd	`[.1val.0gx.0grAd]	Wiktionary lists the rules' reading and not the entry's; first /ˈvoʊlɡəɡrɑːd/
+root	voorhis	`[.1vur.0hiz]	the rules say it as own knowledge, a guess does: ˈvʊɹ.hɪs
+root	wagner	`[.1wag.0nR]	the rules say it as Wiktionary does: /ˈwæɡnɚ/
+root	waiau	`[.1wY.0o]	Wiktionary lists the rules' reading and not the entry's
+root	wallenstein	`[.1vcl.0Xn.2StYn]	neither says it as dictionary.com ˈwɒl ənˌstaɪn, ˈvɑl ənˌʃtaɪn does, ˈwɑ.lənˌstaɪn; ours in root.dic
+root	weiner	`[.1vY.0nR]	the rules are CMU's; en.wikipedia.org/wiki/Anthony_Weiner, a guess gives ˈwi.nɚ
+root	whelan	`[.1wel.0Xn]	the rules say it as Wiktionary does: /ˈwiː.lən/
+root	wiest	`[.1west]	neither says it as en.wikipedia.org/wiki/Dianne_Wiest does, ˈwist; ours in root.dic
+root	yair	`[.2yY.1ir]	Wiktionary lists the rules' reading and not the entry's
+root	yasmeen	`[.2yas.1min]	Wiktionary lists the rules' reading and not the entry's
+root	yea	yeah	the rules say it as Merriam-Webster does: ˈyā
+root	zaftig	`[.1zaf.0tXk]	neither says it as Merriam-Webster does, ˈzäf-tig; ours in root.dic
+root	zebrano	`[.0zX.1brA.0no]	Wiktionary lists the rules' reading and not the entry's
+root	zeeman	`[.1ze.2mAn]	neither says it as Merriam-Webster Zeeman effect ˈzā-ˌmän, -mən does, ˈzeɪˌmɑn; ours in root.dic
+root	zelotes	`[.2zi.1lo.0tiz]	the rules are CMU's; own knowledge, a guess gives zɪˈloʊ.tiz
+root	zera	`[.1zi.0rx]	the rules say it as en.wikipedia.org/wiki/Zera_Yacob_(philosopher), a guess does: ˈzɛ.ɹə
+root	zermatt	`[.0tsEr.1mat]	Wiktionary lists the rules' reading and not the entry's
+root	zugzwang	`[.1tsUk.2tsvaG]	Wiktionary lists the rules' reading and not the entry's

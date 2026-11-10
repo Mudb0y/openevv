@@ -23,11 +23,14 @@ plain 5 d4fe33fae44e4dd2 0510369e14ad1de4 A one-word line. And another; plus "qu
 plain 6 82f39eea2defc6e1 57461d66daef10d0 Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.
 plain 7 29f67773bfed73f0 f65ca06ac278aa5c He said: don't! Then (parenthetically) 1/2 + 3/4 = 5/4; see p. 12.
 plain 8 5e4e4261780111e4 b95269c27c9fd588 A 5,000-strong crowd raised 1,000,500 dollars, and the fund reached 25,000,000.
-plain 9 0c6e8d642ceee098 fece5313a416e4ed Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
-plain 10 7cd979b02e0b624a aa5548d84ca05752 Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.
-utf8 1 7c6e196773dba1a7 7b907bc587bb6d86 The café near the naïve façade serves crème brûlée.
+plain 9 4a2bf6110d70c481 d779708f9ca4a5ac Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
+plain 10 7ce5a5e125142b1e dd512c41c70ddd40 Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.
+plain 11 18383775fc714219 d9b13a74a6db9958 On 2026-10-11 part 123-456-789 suited ages 3-5, and 10-5-2=3.
+plain 12 2a0104dbde86c7d7 a0c0f4b3ce61259e It cost US$5.50 here, EUR 20.50 there, $5-$10 a head, or DM 5.
+plain 13 1169afbba8d1bd5b e881ace669610861 While the morning rain tapped gently against the windows, Daniel sat at his desk, comparing the results of two speech synthesizers, noting how each handled unusual names, technical expressions, compound words, and subtle changes in punctuation, when a message from his colleague arrived with a curious question about whether the latest update had improved the rhythm of longer sentences, the clarity of abbreviations, and the pronunciation of words that could function as either nouns or verbs, prompting him to reopen his test document and listen carefully to every detail.
+utf8 1 ebb7b49a4f0b54f8 82008faec60decb7 The café near the naïve façade serves crème brûlée.
 utf8 2 78ff65d995f63497 cd7285c4b201b708 Señor Muñoz sent a piñata to São Paulo.
-utf8 3 0d63cfdc39d625b8 6b2c0931330cc35a Zdzisław Świątek mieszka w Świdnicy przy ulicy Żółkiewskiego.
+utf8 3 8993e2e3575f4608 34c762745c115cea Zdzisław Świątek mieszka w Świdnicy przy ulicy Żółkiewskiego.
 utf8 4 7ec98a54ca6fd698 a59a8e591420f4c3 He said “this” and ‘that’ — costing €20 … or 50‰.
 utf8 5 6dde14f737993a91 0a607e2bc9dd5c2a Œuvres de Škoda, Žižek, Ÿ and ƒ walk into a bar.
 utf8 6 9542811b386bdb27 acea3dff2f54b9a4 Straße, Grüße, Müller, Köln, Weiß.
@@ -100,8 +103,11 @@ dict 5 d4fe33fae44e4dd2 f51513e11b68fc5c A one-word line. And another; plus "quo
 dict 6 82f39eea2defc6e1 80f1996953c61db2 Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.
 dict 7 29f67773bfed73f0 c571ddfba1403ab2 He said: don't! Then (parenthetically) 1/2 + 3/4 = 5/4; see p. 12.
 dict 8 5e4e4261780111e4 97b1b032b412b274 A 5,000-strong crowd raised 1,000,500 dollars, and the fund reached 25,000,000.
-dict 9 0c6e8d642ceee098 1cef3d4452d5577c Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
-dict 10 7cd979b02e0b624a ceba59834487cff4 Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.
+dict 9 4a2bf6110d70c481 227a0a638e649670 Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
+dict 10 7ce5a5e125142b1e e8529d20b5a7988b Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.
+dict 11 18383775fc714219 f516d0953de8f107 On 2026-10-11 part 123-456-789 suited ages 3-5, and 10-5-2=3.
+dict 12 2a0104dbde86c7d7 b187648f71977773 It cost US$5.50 here, EUR 20.50 there, $5-$10 a head, or DM 5.
+dict 13 1169afbba8d1bd5b 2f62bf908188943f While the morning rain tapped gently against the windows, Daniel sat at his desk, comparing the results of two speech synthesizers, noting how each handled unusual names, technical expressions, compound words, and subtle changes in punctuation, when a message from his colleague arrived with a curious question about whether the latest update had improved the rhythm of longer sentences, the clarity of abbreviations, and the pronunciation of words that could function as either nouns or verbs, prompting him to reopen his test document and listen carefully to every detail.
 second 1 db2e00e0f9ab64fb 86d0d4a3017b6650 Hello. This is the Eloquence synthesizer speaking.
 second 2 b2226360d82f88fc e32227ad5af7f916 Dr. Smith paid $1,234.56 on 3rd May 2026 at 7:45 p.m.
 second 3 78a6c0d59944f21d e2e8fb8b668fca26 The quick brown fox jumps over the lazy dog; e.g. www.example.com/path?q=1
@@ -110,8 +116,11 @@ second 5 e1320b954e42c341 e0a1ade61139aab5 A one-word line. And another; plus "q
 second 6 752056dbc9efb0ec 5ae905798bdc9e04 Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.
 second 7 27d804c74cb1f1e4 6d27f8c778157733 He said: don't! Then (parenthetically) 1/2 + 3/4 = 5/4; see p. 12.
 second 8 2b93fcf546ef2622 e052c61fd60b13a3 A 5,000-strong crowd raised 1,000,500 dollars, and the fund reached 25,000,000.
-second 9 3d86a4feb2ef6e91 1066977e538220a9 Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
-second 10 562eb4ae5eb06560 64dfc6c8067f24c3 Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.
+second 9 c63c2f87bf09ac07 0b987881d14b7ea3 Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
+second 10 aaf4a22d692dd644 5216c3fcc01d357d Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.
+second 11 42381b25367965bb 5276ccf885dc29f0 On 2026-10-11 part 123-456-789 suited ages 3-5, and 10-5-2=3.
+second 12 e39f9d8ddbeaeb00 e889aedb1dc6c5b3 It cost US$5.50 here, EUR 20.50 there, $5-$10 a head, or DM 5.
+second 13 b4326653551b285c ca1bd44b8b70dbb8 While the morning rain tapped gently against the windows, Daniel sat at his desk, comparing the results of two speech synthesizers, noting how each handled unusual names, technical expressions, compound words, and subtle changes in punctuation, when a message from his colleague arrived with a curious question about whether the latest update had improved the rhythm of longer sentences, the clarity of abbreviations, and the pronunciation of words that could function as either nouns or verbs, prompting him to reopen his test document and listen carefully to every detail.
 ssml 1 aeba6858c67acfd3 3fe5cf74a53482b3 <speak version="1.0" xml:lang="en-US">Hello there.</speak>
 ssml 2 302249f0afbd77b8 4dd4349233151d20 <speak version="1.0" xml:lang="en-US"><prosody rate="slow">Slowly now.</prosody> Back to normal.</speak>
 ssml 3 3653258574f72763 509fc18886a00308 <speak version="1.0" xml:lang="en-US"><prosody pitch="high" range="x-high" volume="loud">All four at once.</prosody></speak>
@@ -122,13 +131,16 @@ ssml 7 4cd78177c8895c6f aed3d33120b156d1 <speak version="1.0" xml:lang="en-US">S
 ssml 8 f8a129e665d4356d 5b87110639e79eb6 <speak version="1.0" xml:lang="en-US">Wait<break time="500ms"/>for it.<mark name="here"/> There.</speak>
 ssml 9 e38f0b0f18d5ea04 3292e9857759cc73 <speak version="1.0" xml:lang="en-US"><sub alias="World Wide Web">WWW</sub> and <phoneme ph="h.E.l.oU">hello</phoneme>.</speak>
 ssml 10 019301a1b2fb4152 957d5569e0328ef0 <speak version="1.0" xml:lang="en-US">The café near the naïve façade, with a &amp; b &lt; c.</speak>
-wide 1 08d983deab11daf5 5d79ca06a0beb05f Hello. This is the Eloquence synthesizer speaking.
-wide 2 f8888e238a6898ca 28ee60604cdcfc2d Dr. Smith paid $1,234.56 on 3rd May 2026 at 7:45 p.m.
-wide 3 cd256e86e00a5763 ffb938aee70fd110 The quick brown fox jumps over the lazy dog; e.g. www.example.com/path?q=1
-wide 4 56281b0398e237eb 26a56ac7931e3b1b Testing 1 2 3, ABC XYZ, hyphenated-words and UPPERCASE.
-wide 5 b360ab470a285d8c a630d67ae7163cd0 A one-word line. And another; plus "quoted text" inside.
-wide 6 d89223ae2b66cbe2 6890b36335e24925 Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.
-wide 7 2b23566b6d7bb5cd 8af97f7b9e4451f5 He said: don't! Then (parenthetically) 1/2 + 3/4 = 5/4; see p. 12.
-wide 8 1d74f68a469d0099 cadc5e86a4493186 A 5,000-strong crowd raised 1,000,500 dollars, and the fund reached 25,000,000.
-wide 9 35e7407089a2582a 1a4c4a80aa432492 Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
-wide 10 6ad834de569d7db1 fea8e0795782445c Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.
+wide 1 facab243ae0910b2 3651b4b3efa531c2 Hello. This is the Eloquence synthesizer speaking.
+wide 2 9919e1f5445a44ff 1884923de38b0087 Dr. Smith paid $1,234.56 on 3rd May 2026 at 7:45 p.m.
+wide 3 d5ae4e9bb50a2873 82a265b66cb9c7b0 The quick brown fox jumps over the lazy dog; e.g. www.example.com/path?q=1
+wide 4 f0ff55a219b6f0f8 5838bcd7023aeb47 Testing 1 2 3, ABC XYZ, hyphenated-words and UPPERCASE.
+wide 5 b9bbd0e35025a3c4 2f1bfc3b108ca449 A one-word line. And another; plus "quoted text" inside.
+wide 6 d83d32dcc0d77972 33c4222d2a6ca8df Rzeczpospolita, naiveté, 42% of 3.14159, and Mr O'Brien-Smith Jr.
+wide 7 b6b726fc30c677ff 5c95f1aae2edbe1d He said: don't! Then (parenthetically) 1/2 + 3/4 = 5/4; see p. 12.
+wide 8 bf12f7c775d32f7a aea2dc0321e26d6b A 5,000-strong crowd raised 1,000,500 dollars, and the fund reached 25,000,000.
+wide 9 b561d4abf163ccfe 9634390da65479ca Windows10 and teamtalk5 are words with a version, and MP3, utf8 and H2O are spelled.
+wide 10 7a4c5c26644ae945 7ba4f973d4686967 Call this(thing) or sum(x) for each friend(s), item#3 at price$5, and AUD$5 too.
+wide 11 7921ade5bc7c8478 9557587d24245b05 On 2026-10-11 part 123-456-789 suited ages 3-5, and 10-5-2=3.
+wide 12 e1a8a2b0e2ba296d 8608c6169e073d59 It cost US$5.50 here, EUR 20.50 there, $5-$10 a head, or DM 5.
+wide 13 6ea32f66c82c0d23 97fbd4358afebe06 While the morning rain tapped gently against the windows, Daniel sat at his desk, comparing the results of two speech synthesizers, noting how each handled unusual names, technical expressions, compound words, and subtle changes in punctuation, when a message from his colleague arrived with a curious question about whether the latest update had improved the rhythm of longer sentences, the clarity of abbreviations, and the pronunciation of words that could function as either nouns or verbs, prompting him to reopen his test document and listen carefully to every detail.

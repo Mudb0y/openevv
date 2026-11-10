@@ -45,6 +45,11 @@ move underneath it.
 
     nix shell nixpkgs#hunspellDicts.it_IT
     tools/measure/wordlist.py itit > test/cases/words-itit.txt
+    nix build --no-link nixpkgs#voikko-fi.src
+    tools/measure/wordlist.py fifi > test/cases/words-fifi.txt
+
+    nix build --no-link nixpkgs#hunspellDicts.pt_BR
+    tools/measure/wordlist.py ptbr > test/cases/words-ptbr.txt
 
 usage: tools/measure/wordlist.py <tag> [count]
 """
@@ -86,6 +91,13 @@ SOURCES = {
              'nixpkgs#hunspellDicts.it_IT', 'a-zàèéìòù'),
     'plpl': ('/nix/store/*-hunspell-dict-pl-pl-*/share/hunspell/pl_PL.dic',
              'nixpkgs#hunspellDicts.pl_PL', 'a-ząćęłńóśźż'),
+    # Finnish has no hunspell dictionary; its spelling is Voikko's, whose
+    # vocabulary is one base form to a <form> in the source rather than
+    # anything installed.
+    'fifi': ('/nix/store/*-source/voikko-fi/vocabulary/joukahainen.xml',
+             'nixpkgs#voikko-fi.src', 'a-zåäö'),
+    'ptbr': ('/nix/store/*-hunspell-dict-pt-br-*/share/hunspell/pt_BR.dic',
+             'nixpkgs#hunspellDicts.pt_BR', 'a-záâãàçéêíóôõúü'),
 }
 
 # What a source is read as and what the list is written in, where that is not
@@ -95,6 +107,9 @@ SOURCES = {
 # its letters, so every word with one of them would be dropped.
 ENCODINGS = {
     'plpl': ('iso8859-2', 'utf-8'),
+    # LibreOffice's Brazilian Portuguese is ISO 8859-1, which the Western set
+    # holds every letter of.
+    'ptbr': ('iso8859-1', 'cp1252'),
 }
 
 
@@ -111,11 +126,23 @@ def source_words(tag):
     read_as = ENCODINGS.get(tag, ('utf-8', 'cp1252'))[0]
     for line in open(found[0], encoding=read_as, errors='replace'):
         # A hunspell .dic is a count, then one stem a line with its affix
-        # flags after a slash; SCOWL is one word a line and has neither.
-        w = line.split('/')[0].strip().lower()
+        # flags after a slash; SCOWL is one word a line and has neither; and
+        # Voikko's vocabulary is XML.
+        if found[0].endswith('.xml'):
+            m = re.search(r'<form>([^<]*)</form>', line)
+            w = m.group(1).strip().lower() if m else ''
+        else:
+            w = line.split('/')[0].strip().lower()
         if keep.match(w):
             words.add(w)
     return sorted(words), os.path.basename(found[0])
+
+
+def plain(tag):
+    """A word written in the language's own letters and nothing else -- not a
+    symbol's name, an abbreviation in capitals or a clitic -- which is what
+    the list holds."""
+    return re.compile(r'[%s]{1,20}\Z' % SOURCES[tag][2])
 
 
 def held(tag):
@@ -126,10 +153,28 @@ def held(tag):
     p = os.path.join(ROOT, 'lang', tag, '%s.dict' % tag)
     if not os.path.exists(p):
         return out
+    keep = plain(tag)
     for line in open(p, encoding='utf-8', errors='replace'):
         m = re.match(r'^  (\S+) ', line)
-        if m and len(m.group(1)) <= 20:
+        if m and keep.match(m.group(1)):
             out.add(m.group(1))
+    return out
+
+
+def merged(tag):
+    """Every word a decision in the module's merge ledger names, for the same
+    reason: those are the words a decision was made about, and a word the
+    gate cannot see is a decision nothing holds."""
+    out = set()
+    p = os.path.join(ROOT, 'lang', tag, 'merge')
+    if not os.path.exists(p):
+        return out
+    keep = plain(tag)
+    for line in open(p, encoding='utf-8'):
+        f = line.split()
+        if len(f) >= 3 and not line.startswith('#') and f[0] != 'letter' \
+                and keep.match(f[2]):
+            out.add(f[2])
     return out
 
 
@@ -159,12 +204,18 @@ def main(argv):
     print("# %d words of %s, spread evenly through the %d in %s."
           % (len(picked), tag, len(words), source))
     carried = held(tag)
-    both = sorted(set(picked) | carried)
+    decided = merged(tag)
+    both = sorted(set(picked) | carried | decided)
     if carried:
         print("# With every word the dictionaries hold folded in: %d of them,"
               % len(carried))
         print("# which are the words a change to a dictionary can move.")
+    if decided:
+        print("# And every word lang/%s/merge decides: %d of them." % (tag, len(decided)))
     print("# Written by tools/measure/wordlist.py. See test/words.sh.")
+    # The header goes through the text stream and the words through the bytes
+    # under it, so the one has to be out before the other starts.
+    sys.stdout.flush()
     # In the code set the engine reads rather than in UTF-8, and a word with a
     # character that set has no room for is dropped rather than mangled.
     out = sys.stdout.buffer

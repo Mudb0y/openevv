@@ -437,6 +437,32 @@ typedef struct Cell {
     int32_t l;
 } Cell;
 
+/* What a cell holds as a whole number. A language lifted from 6.1 hands
+   over a fixed cell where IBM's handed a long or a short, its tag says so,
+   and 6.1 truncates its double here as cvttsd2si does. */
+static int32_t cell_long(const Cell *c)
+{
+    return c->pad == DG_FIXED ? delta_fixed_int(c->l) : c->l;
+}
+
+static int32_t cell_word(const Cell *c)
+{
+    return c->pad == DG_FIXED ? delta_fixed_int(c->l) : c->w;
+}
+
+/* The volume, which IBM's synthesiser takes in hundredths of the factor it
+   scales the samples by -- English hands it 202 -- and 6.1 hands over as the
+   factor itself, 2.02, which its own synthesiser takes as a float. Cut to a
+   whole number like the rest it was 2, two hundredths, and Finnish and
+   Portuguese came out forty decibels quieter than 6.1. */
+static int32_t cell_hundredths(const Cell *c)
+{
+    if (c->pad != DG_FIXED)
+        return c->w;
+    return (int32_t)(((int64_t)c->l * 100 + DELTA_FIXED_ONE / 2)
+                     / DELTA_FIXED_ONE);
+}
+
 /* The parameter frame the synthesiser works from, and the defaults every
    frame starts at: a hundred hertz, the eight formants at five hundred,
    fifteen hundred, twenty-five hundred and so on, and everything not named
@@ -595,18 +621,18 @@ int callSynthesizeArray(DeltaThis *d, Cell *rate, Cell *c2, Cell *c3,
     if (!buf)
         return 1;
 
-    v2 = c2->l;
-    v3 = c3->l;
-    v4 = c4->l;
-    v5 = c5->l;
-    v6 = c6->w;
-    v7 = c7->w;
-    v8 = c8->w;
-    v9 = c9->w;
-    v10 = c10->w;
-    v11 = c11->w;
-    v12 = c12->w;
-    v13 = c13->w;
+    v2 = cell_long(c2);
+    v3 = cell_long(c3);
+    v4 = cell_long(c4);
+    v5 = cell_long(c5);
+    v6 = cell_word(c6);
+    v7 = cell_word(c7);
+    v8 = cell_word(c8);
+    v9 = cell_word(c9);
+    v10 = cell_word(c10);
+    v11 = cell_word(c11);
+    v12 = cell_word(c12);
+    v13 = cell_hundredths(c13);
 
     for (i = 0; i < FRAME_WORDS; i++)
         frame[i] = 0;
@@ -617,7 +643,7 @@ int callSynthesizeArray(DeltaThis *d, Cell *rate, Cell *c2, Cell *c3,
        is a value and has to be read back as one: a pointer is wider than that
        where a pointer is wider than a value. */
     va_start(ap, c13);
-    n = EVV_AT(Cell *, va_arg(ap, int32_t))->w;
+    n = cell_word(EVV_AT(Cell *, va_arg(ap, int32_t)));
     while (n != 0) {
         n--;
         if (n < 0) {
@@ -625,8 +651,8 @@ int callSynthesizeArray(DeltaThis *d, Cell *rate, Cell *c2, Cell *c3,
             cpp_delete(buf);
             return 1;
         }
-        frame[n] = EVV_AT(Cell *, va_arg(ap, int32_t))->w;
-        n = EVV_AT(Cell *, va_arg(ap, int32_t))->w;
+        frame[n] = cell_word(EVV_AT(Cell *, va_arg(ap, int32_t)));
+        n = cell_word(EVV_AT(Cell *, va_arg(ap, int32_t)));
     }
     va_end(ap);
 
@@ -799,6 +825,37 @@ int ourKlattCallback(void *user, KlattSamples *s)
         done += piece;
     }
     return 1;
+}
+
+/* Ours. The wideband voice hands each sample over nine milliseconds after
+   it was made, the time its two filters take, and keeps the rest until more
+   comes. Within a run that is only a delay. At the end of one it is the
+   last of the utterance not said until the next begins: a Speech Dispatcher
+   reader heard the end of every letter clipped and then played under the
+   start of the one typed after it. So the end of a run pushes nothing
+   through until all of it is out, and a stop throws it away. */
+int flushSynthesisTail(DeltaThis *d)
+{
+    WideBand *w = DL_WIDE(DT_LANG(d));
+    KlattSamples s;
+    int ok;
+
+    if (!w)
+        return 1;
+    s.count = klatt_wide_tail(w);
+    s.samples = calloc((size_t)s.count, sizeof(int32_t));
+    if (!s.samples)
+        return 0;
+    ok = ourKlattCallback(d, &s);
+    free(s.samples);
+    klatt_wide_clear(w);
+    return ok;
+}
+
+void clearSynthesisTail(DeltaThis *d)
+{
+    if (DL_WIDE(DT_LANG(d)))
+        klatt_wide_clear(DL_WIDE(DT_LANG(d)));
 }
 
 /* ---- a rate the language cannot name --------------------------------- */

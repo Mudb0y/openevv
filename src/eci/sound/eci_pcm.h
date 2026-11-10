@@ -76,10 +76,12 @@
 #define CVT_HISTORY   (2 * SINC_TAPS_MAX)
 
 /* How far behind the input a resampler runs, in input samples. Looking only
-   backwards is what lets a run join the one before it with no seam and
-   nothing held back at the end; the price is a constant delay, and this is
-   it. Two tenths of a millisecond for the curve, and half the taps for the
-   sinc, which is under six milliseconds at the engine's rate.
+   backwards is what lets a run join the one before it with no seam; the
+   price is a constant delay, and this is it. Two tenths of a millisecond for
+   the curve, and half the taps for the sinc, which is nine milliseconds at
+   the engine's rate. A delay leaves the end of a run inside when the run
+   ends, so the engine's end of a run pushes twice this much of nothing
+   through: stb_flushTail in src/eci/synth/eci_synthback.c.
 
    It is asked of the resampler rather than worked out from the method,
    because the sinc's answer depends on how many taps it was given. */
@@ -118,6 +120,8 @@ uint32_t pcm_resample_count(const PcmResampler *r, uint32_t n);
 uint32_t pcm_resample(PcmResampler *r, const int32_t *src, uint32_t n,
                       int32_t *out);
 int32_t  pcm_resample_delay(const PcmResampler *r);
+/* Back to where pcm_resample_start left it, with nothing of a run before. */
+void     pcm_resample_clear(PcmResampler *r);
 /* The weight in units of 2^-30 the sinc gives an input sample num/den input
    samples from the middle of its window, among the weights of the output
    sample that window belongs to; nought where no output sample's window

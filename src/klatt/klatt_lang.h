@@ -98,6 +98,15 @@ struct DeltaLang {
        of it; like the rate, it is read at the top of an utterance. */
     int32_t      wide_wanted;
     struct WideBand *wide;
+
+    /* The dictionary the language carries, which the rules consult after
+       the caller's: whether the caller has turned it off, and per volume the
+       word it last took out and whether it, rather than the caller's, did
+       the taking -- the rules may ask for that word back, and only the one
+       that took it has it. src/eci/dict/eci_usrdct.c is the account. */
+    int32_t      builtin_off;
+    int8_t       builtin_took[3];
+    char         builtin_last[3][0x50];
 };
 
 /* Every parameter frame goes to the synthesiser through this, so that the

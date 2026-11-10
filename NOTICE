@@ -47,11 +47,14 @@ Felix Steindorff's, from openevv-nvda.
 IBM's
 -----
 
-Everything under `lang` is transcribed out of IBM's Embedded ViaVoice objects:
+Everything under `lang` but `lang/fifi`, `lang/ptbr`, `lang/enus/dictionary`
+and `lang/engb/dictionary` is transcribed out of IBM's Embedded ViaVoice objects:
 `lang/enus` is US English, `lang/dede` is German, `lang/engb` is British
 English, `lang/eses` and `lang/esus` are the two Spanishes, `lang/frfr` and
-`lang/frca` the two Frenches and `lang/itit` is Italian, and any language added
-later will be the same.
+`lang/frca` the two Frenches and `lang/itit` is Italian. `lang/fifi` and
+`lang/ptbr` are ETI's and `lang/enus/dictionary` is ours, begun from the
+community's, and the two sections after this one say so, as they do of
+`lang/engb/dictionary`, which is ours.
 
 `lang/jajp` is Japanese and is not in the tree, because a language module that
 cannot yet make an instance would break any build that named it. What that
@@ -114,7 +117,13 @@ which read a long number's groups of noughts the way the same number without
 commas is read, where IBM's rules read the comma after such a group as a
 digit. They are written here and stand on IBM's rules rather than replacing
 them: the two calls in each `ut_numbr.dr` that were pointed at them are an
-edit to IBM's text, and the rest of that text is IBM's as it was.
+edit to IBM's text, and the rest of that text is IBM's as it was. So is
+`lang/enus/rules/ea_homog.up`, which settles two kinds of context IBM's
+homograph rule had no test for when it decides how read is said, on the same
+terms: the call to it in `ea_homog.dr` is the edit, and the rest is IBM's. The
+words added to both Englishes' set of file endings said as words,
+`three_letter_extensions` in each `.sets`, were chosen here; the set and the
+words IBM put in it are IBM's.
 
 That data is IBM's work, not ours. The MIT licence does not cover it and we are
 in no position to license it to anyone. The SDK it was read out of says as much
@@ -140,19 +149,89 @@ legal advice.
 ETI's
 -----
 
-In `lang/enus` and in `lang/engb` alike: the rules at the end of
-`rules/ut_norm.up` that say they were lifted by `tools/rules/lift64.py`, the
+In `lang/enus` and in `lang/engb` alike: the rules that say they were lifted
+by `tools/rules/lift64.py` -- at the end of `rules/ut_norm.up` in both, and in
+`lang/enus` the ones in `rules/et_prfx.up` and `rules/et_numbr.up` too -- the
 bytes named `eti_` in `rules/constants`, the sixth character type and the
-records that use it in the statements, the six variables at the end of the
-globals, the three of them that `set_global_constants` in `rules/u_vars.dr`
-now sets to 6.1's values, and the set of three-letter domain names in the sets
-are ETI Eloquence 6.1's, read out of the US and British English language
-modules Apple ships with its operating systems. They are on the same
-footing as everything under `lang`: no more ours to license than IBM's are,
-and nothing here grants anything in them. Two things in those rules are not
-6.1's, and both are edits to its text rather than anything with a claim of its
-own: the call `normalize_text` makes to IBM's `backquote`, and the annotations
-three of the `eti_` strings write with IBM's mark rather than 6.1's.
+records that use it in the statements, the six variables the globals' comments
+say are 6.1's and, in `lang/enus`, the seven more they say are, those of them
+that `set_global_constants` in `rules/u_vars.dr` now sets to 6.1's values, and
+the set of three-letter domain names in the sets are ETI Eloquence 6.1's, read
+out of the US and British English language modules Apple ships with its
+operating systems. They are on the same footing as everything under `lang`: no
+more ours to license than IBM's are, and nothing here grants anything in them.
+Two things in those rules are not 6.1's, and both are edits to its text rather
+than anything with a claim of its own: the call `normalize_text` makes to IBM's
+`backquote`, and the annotations three of the `eti_` strings write with IBM's
+mark rather than 6.1's.
+
+In `lang/dede`, `lang/eses`, `lang/esus`, `lang/frfr`, `lang/frca`,
+`lang/itit` and `lang/plpl` alike: the rules at the end of `rules/ut_norm.up`
+that say they were lifted by `tools/rules/lift64.py`, the bytes named `eti_`
+in `rules/constants`, and the sixth character type and the records that use
+it in the statements are ETI Eloquence 6.1's, read out of the German, the two
+Spanish, the two French and the Italian modules Apple ships, Polish's being
+Italian's. They are on the same footing. The `convert_phone_number` at the
+end of both Frenches' `ut_norm.up` is ours.
+
+In `lang/enus` alone, the words `lang/enus/merge` says were added, set or read
+as 6.1 reads them say what 6.1 says, taken from what it speaks rather than
+from its tables, and are on the same footing. The ledger itself, the letter
+arms it names and the tools that measured it are ours, and so is
+`smiley_stands_alone` in `rules/ea_text.up`, written to ask where a smiley
+stands as 6.1's own arms for the smileys ask it.
+
+`lang/fifi`, Finnish, is ETI Eloquence 6.1's from end to end: the rules in its
+`rules/f61_*.up`, the strings in `rules/constants`, the variables, the
+statement table, the sets and dictionaries, the settings and the voices, and
+the C written from all of them, read out of the Finnish module Apple ships by
+`tools/module/lift61.py` and `tools/rules/lift64.py`. Its doubles are kept
+here as whole numbers of ten-thousandths, which is the same data written
+another way. The one rule in `rules/written.up` was written here because the
+lifter could not read 6.1's, and it says what 6.1's does, so it is a
+transcription and on the same footing. None of it is ours to license.
+
+`lang/ptbr`, Brazilian Portuguese, is ETI Eloquence 6.1's on exactly the same
+terms, read out of the Portuguese module Apple ships, and the one rule in its
+`rules/written.up` is the same transcription as Finnish's.
+
+The dictionary US English carries
+---------------------------------
+
+`lang/enus/dictionary` began on 14 October 2026 as a snapshot of
+IBMTTSDictionaries,
+
+    https://github.com/eigencrow/IBMTTSDictionaries
+
+pronunciations written for this engine by the people who listen to it,
+maintained by amirsol81, x0 and thunderdrop with contributions from many.
+Its authors dedicated it to the public domain under CC0 1.0,
+
+    https://creativecommons.org/publicdomain/zero/1.0/
+
+and on 30 October 2026 it became ours: one set of files, with the entries
+we took out of it named in `removed` and the commit of theirs whose changes
+it has taken named in `upstream`. The MIT licence covers what we wrote and
+the whole as it is put together, and so `split`, `removed`, `upstream`,
+`sayable`, `pieces` and `lang/engb/dictionary` as well. The community's entries in it were given to
+the public domain by their authors and stay free to anyone, whatever this
+file says.
+
+Some of its entries were written by tools/measure/published.py out of two
+dictionaries that ask nothing of whoever copies them. The Moby
+Pronunciator II is Grady Ward's, placed in the public domain by grant of its
+author in January 2001. The Carnegie Mellon Pronouncing Dictionary of 1993
+is Copyright 1993 by Carnegie Mellon University, which made its use for any
+research or commercial purpose completely unrestricted and asked only to be
+acknowledged, which this is. Wiktionary decides which of their readings is
+the published one and nothing of Wiktionary is copied.
+
+`sayable` and the body of `pieces` in both Englishes are written by
+tools/module/sayable.py out of Moby's word lists, which Grady Ward placed in
+the public domain with the Pronunciator, and the same 1993 release of CMU's
+dictionary. The way the engine uses them, asking whether English could say a
+word and spelling what it could not, is the way eSpeak NG reads a word it
+does not know; nothing of eSpeak NG's is copied.
 
 Where it came from
 ------------------
@@ -165,12 +244,25 @@ IBM's Embedded ViaVoice 4.3 SDK for Windows, which IBM still serves at
 `tools`, so anything under `lang` can be produced again from IBM's own file
 rather than taken on trust.
 
-What is ETI's came out of `enu.dylib` and `eng.dylib` as Apple's tvOS 18.2
-ships them, read by `tools/rules/lift64.py`, which works on any of Apple's
-modules of that engine.
+What is ETI's came out of `enu.dylib`, `eng.dylib`, `fin.dylib` and
+`ptb.dylib` as Apple's tvOS 18.2 ships them, read by `tools/rules/lift64.py`
+and `tools/module/lift61.py`, which work on any of Apple's modules of that
+engine.
 
 Measured against
 ----------------
+
+`test/cases/words-fifi.txt` is twenty thousand words spread through the
+vocabulary of the Voikko project's Finnish (https://voikko.puimula.org),
+whose copyright holders are listed in its CONTRIBUTORS and which is published
+under the GNU General Public License, version 2 or later. Only the words are
+here, lowercased; `tools/measure/wordlist.py` says how they were chosen.
+
+`test/cases/words-ptbr.txt` is twenty thousand words spread through VERO, the
+Brazilian Portuguese spelling dictionary LibreOffice ships, copyright
+Raimundo Santos Moura and published under the GNU Lesser General Public
+License, version 3, and the Mozilla Public License. Only the words are here,
+lowercased, chosen the same way.
 
 The Polish intonation numbers in `docs/status.md` were measured from FLEURS
 (https://huggingface.co/datasets/google/fleurs), read speech published by

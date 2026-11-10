@@ -22,11 +22,12 @@ plain 4 8c311c48c8f852bd fa5311631dbd034e Prova 1 2 3, ABC XYZ, parole-con-tratt
 plain 5 6ce9357f81c16460 fd98068fcb60d982 Una sola parola. E un'altra ancora; piu "testo citato" nel mezzo.
 plain 6 fd7054a8041856c9 8e4119535bfbee73 Otorinolaringoiatra, precipitevolissimevolmente, 42% di 3,14159, e il signor Bianchi-Verdi junior.
 plain 7 45df2411a0fc3a9f b609f5cf485e7a56 Ha detto: non farlo! Poi (tra parentesi) 1/2 + 3/4 = 5/4; vedi p. 12.
+plain 8 ca77bcf8c001daa0 14c749f710dc2291 Mentre la pioggia del mattino batteva piano contro le finestre, Daniele sedeva alla sua scrivania e confrontava i risultati di due sintetizzatori vocali, notando come ciascuno trattava i nomi insoliti, le espressioni tecniche, le parole composte e i piccoli cambiamenti nella punteggiatura, quando arrivo un messaggio di una sua collega con una domanda curiosa sul fatto che l'ultimo aggiornamento avesse migliorato il ritmo delle frasi lunghe, la chiarezza delle abbreviazioni e la pronuncia delle parole che possono essere sia nomi sia verbi, cosi che lui riapri il suo documento di prova e ascolto con attenzione ogni dettaglio.
 utf8 1 08189a74b61fe275 71690b026164ae09 Perche la citta e cosi bella in primavera.
-utf8 2 f42c8776c67a93a3 4613337024a5dbfc Perché la città è così bella in primavera.
+utf8 2 bb4486f3d8742508 2ae8604d4fc7596d Perché la città è così bella in primavera.
 utf8 3 3e0ba5627f694716 666046ba4bfeeaf2 Niccolò andò a Nizza più tardi con lui.
-utf8 4 230d7de175b77219 053c2eb79127bbb9 Città, virtù, però, caffè, lunedì e giovedì.
-utf8 5 da959c740ace36fa ca65a648e0f81982 L'università è chiusa oggi perché è festa.
+utf8 4 5f169d20521e07d4 77d219a3523f3a95 Città, virtù, però, caffè, lunedì e giovedì.
+utf8 5 cf1cb9222935599d fe7b755453580716 L'università è chiusa oggi perché è festa.
 utf8 6 356ce22c3bca3e6a 89bc7a2647217726 Non è però così tardi come sembrava ieri sera.
 utf8 7 a0aaf825d78d1041 2031e232b728ab14 Una frase completamente senza accenti per confronto.
 anno 1 988b03ea2aacd832 3f9c0441d7f208ed Voce normale `vs50 ora molto piu lenta di prima.
@@ -96,6 +97,7 @@ dict 4 8c311c48c8f852bd b11415bc360a4655 Prova 1 2 3, ABC XYZ, parole-con-tratti
 dict 5 6ce9357f81c16460 86a9b5e625927dd8 Una sola parola. E un'altra ancora; piu "testo citato" nel mezzo.
 dict 6 fd7054a8041856c9 e2c6e60ac01a19f8 Otorinolaringoiatra, precipitevolissimevolmente, 42% di 3,14159, e il signor Bianchi-Verdi junior.
 dict 7 45df2411a0fc3a9f 4e9fe223b6d9698d Ha detto: non farlo! Poi (tra parentesi) 1/2 + 3/4 = 5/4; vedi p. 12.
+dict 8 ca77bcf8c001daa0 8d8e8bc7cb3f3d9b Mentre la pioggia del mattino batteva piano contro le finestre, Daniele sedeva alla sua scrivania e confrontava i risultati di due sintetizzatori vocali, notando come ciascuno trattava i nomi insoliti, le espressioni tecniche, le parole composte e i piccoli cambiamenti nella punteggiatura, quando arrivo un messaggio di una sua collega con una domanda curiosa sul fatto che l'ultimo aggiornamento avesse migliorato il ritmo delle frasi lunghe, la chiarezza delle abbreviazioni e la pronuncia delle parole che possono essere sia nomi sia verbi, cosi che lui riapri il suo documento di prova e ascolto con attenzione ogni dettaglio.
 second 1 ebf3cd4f69450924 b687026b2d0a0db5 Ciao. Qui parla il sintetizzatore vocale Eloquence.
 second 2 5f900579ea07dfe9 42046e8b2d73444e Il dottor Rossi ha pagato 1.234,56 euro il 3 maggio 2026 alle 19:45.
 second 3 07e9b75ed9a0a591 b5fb97627a446ae2 La rapida volpe marrone salta sopra il cane pigro; p.es. www.esempio.it/percorso?q=1
@@ -103,20 +105,22 @@ second 4 d9361aa21df01563 fd85024c04520aa1 Prova 1 2 3, ABC XYZ, parole-con-trat
 second 5 3215b153accf8545 9c8df99fcd3d03cf Una sola parola. E un'altra ancora; piu "testo citato" nel mezzo.
 second 6 e18c965a04d533eb d78c9bcf72dc8648 Otorinolaringoiatra, precipitevolissimevolmente, 42% di 3,14159, e il signor Bianchi-Verdi junior.
 second 7 ba317c6a1c60caf4 15afcf0ae629a3e4 Ha detto: non farlo! Poi (tra parentesi) 1/2 + 3/4 = 5/4; vedi p. 12.
+second 8 bfbb1673d64582a6 9121f5beb1514a71 Mentre la pioggia del mattino batteva piano contro le finestre, Daniele sedeva alla sua scrivania e confrontava i risultati di due sintetizzatori vocali, notando come ciascuno trattava i nomi insoliti, le espressioni tecniche, le parole composte e i piccoli cambiamenti nella punteggiatura, quando arrivo un messaggio di una sua collega con una domanda curiosa sul fatto che l'ultimo aggiornamento avesse migliorato il ritmo delle frasi lunghe, la chiarezza delle abbreviazioni e la pronuncia delle parole che possono essere sia nomi sia verbi, cosi che lui riapri il suo documento di prova e ascolto con attenzione ogni dettaglio.
 ssml 1 5ef49c7aef96ecd0 98f0c6eb928dcedf <speak version="1.0" xml:lang="it-IT">Buongiorno.</speak>
 ssml 2 d3abbd182a011f31 b7c4c3f1d75d99fa <speak version="1.0" xml:lang="it-IT"><prosody rate="slow">Adesso piu lentamente.</prosody> Di nuovo normale.</speak>
 ssml 3 dfd2f700d8a88252 fe1b3e2449e19b75 <speak version="1.0" xml:lang="it-IT"><prosody pitch="high" range="x-high" volume="loud">Tutti quattro insieme.</prosody></speak>
-ssml 4 bd76e5dcbaf0aff0 093c501132b7b630 <speak version="1.0" xml:lang="it-IT"><emphasis level="strong">Questo</emphasis>, non quello.</speak>
+ssml 4 471c302e9f87cff0 9d44a5293d92e3d7 <speak version="1.0" xml:lang="it-IT"><emphasis level="strong">Questo</emphasis>, non quello.</speak>
 ssml 5 da09c11dc0936362 70663891e0c1ded9 <speak version="1.0" xml:lang="it-IT"><voice gender="female">Lei lo ha detto.</voice> E lui no.</speak>
 ssml 6 60a56c0a81fa2815 3914c1a3a220035b <speak version="1.0" xml:lang="it-IT">Costava <say-as interpret-as="cardinal">1234</say-as> il <say-as interpret-as="ordinal">3</say-as>.</speak>
 ssml 7 1554831edbdb5f59 cfd72f811c26aa7c <speak version="1.0" xml:lang="it-IT">Compita: <say-as interpret-as="letters">abc</say-as>, e chiama il <say-as interpret-as="number" format="telephone">5551234</say-as>.</speak>
 ssml 8 c07e389b0e4e4962 af753f16952fad7f <speak version="1.0" xml:lang="it-IT">Aspetta<break time="500ms"/>un momento.<mark name="qui"/> La.</speak>
 ssml 9 6df310ed9a6053f1 bd8dcfdc6521f02c <speak version="1.0" xml:lang="it-IT"><sub alias="Rete mondiale">WWW</sub> e <phoneme ph="h.E.l.oU">ciao</phoneme>.</speak>
 ssml 10 ebd80f3f9895d09d 716ad3282291fc5f <speak version="1.0" xml:lang="it-IT">Il caffè e perché più città, con a &amp; b &lt; c.</speak>
-wide 1 5739bdcba3744a1e 0d47d9ef0481318b Ciao. Qui parla il sintetizzatore vocale Eloquence.
-wide 2 e8bf11686389799f a4de102ec545c763 Il dottor Rossi ha pagato 1.234,56 euro il 3 maggio 2026 alle 19:45.
-wide 3 5976283f4b1bbe79 b5acf81bbf8c1653 La rapida volpe marrone salta sopra il cane pigro; p.es. www.esempio.it/percorso?q=1
-wide 4 b4f06d65318fcb43 06b5d3dcc7c73838 Prova 1 2 3, ABC XYZ, parole-con-trattino e MAIUSCOLE.
-wide 5 73de27fd23e5ae81 23512eff878590e6 Una sola parola. E un'altra ancora; piu "testo citato" nel mezzo.
-wide 6 cbfedc2a3aef1216 c6f688b1782564b2 Otorinolaringoiatra, precipitevolissimevolmente, 42% di 3,14159, e il signor Bianchi-Verdi junior.
-wide 7 429f568277f9f00a 5f29a767421fe337 Ha detto: non farlo! Poi (tra parentesi) 1/2 + 3/4 = 5/4; vedi p. 12.
+wide 1 98b57dc4566cb9cf ab2e20ba7a52246c Ciao. Qui parla il sintetizzatore vocale Eloquence.
+wide 2 5acf6bc1e506c1a5 e402767eb14f233f Il dottor Rossi ha pagato 1.234,56 euro il 3 maggio 2026 alle 19:45.
+wide 3 62fc3e91e96da342 0a6cde405216c11e La rapida volpe marrone salta sopra il cane pigro; p.es. www.esempio.it/percorso?q=1
+wide 4 6573fa8bb594f4d3 b8c019007084b8f1 Prova 1 2 3, ABC XYZ, parole-con-trattino e MAIUSCOLE.
+wide 5 f8edd943eed91db1 18fc270ea40894ba Una sola parola. E un'altra ancora; piu "testo citato" nel mezzo.
+wide 6 d4e6e60b8df7daa8 e6522e77e4b8d2c8 Otorinolaringoiatra, precipitevolissimevolmente, 42% di 3,14159, e il signor Bianchi-Verdi junior.
+wide 7 a015c2cb4ea4fc6c 8df59e4e35f8471c Ha detto: non farlo! Poi (tra parentesi) 1/2 + 3/4 = 5/4; vedi p. 12.
+wide 8 c2d12f4c3f6fdbdb d2c2eee78943b268 Mentre la pioggia del mattino batteva piano contro le finestre, Daniele sedeva alla sua scrivania e confrontava i risultati di due sintetizzatori vocali, notando come ciascuno trattava i nomi insoliti, le espressioni tecniche, le parole composte e i piccoli cambiamenti nella punteggiatura, quando arrivo un messaggio di una sua collega con una domanda curiosa sul fatto che l'ultimo aggiornamento avesse migliorato il ritmo delle frasi lunghe, la chiarezza delle abbreviazioni e la pronuncia delle parole che possono essere sia nomi sia verbi, cosi che lui riapri il suo documento di prova e ascolto con attenzione ogni dettaglio.

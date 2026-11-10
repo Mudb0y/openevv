@@ -35,7 +35,9 @@
 0x10000	-1	version2 of firefox115.
 
 # Hosts, web and email addresses and paths, which 6.1 reads a part at a time,
-# with a domain it knows said as a word.
+# with a domain it knows said as a word. A file's ending that is a word, as
+# nix is, is said as one here and spelled by 6.1, as docs/quirks.md says,
+# so the path ends in one both spell.
 0x10000	-1	example.com
 0x10000	-1	example.org
 0x10000	-1	example.com/path
@@ -48,7 +50,7 @@
 0x10000	-1	Go to www.example.com now.
 0x10000	-1	Mail stas@example.org today.
 0x10000	-1	Write to john.smith@mail.co.uk please.
-0x10000	-1	Edit /etc/nixos/configuration.nix now.
+0x10000	-1	Edit /etc/nixos/notes.txt now.
 0x10000	-1	Run setup.exe twice.
 0x10000	-1	Visit example.com/path/to/page.html today.
 0x10000	-1	ftp://files.example.net/pub is old.
@@ -82,3 +84,66 @@
 0x10000	-1	Vs. Them we lost.
 0x10000	-1	The end. Air was cold.
 0x10000	-1	It works, i.e. It runs.
+
+# Phone numbers, which 6.1 reads with a nought as oh and with the mark after
+# the number kept, so one at the end of a sentence ends it.
+0x10000	-1	Call 1-800-555-0199.
+0x10000	-1	Call 555-1234.
+0x10000	-1	Call 555-0100 now.
+0x10000	-1	My number is 212-555-0100, call me.
+0x10000	-1	Call (212) 555-0100.
+0x10000	-1	Fax: 212-555-0100.
+0x10000	-1	Call 555-1234 ext. 56.
+0x10000	-1	Call 555-1234 or 555-4321.
+
+# The day of the month, which 6.1 reads as an ordinal after any month name
+# and reads the other way round when the day comes first.
+0x10000	-1	Due September 30.
+0x10000	-1	Due September 30, 2026.
+0x10000	-1	On September 30 we met.
+0x10000	-1	September 30 is a Monday.
+0x10000	-1	It is due on March 3.
+0x10000	-1	It is due on March 23.
+0x10000	-1	It is due March 31.
+0x10000	-1	Born June 1.
+0x10000	-1	Born June 1, 1990.
+0x10000	-1	The deadline is April 15.
+0x10000	-1	See you on December 25!
+0x10000	-1	Is it on May 5?
+0x10000	-1	Due Sept. 30.
+0x10000	-1	Due Sep 30.
+0x10000	-1	On 30 September we met.
+0x10000	-1	On the 30th of September.
+0x10000	-1	In September 2026 we met.
+0x10000	-1	Due 5 Jan.
+0x10000	-1	Due 30 Sept.
+0x10000	-1	Due 4 Jul.
+0x10000	-1	Born June 1.
+0x10000	-1	31 December 1999 was the last day.
+0x10000	-1	From March 3 to March 5.
+0x10000	-1	Between May 1 and May 10.
+0x10000	-1	Due Jan 5.
+0x10000	-1	Due Feb 5.
+0x10000	-1	Due Sep 30.
+
+# Three or more numbers joined by hyphens and nothing else, which 6.1 reads
+# with every hyphen as dash. Two alone are a range, ten to eleven, where 6.1
+# says dash as well, so none of those is here.
+0x10000	-1	The date is 2026-10-11.
+0x10000	-1	Read 2026-10-11, then go.
+0x10000	-1	See items 1-2-3.
+0x10000	-1	Set (1-2-3) aside.
+0x10000	-1	Score 3-2-1 today.
+0x10000	-1	Part 123-456-789-0 is missing.
+0x10000	-1	ISBN 978-3-16-148410-0 here.
+
+# Money, which 6.1 reads with the nation after the number, and with the
+# letters of a currency before a number as that currency. Its dash in $5-$10
+# and its letters for DM 5 are not taken, so neither is here.
+0x10000	-1	It costs US$5.50.
+0x10000	-1	It costs A$5 million.
+0x10000	-1	It costs AUD$5.
+0x10000	-1	It costs C$1,000.
+0x10000	-1	It costs HK$100.
+0x10000	-1	It costs EUR 20.50.
+0x10000	-1	They paid AU$20.

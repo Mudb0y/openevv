@@ -1,0 +1,2241 @@
+# The rules of Finnish, lifted by tools/rules/lift64.py out of ETI
+# Eloquence 6.1 as Apple ships it, by tools/module/lift61.py. Each says
+# `instead' because it is written afresh rather than re-expressed from one of
+# IBM's: nothing of IBM's is under it.
+
+rule set_fin_global_constants takes 1
+  instead
+  place p4a66a
+  place p4a6a1
+  place p4a6d4
+  call fence 0 sym eti_null
+  set global half 4074 to 1
+  set global half 4078 to 2
+  and 0 into global half 4082
+  set global half 4086 to 1
+  set global half 4090 to 2
+  set global half 4094 to 3
+  set global half 4098 to 4
+  set global half 4102 to 5
+  set global half 4106 to 6
+  set global half 4110 to 7
+  set global half 4114 to 8
+  set global half 4118 to 9
+  set global half 4122 to 10
+  set global half 4126 to 11
+  set global half 4130 to 12
+  set global half 4134 to 13
+  set global half 4138 to 1
+  set global half 4142 to 2
+  set global half 2100 to 3
+  set global half 2104 to 2
+  match
+end
+
+rule init_fin_vars takes 1
+  instead
+  place p4a7b8
+  place p4a7eb
+  place p4a81a
+  call fence 0 sym eti_null
+  set global half 3522 to global half 3562
+  match
+end
+
+rule reset_fin_sent_vars takes 1
+  instead
+  variable gc50 word 2044
+  place p4a85f
+  place p4a892
+  place p4a8c1
+  call fence 0 sym eti_null
+  call npush_s 1
+  set global half 2046 to 3
+  call npop addr gc50
+  call npush_s 3
+  set global half 2046 to 2
+  call npop addr gc50
+  match
+end
+
+rule init_fin_textnorm_vars takes 2
+  instead
+  local cf0 bytes 8
+  variable g1708 word 4176
+  place p4a93d
+  place p4a971
+  place p4a9cd
+  call get_parm addr cf0 arg 1 -6
+  call fence 0 sym eti_null
+  call init_case_and_grade
+  set global word 4148 to global word 2224
+  set global word 4156 to global word 2224
+  set global word 4164 to global word 2224
+  set global word 4172 to global word 2224
+  call lpta_loadpn addr cf0
+  call lpta_ctxtl 4
+  call rpta_loadpn addr g1708
+  call compare_ptas
+  if answer is not 0
+    match
+  end
+  place p4aa49
+  call testneq
+  if answer is not 0
+    match
+  end
+  place p4aa55
+  set global word 4180 to global word 2224
+  match
+end
+
+rule init_case_and_grade takes 1
+  instead
+  place p4aa77
+  place p4aaaa
+  place p4aad9
+  call fence 0 sym eti_null
+  set global half 4066 to global half 4054
+  and 0 into global half 4054
+  and 0 into global half 4058
+  and 0 into global half 4062
+  match
+end
+
+rule init_morph_vars takes 1
+  instead
+  place p4ab36
+  place p4ab69
+  place p4ab98
+  call fence 0 sym eti_null
+  and 0 into global half 4186
+  and 0 into global half 4190
+  set global word 4196 to global word 2224
+  match
+end
+
+rule register_fin_phones takes 3
+  instead
+  local cf0 bytes 8
+  local cf4 bytes 8
+  local cf8 bytes 8
+  local cfc bytes 8
+  local c100 bytes 8
+  local c104 bytes 8
+  local c108 bytes 8
+  local c10c bytes 8
+  local c110 bytes 8
+  local c114 bytes 8
+  local c118 bytes 8
+  local c11c bytes 8
+  local c120 bytes 8
+  local c124 bytes 8
+  local c128 bytes 8
+  local c12c bytes 8
+  local c130 bytes 8
+  local v138 word
+  variable gde0 word 2400
+  place p4abf0
+  place p4ac2b
+  place p4ac8b
+  call get_parm addr c130 arg 1 -4
+  call get_parm addr c12c arg 2 -4
+  set c128 to 65532
+  set c124 to 65532
+  set c120 to 65532
+  set c110 to 65532
+  set c108 to 65532
+  set c104 to 65532
+  set c100 to 65532
+  set cfc to 65532
+  set cf8 to 65532
+  set cf4 to 65532
+  set cf0 to 65532
+  set c10c to 65532
+  set c11c to 65532
+  set c118 to 65532
+  set c114 to 65532
+  call fence 0 sym eti_null
+  call starttest 1
+  call move_i addr c128 65
+  call move_i addr c124 0
+  call move_i addr c120 0
+  call move_i addr c110 0
+  call move_i addr c108 0
+  call move_i addr c104 0
+  call move_i addr c100 0
+  call move_i addr cfc 100
+  call move_i addr cf8 125
+  call move_i addr cf4 128
+  call move_i addr cf0 200
+  call move_i addr c10c 150
+  call move_i addr c11c 130
+  call move_i addr c118 150
+  call move_i addr c114 150
+  set v138 to addr gde0
+  call registerPhoneme addr c130 addr c12c addr gde0 addr c128 addr c124 addr c120 addr c110 addr c108 addr c104 addr c100 addr cfc addr cf8 addr cf4 addr cf0 addr c10c addr c11c addr c118 addr c114
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4af29
+  go to p4af30
+  place p4af30
+  place t4af30_1 on 1
+  increment global half 2402
+  call starttest 2
+  call move_i addr c114 71
+  call move_i addr c118 0
+  call move_i addr c11c 0
+  call move_i addr c10c 0
+  call move_i addr cf0 0
+  call move_i addr cf4 0
+  call move_i addr cf8 0
+  call move_i addr cfc 50
+  call move_i addr c100 100
+  call move_i addr c104 128
+  call move_i addr c108 75
+  call move_i addr c110 130
+  call move_i addr c120 130
+  call move_i addr c124 0
+  call move_i addr c128 0
+  call registerPhoneme addr c130 addr c12c addr gde0 addr c114 addr c118 addr c11c addr c10c addr cf0 addr cf4 addr cf8 addr cfc addr c100 addr c104 addr c108 addr c110 addr c120 addr c124 addr c128
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4b0f5
+  place t4b0f5_2 on 2
+  increment global half 2402
+  call starttest 3
+  call move_i addr c128 73
+  call move_i addr c124 0
+  call move_i addr c120 0
+  call move_i addr c110 0
+  call move_i addr c108 0
+  call move_i addr c104 0
+  call move_i addr c100 0
+  call move_i addr cfc 50
+  call move_i addr cf8 100
+  call move_i addr cf4 128
+  call move_i addr cf0 50
+  call move_i addr c10c 130
+  call move_i addr c11c 175
+  call move_i addr c118 0
+  call move_i addr c114 125
+  call registerPhoneme addr c130 addr c12c addr gde0 addr c128 addr c124 addr c120 addr c110 addr c108 addr c104 addr c100 addr cfc addr cf8 addr cf4 addr cf0 addr c10c addr c11c addr c118 addr c114
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4b2b9
+  place t4b2b9_3 on 3
+  increment global half 2402
+  call starttest 4
+  call move_i addr c114 79
+  call move_i addr c118 0
+  call move_i addr c11c 0
+  call move_i addr c10c 0
+  call move_i addr cf0 0
+  call move_i addr cf4 0
+  call move_i addr cf8 0
+  call move_i addr cfc 25
+  call move_i addr c100 0
+  call move_i addr c104 130
+  call move_i addr c108 150
+  call move_i addr c110 60
+  call move_i addr c120 60
+  call move_i addr c124 0
+  call move_i addr c128 255
+  call registerPhoneme addr c130 addr c12c addr gde0 addr c114 addr c118 addr c11c addr c10c addr cf0 addr cf4 addr cf8 addr cfc addr c100 addr c104 addr c108 addr c110 addr c120 addr c124 addr c128
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4b47d
+  place t4b47d_4 on 4
+  increment global half 2402
+  call starttest 5
+  call move_i addr c128 82
+  call move_i addr c124 0
+  call move_i addr c120 0
+  call move_i addr c110 0
+  call move_i addr c108 0
+  call move_i addr c104 0
+  call move_i addr c100 0
+  call move_i addr cfc 50
+  call move_i addr cf8 75
+  call move_i addr cf4 128
+  call move_i addr cf0 100
+  call move_i addr c10c 150
+  call move_i addr c11c 130
+  call move_i addr c118 0
+  call move_i addr c114 200
+  call registerPhoneme addr c130 addr c12c addr gde0 addr c128 addr c124 addr c120 addr c110 addr c108 addr c104 addr c100 addr cfc addr cf8 addr cf4 addr cf0 addr c10c addr c11c addr c118 addr c114
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4b63f
+  place t4b63f_5 on 5
+  increment global half 2402
+  call starttest 6
+  call move_i addr c114 83
+  call move_i addr c118 0
+  call move_i addr c11c 0
+  call move_i addr c10c 0
+  call move_i addr cf0 0
+  call move_i addr cf4 0
+  call move_i addr cf8 0
+  call move_i addr cfc 75
+  call move_i addr c100 125
+  call move_i addr c104 128
+  call move_i addr c108 100
+  call move_i addr c110 130
+  call move_i addr c120 130
+  call move_i addr c124 0
+  call move_i addr c128 200
+  call registerPhoneme addr c130 addr c12c addr gde0 addr c114 addr c118 addr c11c addr c10c addr cf0 addr cf4 addr cf8 addr cfc addr c100 addr c104 addr c108 addr c110 addr c120 addr c124 addr c128
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4b803
+  place t4b803_6 on 6
+  increment global half 2402
+  call starttest 7
+  call move_i addr c128 85
+  call move_i addr c124 0
+  call move_i addr c120 0
+  call move_i addr c110 0
+  call move_i addr c108 0
+  call move_i addr c104 0
+  call move_i addr c100 0
+  call move_i addr cfc 25
+  call move_i addr cf8 0
+  call move_i addr cf4 130
+  call move_i addr cf0 90
+  call move_i addr c10c 60
+  call move_i addr c11c 60
+  call move_i addr c118 0
+  call move_i addr c114 255
+  call registerPhoneme addr c130 addr c12c addr gde0 addr c128 addr c124 addr c120 addr c110 addr c108 addr c104 addr c100 addr cfc addr cf8 addr cf4 addr cf0 addr c10c addr c11c addr c118 addr c114
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4b9c5
+  place t4b9c5_7 on 7
+  increment global half 2402
+  call starttest 8
+  call move_i addr c114 89
+  call move_i addr c118 0
+  call move_i addr c11c 0
+  call move_i addr c10c 0
+  call move_i addr cf0 0
+  call move_i addr cf4 0
+  call move_i addr cf8 0
+  call move_i addr cfc 25
+  call move_i addr c100 0
+  call move_i addr c104 130
+  call move_i addr c108 90
+  call move_i addr c110 60
+  call move_i addr c120 60
+  call move_i addr c124 0
+  call move_i addr c128 255
+  call registerPhoneme addr c130 addr c12c addr gde0 addr c114 addr c118 addr c11c addr c10c addr cf0 addr cf4 addr cf8 addr cfc addr c100 addr c104 addr c108 addr c110 addr c120 addr c124 addr c128
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4bb87
+  place t4bb87_8 on 8
+  increment global half 2402
+  call starttest 9
+  call move_i addr c128 90
+  call move_i addr c124 0
+  call move_i addr c120 0
+  call move_i addr c110 0
+  call move_i addr c108 0
+  call move_i addr c104 0
+  call move_i addr c100 0
+  call move_i addr cfc 75
+  call move_i addr cf8 125
+  call move_i addr cf4 128
+  call move_i addr cf0 100
+  call move_i addr c10c 130
+  call move_i addr c11c 130
+  call move_i addr c118 0
+  call move_i addr c114 200
+  call registerPhoneme addr c130 addr c12c addr gde0 addr c128 addr c124 addr c120 addr c110 addr c108 addr c104 addr c100 addr cfc addr cf8 addr cf4 addr cf0 addr c10c addr c11c addr c118 addr c114
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4bd4b
+  place t4bd4b_9 on 9
+  increment global half 2402
+  call starttest 10
+  call move_i addr c114 97
+  call move_i addr c118 0
+  call move_i addr c11c 0
+  call move_i addr c10c 0
+  call move_i addr cf0 0
+  call move_i addr cf4 0
+  call move_i addr cf8 0
+  call move_i addr cfc 100
+  call move_i addr c100 125
+  call move_i addr c104 128
+  call move_i addr c108 200
+  call move_i addr c110 150
+  call move_i addr c120 130
+  call move_i addr c124 150
+  call move_i addr c128 150
+  call registerPhoneme addr c130 addr c12c addr gde0 addr c114 addr c118 addr c11c addr c10c addr cf0 addr cf4 addr cf8 addr cfc addr c100 addr c104 addr c108 addr c110 addr c120 addr c124 addr c128
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4bf14
+  place t4bf14_10 on 10
+  increment global half 2402
+  call starttest 11
+  call move_i addr c128 98
+  call move_i addr c124 0
+  call move_i addr c120 0
+  call move_i addr c110 0
+  call move_i addr c108 0
+  call move_i addr c104 0
+  call move_i addr c100 0
+  call move_i addr cfc 0
+  call move_i addr cf8 100
+  call move_i addr cf4 128
+  call move_i addr cf0 0
+  call move_i addr c10c 0
+  call move_i addr c11c 0
+  call move_i addr c118 0
+  call move_i addr c114 200
+  call registerPhoneme addr c130 addr c12c addr gde0 addr c128 addr c124 addr c120 addr c110 addr c108 addr c104 addr c100 addr cfc addr cf8 addr cf4 addr cf0 addr c10c addr c11c addr c118 addr c114
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4c0d2
+  place t4c0d2_11 on 11
+  increment global half 2402
+  call starttest 12
+  call move_i addr c114 100
+  call move_i addr c118 0
+  call move_i addr c11c 0
+  call move_i addr c10c 0
+  call move_i addr cf0 0
+  call move_i addr cf4 0
+  call move_i addr cf8 0
+  call move_i addr cfc 75
+  call move_i addr c100 150
+  call move_i addr c104 128
+  call move_i addr c108 50
+  call move_i addr c110 130
+  call move_i addr c120 130
+  call move_i addr c124 255
+  call move_i addr c128 0
+  call registerPhoneme addr c130 addr c12c addr gde0 addr c114 addr c118 addr c11c addr c10c addr cf0 addr cf4 addr cf8 addr cfc addr c100 addr c104 addr c108 addr c110 addr c120 addr c124 addr c128
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4c29b
+  place t4c29b_12 on 12
+  increment global half 2402
+  call starttest 13
+  call move_i addr c128 101
+  call move_i addr c124 0
+  call move_i addr c120 0
+  call move_i addr c110 0
+  call move_i addr c108 0
+  call move_i addr c104 0
+  call move_i addr c100 0
+  call move_i addr cfc 50
+  call move_i addr cf8 100
+  call move_i addr cf4 128
+  call move_i addr cf0 75
+  call move_i addr c10c 130
+  call move_i addr c11c 175
+  call move_i addr c118 0
+  call move_i addr c114 255
+  call registerPhoneme addr c130 addr c12c addr gde0 addr c128 addr c124 addr c120 addr c110 addr c108 addr c104 addr c100 addr cfc addr cf8 addr cf4 addr cf0 addr c10c addr c11c addr c118 addr c114
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4c45d
+  place t4c45d_13 on 13
+  increment global half 2402
+  call starttest 14
+  call move_i addr c114 102
+  call move_i addr c118 0
+  call move_i addr c11c 0
+  call move_i addr c10c 0
+  call move_i addr cf0 0
+  call move_i addr cf4 0
+  call move_i addr cf8 0
+  call move_i addr cfc 10
+  call move_i addr c100 100
+  call move_i addr c104 128
+  call move_i addr c108 25
+  call move_i addr c110 130
+  call move_i addr c120 0
+  call move_i addr c124 0
+  call move_i addr c128 200
+  call registerPhoneme addr c130 addr c12c addr gde0 addr c114 addr c118 addr c11c addr c10c addr cf0 addr cf4 addr cf8 addr cfc addr c100 addr c104 addr c108 addr c110 addr c120 addr c124 addr c128
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4c61d
+  place t4c61d_14 on 14
+  increment global half 2402
+  call starttest 15
+  call move_i addr c128 103
+  call move_i addr c124 0
+  call move_i addr c120 0
+  call move_i addr c110 0
+  call move_i addr c108 0
+  call move_i addr c104 0
+  call move_i addr c100 0
+  call move_i addr cfc 50
+  call move_i addr cf8 100
+  call move_i addr cf4 128
+  call move_i addr cf0 75
+  call move_i addr c10c 130
+  call move_i addr c11c 130
+  call move_i addr c118 0
+  call move_i addr c114 0
+  call registerPhoneme addr c130 addr c12c addr gde0 addr c128 addr c124 addr c120 addr c110 addr c108 addr c104 addr c100 addr cfc addr cf8 addr cf4 addr cf0 addr c10c addr c11c addr c118 addr c114
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4c7e2
+  place t4c7e2_15 on 15
+  increment global half 2402
+  call starttest 16
+  call move_i addr c114 105
+  call move_i addr c118 0
+  call move_i addr c11c 0
+  call move_i addr c10c 0
+  call move_i addr cf0 0
+  call move_i addr cf4 0
+  call move_i addr cf8 0
+  call move_i addr cfc 25
+  call move_i addr c100 150
+  call move_i addr c104 128
+  call move_i addr c108 50
+  call move_i addr c110 130
+  call move_i addr c120 130
+  call move_i addr c124 0
+  call move_i addr c128 255
+  call registerPhoneme addr c130 addr c12c addr gde0 addr c114 addr c118 addr c11c addr c10c addr cf0 addr cf4 addr cf8 addr cfc addr c100 addr c104 addr c108 addr c110 addr c120 addr c124 addr c128
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4c9a8
+  place t4c9a8_16 on 16
+  increment global half 2402
+  call starttest 17
+  call move_i addr c128 106
+  call move_i addr c124 0
+  call move_i addr c120 0
+  call move_i addr c110 0
+  call move_i addr c108 0
+  call move_i addr c104 0
+  call move_i addr c100 0
+  call move_i addr cfc 25
+  call move_i addr cf8 150
+  call move_i addr cf4 128
+  call move_i addr cf0 50
+  call move_i addr c10c 130
+  call move_i addr c11c 130
+  call move_i addr c118 0
+  call move_i addr c114 255
+  call registerPhoneme addr c130 addr c12c addr gde0 addr c128 addr c124 addr c120 addr c110 addr c108 addr c104 addr c100 addr cfc addr cf8 addr cf4 addr cf0 addr c10c addr c11c addr c118 addr c114
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4cb6e
+  place t4cb6e_17 on 17
+  increment global half 2402
+  call starttest 18
+  call move_i addr c114 107
+  call move_i addr c118 0
+  call move_i addr c11c 0
+  call move_i addr c10c 0
+  call move_i addr cf0 0
+  call move_i addr cf4 0
+  call move_i addr cf8 0
+  call move_i addr cfc 50
+  call move_i addr c100 100
+  call move_i addr c104 128
+  call move_i addr c108 75
+  call move_i addr c110 130
+  call move_i addr c120 130
+  call move_i addr c124 0
+  call move_i addr c128 0
+  call registerPhoneme addr c130 addr c12c addr gde0 addr c114 addr c118 addr c11c addr c10c addr cf0 addr cf4 addr cf8 addr cfc addr c100 addr c104 addr c108 addr c110 addr c120 addr c124 addr c128
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4cd33
+  place t4cd33_18 on 18
+  increment global half 2402
+  call starttest 19
+  call move_i addr c128 108
+  call move_i addr c124 0
+  call move_i addr c120 0
+  call move_i addr c110 0
+  call move_i addr c108 0
+  call move_i addr c104 0
+  call move_i addr c100 0
+  call move_i addr cfc 75
+  call move_i addr cf8 150
+  call move_i addr cf4 128
+  call move_i addr cf0 50
+  call move_i addr c10c 130
+  call move_i addr c11c 130
+  call move_i addr c118 255
+  call move_i addr c114 0
+  call registerPhoneme addr c130 addr c12c addr gde0 addr c128 addr c124 addr c120 addr c110 addr c108 addr c104 addr c100 addr cfc addr cf8 addr cf4 addr cf0 addr c10c addr c11c addr c118 addr c114
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4cefc
+  place t4cefc_19 on 19
+  increment global half 2402
+  call starttest 20
+  call move_i addr c114 109
+  call move_i addr c118 0
+  call move_i addr c11c 0
+  call move_i addr c10c 0
+  call move_i addr cf0 0
+  call move_i addr cf4 0
+  call move_i addr cf8 0
+  call move_i addr cfc 0
+  call move_i addr c100 100
+  call move_i addr c104 128
+  call move_i addr c108 0
+  call move_i addr c110 0
+  call move_i addr c120 0
+  call move_i addr c124 0
+  call move_i addr c128 200
+  call registerPhoneme addr c130 addr c12c addr gde0 addr c114 addr c118 addr c11c addr c10c addr cf0 addr cf4 addr cf8 addr cfc addr c100 addr c104 addr c108 addr c110 addr c120 addr c124 addr c128
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4d0ba
+  place t4d0ba_20 on 20
+  increment global half 2402
+  call starttest 21
+  call move_i addr c128 110
+  call move_i addr c124 0
+  call move_i addr c120 0
+  call move_i addr c110 0
+  call move_i addr c108 0
+  call move_i addr c104 0
+  call move_i addr c100 0
+  call move_i addr cfc 75
+  call move_i addr cf8 150
+  call move_i addr cf4 128
+  call move_i addr cf0 50
+  call move_i addr c10c 130
+  call move_i addr c11c 130
+  call move_i addr c118 255
+  call move_i addr c114 0
+  call registerPhoneme addr c130 addr c12c addr gde0 addr c128 addr c124 addr c120 addr c110 addr c108 addr c104 addr c100 addr cfc addr cf8 addr cf4 addr cf0 addr c10c addr c11c addr c118 addr c114
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4d283
+  place t4d283_21 on 21
+  increment global half 2402
+  call starttest 22
+  call move_i addr c114 111
+  call move_i addr c118 0
+  call move_i addr c11c 0
+  call move_i addr c10c 0
+  call move_i addr cf0 0
+  call move_i addr cf4 0
+  call move_i addr cf8 0
+  call move_i addr cfc 25
+  call move_i addr c100 0
+  call move_i addr c104 130
+  call move_i addr c108 130
+  call move_i addr c110 60
+  call move_i addr c120 60
+  call move_i addr c124 0
+  call move_i addr c128 255
+  call registerPhoneme addr c130 addr c12c addr gde0 addr c114 addr c118 addr c11c addr c10c addr cf0 addr cf4 addr cf8 addr cfc addr c100 addr c104 addr c108 addr c110 addr c120 addr c124 addr c128
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4d449
+  place t4d449_22 on 22
+  increment global half 2402
+  call starttest 23
+  call move_i addr c128 112
+  call move_i addr c124 0
+  call move_i addr c120 0
+  call move_i addr c110 0
+  call move_i addr c108 0
+  call move_i addr c104 0
+  call move_i addr c100 0
+  call move_i addr cfc 0
+  call move_i addr cf8 100
+  call move_i addr cf4 128
+  call move_i addr cf0 0
+  call move_i addr c10c 0
+  call move_i addr c11c 0
+  call move_i addr c118 0
+  call move_i addr c114 200
+  call registerPhoneme addr c130 addr c12c addr gde0 addr c128 addr c124 addr c120 addr c110 addr c108 addr c104 addr c100 addr cfc addr cf8 addr cf4 addr cf0 addr c10c addr c11c addr c118 addr c114
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4d607
+  place t4d607_23 on 23
+  increment global half 2402
+  call starttest 24
+  call move_i addr c114 114
+  call move_i addr c118 0
+  call move_i addr c11c 0
+  call move_i addr c10c 0
+  call move_i addr cf0 0
+  call move_i addr cf4 0
+  call move_i addr cf8 0
+  call move_i addr cfc 25
+  call move_i addr c100 150
+  call move_i addr c104 128
+  call move_i addr c108 50
+  call move_i addr c110 130
+  call move_i addr c120 130
+  call move_i addr c124 0
+  call move_i addr c128 255
+  call registerPhoneme addr c130 addr c12c addr gde0 addr c114 addr c118 addr c11c addr c10c addr cf0 addr cf4 addr cf8 addr cfc addr c100 addr c104 addr c108 addr c110 addr c120 addr c124 addr c128
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4d7cd
+  place t4d7cd_24 on 24
+  increment global half 2402
+  call starttest 25
+  call move_i addr c128 115
+  call move_i addr c124 0
+  call move_i addr c120 0
+  call move_i addr c110 0
+  call move_i addr c108 0
+  call move_i addr c104 0
+  call move_i addr c100 0
+  call move_i addr cfc 50
+  call move_i addr cf8 100
+  call move_i addr cf4 128
+  call move_i addr cf0 75
+  call move_i addr c10c 130
+  call move_i addr c11c 130
+  call move_i addr c118 150
+  call move_i addr c114 0
+  call registerPhoneme addr c130 addr c12c addr gde0 addr c128 addr c124 addr c120 addr c110 addr c108 addr c104 addr c100 addr cfc addr cf8 addr cf4 addr cf0 addr c10c addr c11c addr c118 addr c114
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4d994
+  place t4d994_25 on 25
+  increment global half 2402
+  call starttest 26
+  call move_i addr c114 116
+  call move_i addr c118 0
+  call move_i addr c11c 0
+  call move_i addr c10c 0
+  call move_i addr cf0 0
+  call move_i addr cf4 0
+  call move_i addr cf8 0
+  call move_i addr cfc 75
+  call move_i addr c100 150
+  call move_i addr c104 128
+  call move_i addr c108 50
+  call move_i addr c110 130
+  call move_i addr c120 130
+  call move_i addr c124 255
+  call move_i addr c128 0
+  call registerPhoneme addr c130 addr c12c addr gde0 addr c114 addr c118 addr c11c addr c10c addr cf0 addr cf4 addr cf8 addr cfc addr c100 addr c104 addr c108 addr c110 addr c120 addr c124 addr c128
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4db5d
+  place t4db5d_26 on 26
+  increment global half 2402
+  call starttest 27
+  call move_i addr c128 117
+  call move_i addr c124 0
+  call move_i addr c120 0
+  call move_i addr c110 0
+  call move_i addr c108 0
+  call move_i addr c104 0
+  call move_i addr c100 0
+  call move_i addr cfc 25
+  call move_i addr cf8 0
+  call move_i addr cf4 130
+  call move_i addr cf0 90
+  call move_i addr c10c 60
+  call move_i addr c11c 60
+  call move_i addr c118 0
+  call move_i addr c114 255
+  call registerPhoneme addr c130 addr c12c addr gde0 addr c128 addr c124 addr c120 addr c110 addr c108 addr c104 addr c100 addr cfc addr cf8 addr cf4 addr cf0 addr c10c addr c11c addr c118 addr c114
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4dd1f
+  place t4dd1f_27 on 27
+  increment global half 2402
+  call starttest 28
+  call move_i addr c114 118
+  call move_i addr c118 0
+  call move_i addr c11c 0
+  call move_i addr c10c 0
+  call move_i addr cf0 0
+  call move_i addr cf4 0
+  call move_i addr cf8 0
+  call move_i addr cfc 10
+  call move_i addr c100 100
+  call move_i addr c104 128
+  call move_i addr c108 25
+  call move_i addr c110 130
+  call move_i addr c120 0
+  call move_i addr c124 0
+  call move_i addr c128 200
+  call registerPhoneme addr c130 addr c12c addr gde0 addr c114 addr c118 addr c11c addr c10c addr cf0 addr cf4 addr cf8 addr cfc addr c100 addr c104 addr c108 addr c110 addr c120 addr c124 addr c128
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4dedf
+  place t4dedf_28 on 28
+  increment global half 2402
+  call starttest 29
+  call move_i addr c128 119
+  call move_i addr c124 0
+  call move_i addr c120 0
+  call move_i addr c110 0
+  call move_i addr c108 0
+  call move_i addr c104 0
+  call move_i addr c100 0
+  call move_i addr cfc 25
+  call move_i addr cf8 0
+  call move_i addr cf4 130
+  call move_i addr cf0 90
+  call move_i addr c10c 60
+  call move_i addr c11c 60
+  call move_i addr c118 0
+  call move_i addr c114 255
+  call registerPhoneme addr c130 addr c12c addr gde0 addr c128 addr c124 addr c120 addr c110 addr c108 addr c104 addr c100 addr cfc addr cf8 addr cf4 addr cf0 addr c10c addr c11c addr c118 addr c114
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4e0a1
+  place t4e0a1_29 on 29
+  increment global half 2402
+  call starttest 30
+  call move_i addr c114 121
+  call move_i addr c118 0
+  call move_i addr c11c 0
+  call move_i addr c10c 0
+  call move_i addr cf0 0
+  call move_i addr cf4 0
+  call move_i addr cf8 0
+  call move_i addr cfc 25
+  call move_i addr c100 0
+  call move_i addr c104 130
+  call move_i addr c108 90
+  call move_i addr c110 60
+  call move_i addr c120 60
+  call move_i addr c124 0
+  call move_i addr c128 255
+  call registerPhoneme addr c130 addr c12c addr gde0 addr c114 addr c118 addr c11c addr c10c addr cf0 addr cf4 addr cf8 addr cfc addr c100 addr c104 addr c108 addr c110 addr c120 addr c124 addr c128
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4e263
+  place t4e263_30 on 30
+  increment global half 2402
+  call starttest 31
+  call move_i addr c128 122
+  call move_i addr c124 0
+  call move_i addr c120 0
+  call move_i addr c110 0
+  call move_i addr c108 0
+  call move_i addr c104 0
+  call move_i addr c100 0
+  call move_i addr cfc 50
+  call move_i addr cf8 100
+  call move_i addr cf4 128
+  call move_i addr cf0 75
+  call move_i addr c10c 130
+  call move_i addr c11c 130
+  call move_i addr c118 150
+  call move_i addr c114 0
+  call registerPhoneme addr c130 addr c12c addr gde0 addr c128 addr c124 addr c120 addr c110 addr c108 addr c104 addr c100 addr cfc addr cf8 addr cf4 addr cf0 addr c10c addr c11c addr c118 addr c114
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4e42a
+  place t4e42a_31 on 31
+  increment global half 2402
+  call starttest 32
+  call move_i addr c114 97
+  call move_i addr c118 111
+  call move_i addr c11c 0
+  call move_i addr c10c 0
+  call move_i addr cf0 0
+  call move_i addr cf4 0
+  call move_i addr cf8 0
+  call move_i addr cfc 100
+  call move_i addr c100 125
+  call move_i addr c104 128
+  call move_i addr c108 200
+  call move_i addr c110 150
+  call move_i addr c120 130
+  call move_i addr c124 150
+  call move_i addr c128 150
+  call registerPhoneme addr c130 addr c12c addr gde0 addr c114 addr c118 addr c11c addr c10c addr cf0 addr cf4 addr cf8 addr cfc addr c100 addr c104 addr c108 addr c110 addr c120 addr c124 addr c128
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4e5f3
+  place t4e5f3_32 on 32
+  increment global half 2402
+  call starttest 33
+  call move_i addr c128 164
+  call move_i addr c124 0
+  call move_i addr c120 0
+  call move_i addr c110 0
+  call move_i addr c108 0
+  call move_i addr c104 0
+  call move_i addr c100 0
+  call move_i addr cfc 0
+  call move_i addr cf8 170
+  call move_i addr cf4 128
+  call move_i addr cf0 0
+  call move_i addr c10c 0
+  call move_i addr c11c 0
+  call move_i addr c118 0
+  call move_i addr c114 0
+  call registerPhoneme addr c130 addr c12c addr gde0 addr c128 addr c124 addr c120 addr c110 addr c108 addr c104 addr c100 addr cfc addr cf8 addr cf4 addr cf0 addr c10c addr c11c addr c118 addr c114
+  if answer is 0
+    go to p4e7e7
+  end
+  set unwind to 0
+  backtrack
+  place p4e7e7
+  place t4e7e7_33 on 33
+  increment global half 2402
+  match
+end
+
+rule fin_gramm_cat_dict takes 4
+  instead
+  local c120 bytes 16
+  local c130 bytes 8
+  local c148 bytes 8
+  local c168 bytes 20
+  local c180 bytes 8
+  local c190 bytes 8
+  local vf8 word
+  local v100 word
+  local v138 word
+  local h_rax
+  local h_rcx
+  local h_rdx
+  local h_rsi
+  variable g218 word 280
+  variable g228 word 288
+  variable gbec word 1984
+  variable gbf8 word 1996
+  place p4e884
+  set h_rcx to 94
+  place p4e8cd
+  place p4e900
+  set h_rsi to addr c148
+  set h_rdx to arg 1
+  set h_rcx to -6
+  call get_parm h_rsi h_rdx h_rcx
+  set h_rax to answer
+  set h_rsi to addr c190
+  set h_rdx to arg 2
+  set h_rcx to -6
+  call get_parm h_rsi h_rdx h_rcx
+  set h_rax to answer
+  set h_rsi to addr c130
+  set h_rdx to arg 3
+  set h_rcx to -6
+  call get_parm h_rsi h_rdx h_rcx
+  set h_rax to answer
+  set cell c120 word 0 to 0
+  set cell c120 word 4 to 0
+  and 0 into cell c120 word 8
+  set c120 to -65532
+  and 0 into cell c180 half 0
+  set c180 to -65533
+  set cell c168 word 0 to 0
+  set cell c168 word 4 to 0
+  set cell c168 word 8 to 0
+  set cell c168 word 12 to 0
+  set c168 to -65534
+  set h_rax to global byte 152
+  set h_rdx to h_rax
+  set h_rsi to h_rdx
+  call fence 0 sym eti_null
+  set h_rsi to addr c148
+  set h_rdx to addr c190
+  call lpta_rpta_loadp h_rsi h_rdx
+  set h_rax to answer
+  set h_rsi to 0
+  set h_rcx to 0
+  set h_rdx to 0
+  call actd_lookup h_rsi h_rdx h_rcx
+  set h_rax to answer
+  if h_rax is 0
+    go to p4ea04
+  end
+  give up
+  place p4ea04
+  set h_rax to addr g228
+  set vf8 to addr g228
+  set h_rax to addr gbf8
+  set v100 to addr gbf8
+  set h_rax to addr gbec
+  set v138 to addr gbec
+  place p4ea40
+  place t4ea40_39 on 39
+  set h_rax to cell c148 value
+  set global word 284 to h_rax
+  set h_rax to cell c190 value
+  set global word 292 to h_rax
+  set h_rsi to 41
+  call starttest h_rsi
+  set h_rax to answer
+  set h_rsi to addr g218
+  set h_rdx to 3
+  call lpta_loadp h_rsi
+  call setscan_r h_rdx
+  set h_rax to answer
+  if h_rax is not 0
+    go to p4ea89
+  end
+  place p4ea79
+  call advanc
+  set h_rax to answer
+  if h_rax is 0
+    go to p4f65f
+  end
+  place p4ea89
+  place t4ea89_41 on 41
+  set h_rsi to 44
+  call starttest h_rsi
+  set h_rax to answer
+  set h_rsi to addr c130
+  set h_rdx to 1
+  call lpta_loadp h_rsi
+  call setscan_r h_rdx
+  set h_rax to answer
+  if h_rax is not 0
+    go to p4eac6
+  end
+  place p4eaaa
+  set h_rdx to 1
+  set h_rsi to 1
+  set h_rcx to sym eti_s_fb1cf
+  call test_string_s h_rsi h_rdx h_rcx
+  set h_rax to answer
+  if h_rax is 0
+    give up
+  end
+  place p4eac6
+  place t4eac6_44 on 44
+  set cell c120 field to 3
+  set h_rsi to addr c120
+  set h_rdx to addr gbec
+  call copyvar h_rsi h_rdx
+  set h_rax to answer
+  call actd_goto
+  set h_rax to answer
+  set unwind to 0
+  backtrack
+  place p4eb1b
+  place t4eb1b_1 on 1
+  set h_rsi to addr g218
+  set h_rdx to addr g228
+  call lpta_rpta_loadp h_rsi h_rdx
+  set h_rax to answer
+  set h_rcx to sym eti_s_fb1d0
+  set h_rsi to 2
+  set h_rdx to 3
+  call insert_2pt_s h_rsi h_rdx h_rcx 0
+  set h_rax to answer
+  if h_rax is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4eb49
+  set h_rsi to 4
+  go to p4f26d
+  place p4eb50
+  place t4eb50_2 on 2
+  set h_rsi to addr g218
+  set h_rdx to addr g228
+  call lpta_rpta_loadp h_rsi h_rdx
+  set h_rax to answer
+  set h_rcx to sym eti_s_fb1d3
+  go to p4eb9f
+  place p4eb6b
+  place t4eb6b_3 on 3
+  set h_rsi to addr g218
+  set h_rdx to addr g228
+  call lpta_rpta_loadp h_rsi h_rdx
+  set h_rax to answer
+  set h_rcx to sym eti_s_fb1d5
+  go to p4eb9f
+  place p4eb86
+  place t4eb86_4 on 4
+  set h_rsi to addr g218
+  set h_rdx to addr g228
+  call lpta_rpta_loadp h_rsi h_rdx
+  set h_rax to answer
+  set h_rcx to sym eti_s_fb1d7
+  place p4eb9f
+  set h_rdx to 2
+  set h_rsi to 2
+  call insert_2pt_s h_rsi h_rdx h_rcx 0
+  set h_rax to answer
+  if h_rax is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4ebb7
+  set h_rsi to 1
+  call npush_s h_rsi
+  set h_rax to answer
+  set cell c120 field to 1
+  set h_rsi to addr c120
+  call npop h_rsi
+  set h_rax to answer
+  set h_rsi to 6
+  go to p4f3b4
+  place p4ebe3
+  place t4ebe3_5 on 5
+  set h_rsi to addr g218
+  set h_rdx to addr g228
+  call lpta_rpta_loadp h_rsi h_rdx
+  set h_rax to answer
+  set h_rcx to sym eti_s_fb1d9
+  go to p4f16d
+  place p4ec01
+  place t4ec01_6 on 6
+  set h_rsi to addr g218
+  set h_rdx to addr g228
+  call lpta_rpta_loadp h_rsi h_rdx
+  set h_rax to answer
+  set h_rcx to sym eti_s_fb1db
+  go to p4f1be
+  place p4ec1f
+  place t4ec1f_7 on 7
+  set h_rsi to addr g218
+  set h_rdx to addr g228
+  call lpta_rpta_loadp h_rsi h_rdx
+  set h_rax to answer
+  set h_rcx to sym eti_s_fb1e1
+  set h_rsi to 2
+  set h_rdx to 3
+  call insert_2pt_s h_rsi h_rdx h_rcx 0
+  set h_rax to answer
+  if h_rax is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4ec51
+  set h_rsi to 8
+  call npush_s h_rsi
+  set h_rax to answer
+  set cell c120 field to 1
+  set h_rsi to addr c120
+  call npop h_rsi
+  set h_rax to answer
+  set h_rsi to 4
+  go to p4f3b4
+  place p4ec7d
+  place t4ec7d_8 on 8
+  set h_rsi to addr g218
+  set h_rdx to addr g228
+  call lpta_rpta_loadp h_rsi h_rdx
+  set h_rax to answer
+  set h_rcx to sym eti_s_fb1e4
+  go to p4f0ce
+  place p4ec9b
+  place t4ec9b_9 on 9
+  set h_rsi to addr g218
+  set h_rdx to addr g228
+  call lpta_rpta_loadp h_rsi h_rdx
+  set h_rax to answer
+  set h_rcx to sym eti_s_fb1e9
+  set h_rdx to 2
+  set h_rsi to 2
+  go to p4f380
+  place p4ecc4
+  place t4ecc4_10 on 10
+  set h_rsi to addr g218
+  set h_rdx to addr g228
+  call lpta_rpta_loadp h_rsi h_rdx
+  set h_rax to answer
+  set h_rcx to sym eti_s_fb1eb
+  set h_rsi to 2
+  set h_rdx to 4
+  call insert_2pt_s h_rsi h_rdx h_rcx 0
+  set h_rax to answer
+  if h_rax is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4ecf6
+  set h_rsi to 10
+  go to p4f26d
+  place p4ecfd
+  place t4ecfd_11 on 11
+  set h_rsi to addr g218
+  set h_rdx to addr g228
+  call lpta_rpta_loadp h_rsi h_rdx
+  set h_rax to answer
+  set h_rcx to sym eti_s_fb1ef
+  set h_rsi to 2
+  set h_rdx to 4
+  go to p4f114
+  place p4ed20
+  place t4ed20_12 on 12
+  set h_rsi to addr g218
+  set h_rdx to addr g228
+  call lpta_rpta_loadp h_rsi h_rdx
+  set h_rax to answer
+  set h_rcx to sym eti_s_fb1f3
+  go to p4ed54
+  place p4ed3b
+  place t4ed3b_13 on 13
+  set h_rsi to addr g218
+  set h_rdx to addr g228
+  call lpta_rpta_loadp h_rsi h_rdx
+  set h_rax to answer
+  set h_rcx to sym eti_s_fb1f6
+  place p4ed54
+  set h_rsi to 2
+  set h_rdx to 3
+  call insert_2pt_s h_rsi h_rdx h_rcx 0
+  set h_rax to answer
+  if h_rax is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4ed6d
+  set h_rsi to 3
+  call npush_s h_rsi
+  set h_rax to answer
+  set cell c120 field to 1
+  set h_rsi to addr c120
+  call npop h_rsi
+  set h_rax to answer
+  set h_rsi to 11
+  go to p4f3b4
+  place p4ed99
+  place t4ed99_14 on 14
+  set h_rsi to addr g218
+  set h_rdx to addr g228
+  call lpta_rpta_loadp h_rsi h_rdx
+  set h_rax to answer
+  set h_rcx to sym eti_s_fb1f9
+  go to p4f16d
+  place p4edb7
+  place t4edb7_15 on 15
+  set h_rsi to addr g218
+  set h_rdx to addr g228
+  call lpta_rpta_loadp h_rsi h_rdx
+  set h_rax to answer
+  set h_rcx to sym eti_s_fb1fb
+  go to p4f1be
+  place p4edd5
+  place t4edd5_16 on 16
+  set h_rsi to addr g218
+  set h_rdx to addr g228
+  call lpta_rpta_loadp h_rsi h_rdx
+  set h_rax to answer
+  set h_rcx to sym eti_s_fb201
+  go to p4f0ce
+  place p4edf3
+  place t4edf3_17 on 17
+  set h_rsi to addr g218
+  set h_rdx to addr g228
+  call lpta_rpta_loadp h_rsi h_rdx
+  set h_rax to answer
+  set h_rcx to sym eti_s_fb206
+  set h_rsi to 2
+  set h_rdx to 5
+  go to p4f114
+  place p4ee16
+  place t4ee16_18 on 18
+  set h_rsi to addr g218
+  set h_rdx to addr g228
+  call lpta_rpta_loadp h_rsi h_rdx
+  set h_rax to answer
+  set h_rcx to sym eti_s_fb20b
+  go to p4f10f
+  place p4ee34
+  place t4ee34_19 on 19
+  set h_rsi to addr g218
+  set h_rdx to addr g228
+  call lpta_rpta_loadp h_rsi h_rdx
+  set h_rax to answer
+  set h_rcx to sym eti_s_fb211
+  go to p4eebf
+  place p4ee4f
+  place t4ee4f_20 on 20
+  set h_rsi to addr g218
+  set h_rdx to addr g228
+  call lpta_rpta_loadp h_rsi h_rdx
+  set h_rax to answer
+  set h_rcx to sym eti_s_fb219
+  go to p4f10f
+  place p4ee6d
+  place t4ee6d_21 on 21
+  set h_rsi to addr g218
+  set h_rdx to addr g228
+  call lpta_rpta_loadp h_rsi h_rdx
+  set h_rax to answer
+  set h_rcx to sym eti_s_fb21f
+  go to p4f10f
+  place p4ee8b
+  place t4ee8b_22 on 22
+  set h_rsi to addr g218
+  set h_rdx to addr g228
+  call lpta_rpta_loadp h_rsi h_rdx
+  set h_rax to answer
+  set h_rcx to sym eti_s_fb225
+  go to p4eebf
+  place p4eea6
+  place t4eea6_23 on 23
+  set h_rsi to addr g218
+  set h_rdx to addr g228
+  call lpta_rpta_loadp h_rsi h_rdx
+  set h_rax to answer
+  set h_rcx to sym eti_s_fb22d
+  place p4eebf
+  set h_rsi to 2
+  set h_rdx to 8
+  go to p4f114
+  place p4eec9
+  place t4eec9_24 on 24
+  set h_rsi to addr g218
+  set h_rdx to addr g228
+  call lpta_rpta_loadp h_rsi h_rdx
+  set h_rax to answer
+  set h_rcx to sym eti_s_fb235
+  set h_rdx to 2
+  set h_rsi to 2
+  call insert_2pt_s h_rsi h_rdx h_rcx 0
+  set h_rax to answer
+  if h_rax is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4eefa
+  set h_rsi to 5
+  go to p4f187
+  place p4ef01
+  place t4ef01_25 on 25
+  set h_rsi to addr g218
+  set h_rdx to addr g228
+  call lpta_rpta_loadp h_rsi h_rdx
+  set h_rax to answer
+  set h_rcx to sym eti_s_fb237
+  set h_rsi to 2
+  set h_rdx to 1
+  call insert_2pt_s h_rsi h_rdx h_rcx 0
+  set h_rax to answer
+  if h_rax is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4ef33
+  set h_rdx to 27
+  set h_rsi to addr c168
+  call settvar_s h_rsi h_rdx
+  set h_rax to answer
+  set h_rsi to 0
+  call npush_s h_rsi
+  set h_rax to answer
+  set cell c168 field to 11
+  set h_rsi to addr c168
+  call npop h_rsi
+  set h_rax to answer
+  set h_rsi to 2
+  set h_rdx to addr c168
+  set h_rcx to 0
+  call insert_lv h_rsi h_rdx h_rcx
+  set h_rax to answer
+  set h_rcx to sym eti_s_fb238
+  set h_rdx to 4
+  set h_rsi to 2
+  call insert_l h_rsi h_rdx h_rcx 0
+  set h_rax to answer
+  set h_rsi to 5
+  go to p4f1d9
+  place p4ef9f
+  place t4ef9f_26 on 26
+  set h_rsi to addr g218
+  set h_rdx to addr g228
+  call lpta_rpta_loadp h_rsi h_rdx
+  set h_rax to answer
+  set h_rcx to sym eti_s_fb23c
+  set h_rdx to 2
+  set h_rsi to 2
+  call insert_2pt_s h_rsi h_rdx h_rcx 0
+  set h_rax to answer
+  if h_rax is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4efd0
+  set h_rsi to 2
+  go to p4f187
+  place p4efd7
+  place t4efd7_27 on 27
+  set h_rsi to addr g218
+  set h_rdx to addr g228
+  call lpta_rpta_loadp h_rsi h_rdx
+  set h_rax to answer
+  set h_rcx to sym eti_s_fb23e
+  set h_rdx to 2
+  set h_rsi to 2
+  call insert_2pt_s h_rsi h_rdx h_rcx 0
+  set h_rax to answer
+  if h_rax is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4f008
+  set h_rsi to 5
+  call npush_s h_rsi
+  set h_rax to answer
+  set cell c120 field to 1
+  set h_rsi to addr c120
+  call npop h_rsi
+  set h_rax to answer
+  set h_rsi to 10
+  go to p4f3b4
+  place p4f034
+  place t4f034_28 on 28
+  set h_rsi to addr g218
+  set h_rdx to addr g228
+  call lpta_rpta_loadp h_rsi h_rdx
+  set h_rax to answer
+  set h_rcx to sym eti_s_fb240
+  set h_rsi to 2
+  set h_rdx to 4
+  go to p4f379
+  place p4f057
+  place t4f057_29 on 29
+  set h_rsi to addr g218
+  set h_rdx to addr g228
+  call lpta_rpta_loadp h_rsi h_rdx
+  set h_rax to answer
+  set h_rcx to sym eti_s_fb244
+  set h_rsi to 2
+  set h_rdx to 3
+  call insert_2pt_s h_rsi h_rdx h_rcx 0
+  set h_rax to answer
+  if h_rax is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4f089
+  set h_rsi to 5
+  call npush_s h_rsi
+  set h_rax to answer
+  set cell c120 field to 1
+  set h_rsi to addr c120
+  call npop h_rsi
+  set h_rax to answer
+  set h_rsi to 7
+  go to p4f3b4
+  place p4f0b5
+  place t4f0b5_30 on 30
+  set h_rsi to addr g218
+  set h_rdx to addr g228
+  call lpta_rpta_loadp h_rsi h_rdx
+  set h_rax to answer
+  set h_rcx to sym eti_s_fb247
+  place p4f0ce
+  set h_rsi to 2
+  set h_rdx to 5
+  go to p4f1c3
+  place p4f0d8
+  place t4f0d8_31 on 31
+  set h_rsi to addr g218
+  set h_rdx to addr g228
+  call lpta_rpta_loadp h_rsi h_rdx
+  set h_rax to answer
+  set h_rcx to sym eti_s_fb24c
+  go to p4f374
+  place p4f0f6
+  place t4f0f6_32 on 32
+  set h_rsi to addr g218
+  set h_rdx to addr g228
+  call lpta_rpta_loadp h_rsi h_rdx
+  set h_rax to answer
+  set h_rcx to sym eti_s_fb24f
+  place p4f10f
+  set h_rsi to 2
+  set h_rdx to 6
+  place p4f114
+  call insert_2pt_s h_rsi h_rdx h_rcx 0
+  set h_rax to answer
+  if h_rax is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4f128
+  set h_rsi to 3
+  call npush_s h_rsi
+  set h_rax to answer
+  set cell c120 field to 1
+  set h_rsi to addr c120
+  call npop h_rsi
+  set h_rax to answer
+  set h_rsi to 2
+  go to p4f1fe
+  place p4f154
+  place t4f154_33 on 33
+  set h_rsi to addr g218
+  set h_rdx to addr g228
+  call lpta_rpta_loadp h_rsi h_rdx
+  set h_rax to answer
+  set h_rcx to sym eti_s_fb255
+  place p4f16d
+  set h_rdx to 2
+  set h_rsi to 2
+  call insert_2pt_s h_rsi h_rdx h_rcx 0
+  set h_rax to answer
+  if h_rax is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4f185
+  set h_rsi to 8
+  place p4f187
+  call npush_s h_rsi
+  set h_rax to answer
+  set h_rsi to addr c120
+  set cell c120 field to 1
+  go to p4f3cb
+  place p4f1a5
+  place t4f1a5_34 on 34
+  set h_rsi to addr g218
+  set h_rdx to addr g228
+  call lpta_rpta_loadp h_rsi h_rdx
+  set h_rax to answer
+  set h_rcx to sym eti_s_fb257
+  place p4f1be
+  set h_rsi to 2
+  set h_rdx to 6
+  place p4f1c3
+  call insert_2pt_s h_rsi h_rdx h_rcx 0
+  set h_rax to answer
+  if h_rax is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4f1d7
+  set h_rsi to 8
+  place p4f1d9
+  call npush_s h_rsi
+  set h_rax to answer
+  set cell c120 field to 1
+  set h_rsi to addr c120
+  call npop h_rsi
+  set h_rax to answer
+  set h_rsi to 7
+  place p4f1fe
+  call npush_s h_rsi
+  set h_rax to answer
+  set cell c120 field to 2
+  place p4f20f
+  set h_rsi to addr c120
+  call npop h_rsi
+  set h_rax to answer
+  set cell c120 field to 3
+  set h_rsi to addr c120
+  set h_rdx to addr gbf8
+  call copyvar h_rsi h_rdx
+  set h_rax to answer
+  go to p4f3d0
+  place p4f239
+  place t4f239_35 on 35
+  set h_rsi to addr g218
+  set h_rdx to addr g228
+  call lpta_rpta_loadp h_rsi h_rdx
+  set h_rax to answer
+  set h_rcx to sym eti_s_fb25d
+  set h_rsi to 2
+  set h_rdx to 3
+  call insert_2pt_s h_rsi h_rdx h_rcx 0
+  set h_rax to answer
+  if h_rax is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4f26b
+  set h_rsi to 6
+  place p4f26d
+  call npush_s h_rsi
+  set h_rax to answer
+  set cell c120 field to 1
+  go to p4f20f
+  place p4f287
+  place t4f287_36 on 36
+  set h_rsi to addr g218
+  set h_rdx to addr g228
+  call lpta_rpta_loadp h_rsi h_rdx
+  set h_rax to answer
+  set h_rcx to sym eti_s_fb260
+  set h_rsi to 2
+  set h_rdx to 1
+  call insert_2pt_s h_rsi h_rdx h_rcx 0
+  set h_rax to answer
+  if h_rax is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4f2b9
+  set h_rdx to 34
+  set h_rsi to addr c168
+  call settvar_s h_rsi h_rdx
+  set h_rax to answer
+  set h_rsi to 0
+  call npush_s h_rsi
+  set h_rax to answer
+  set cell c168 field to 11
+  set h_rsi to addr c168
+  call npop h_rsi
+  set h_rax to answer
+  set h_rsi to 2
+  set h_rdx to addr c168
+  set h_rcx to 0
+  call insert_lv h_rsi h_rdx h_rcx
+  set h_rax to answer
+  set h_rcx to sym eti_s_fb261
+  set h_rsi to 2
+  set h_rdx to 2
+  call insert_l h_rsi h_rdx h_rcx 0
+  set h_rax to answer
+  set h_rsi to 3
+  call npush_s h_rsi
+  set h_rax to answer
+  set cell c120 field to 1
+  set h_rsi to addr c120
+  call npop h_rsi
+  set h_rax to answer
+  set h_rsi to 2
+  call npush_s h_rsi
+  set h_rax to answer
+  set cell c120 field to 2
+  set h_rsi to addr c120
+  go to p4f3cb
+  place p4f35b
+  place t4f35b_37 on 37
+  set h_rsi to addr g218
+  set h_rdx to addr g228
+  call lpta_rpta_loadp h_rsi h_rdx
+  set h_rax to answer
+  set h_rcx to sym eti_s_fb263
+  place p4f374
+  set h_rsi to 2
+  set h_rdx to 3
+  place p4f379
+  place p4f380
+  call insert_2pt_s h_rsi h_rdx h_rcx 0
+  set h_rax to answer
+  if h_rax is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4f38d
+  set h_rsi to 3
+  call npush_s h_rsi
+  set h_rax to answer
+  set cell c120 field to 1
+  set h_rsi to addr c120
+  call npop h_rsi
+  set h_rax to answer
+  set h_rsi to 2
+  place p4f3b4
+  call npush_s h_rsi
+  set h_rax to answer
+  set cell c120 field to 2
+  set h_rsi to addr c120
+  place p4f3cb
+  call npop h_rsi
+  set h_rax to answer
+  place p4f3d0
+  place t4f3d0_40 on 40
+  place t4f3d0_54 on 54
+  set h_rsi to 45
+  call starttest h_rsi
+  set h_rax to answer
+  set h_rdx to 4
+  set h_rsi to addr g218
+  call lpta_loadp h_rsi
+  call setscan_r h_rdx
+  set h_rax to answer
+  if h_rax is 0
+    go to p4f507
+  end
+  place p4f3f1
+  place t4f3f1_45 on 45
+  set h_rsi to 50
+  call starttest h_rsi
+  set h_rax to answer
+  set h_rdx to addr c130
+  set h_rsi to addr g218
+  call followed_by_hyphen h_rsi h_rdx
+  set h_rax to answer
+  if h_rax is 0
+    go to p4f53b
+  end
+  place p4f416
+  place t4f416_50 on 50
+  set h_rsi to 51
+  call starttest h_rsi
+  set h_rax to answer
+  set h_rdx to addr c130
+  set h_rsi to addr g218
+  call in_quotes h_rsi h_rdx
+  set h_rax to answer
+  if h_rax is 0
+    go to p4f53b
+  end
+  place p4f43b
+  place t4f43b_51 on 51
+  set h_rsi to 52
+  call starttest h_rsi
+  set h_rax to answer
+  set h_rsi to addr g228
+  call lpta_loadpn h_rsi
+  set h_rax to answer
+  set h_rsi to addr c130
+  call rpta_loadpn h_rsi
+  set h_rax to answer
+  call compare_ptas
+  set h_rax to answer
+  if h_rax is not 0
+    go to p4f4d5
+  end
+  place p4f470
+  call testneq
+  set h_rax to answer
+  if h_rax is not 0
+    go to p4f4d5
+  end
+  place p4f47c
+  set h_rsi to addr c120
+  set cell c120 field to 3
+  call npush_v h_rsi
+  set h_rax to answer
+  set h_rsi to addr gbec
+  call npush_v h_rsi
+  set h_rax to answer
+  call if_testeq
+  set h_rax to answer
+  if h_rax is not 0
+    go to p4f4d5
+  end
+  place p4f4ac
+  set h_rdx to addr c130
+  set h_rsi to addr g218
+  call lpta_rpta_loadp h_rsi h_rdx
+  set h_rax to answer
+  set h_rsi to 4
+  set h_rdx to 3
+  set h_rcx to 0
+  call mark_i h_rsi h_rdx h_rcx 0
+  set h_rax to answer
+  if h_rax is 0
+    go to p4f53b
+  end
+  place p4f4d5
+  place t4f4d5_52 on 52
+  set h_rdx to addr c130
+  set h_rsi to addr g218
+  call lpta_rpta_loadp h_rsi h_rdx
+  set h_rax to answer
+  set h_rcx to addr c120
+  set cell c120 field to 3
+  set h_rsi to 4
+  set h_rdx to 3
+  call mark_v h_rsi h_rdx h_rcx 0
+  set h_rax to answer
+  go to p4f533
+  place p4f507
+  set h_rsi to 46
+  call bspush_ca_scan h_rsi
+  set h_rax to answer
+  set h_rsi to 4
+  set h_rdx to 6
+  set h_rcx to 1
+  place p4f51a
+  call testFldeq h_rsi h_rdx h_rcx
+  set h_rax to answer
+  if h_rax is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4f52b
+  place t4f52b_47 on 47
+  call advance_tok
+  set h_rax to answer
+  place p4f533
+  if h_rax is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4f53b
+  place t4f53b_49 on 49
+  set h_rdx to addr c130
+  set h_rsi to addr g218
+  call lpta_rpta_loadp h_rsi h_rdx
+  set h_rax to answer
+  set h_rcx to addr c120
+  set cell c120 field to 1
+  set h_rsi to 4
+  set h_rdx to 1
+  call mark_v h_rsi h_rdx h_rcx 0
+  set h_rax to answer
+  if h_rax is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4f573
+  set h_rcx to addr c120
+  set cell c120 field to 2
+  set h_rsi to 4
+  set h_rdx to 2
+  call mark_v h_rsi h_rdx h_rcx 0
+  set h_rax to answer
+  if h_rax is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4f599
+  set h_rsi to addr g218
+  set h_rdx to addr g228
+  call lpta_rpta_loadp h_rsi h_rdx
+  set h_rax to answer
+  set h_rsi to addr c180
+  set h_rdx to 1
+  call settvar_s h_rsi h_rdx
+  set h_rax to answer
+  set h_rsi to 1
+  call npush_s h_rsi
+  set h_rax to answer
+  set cell c180 field to 1
+  set h_rsi to addr c180
+  call npop h_rsi
+  set h_rax to answer
+  set h_rsi to 3
+  set h_rdx to addr c180
+  set h_rcx to 0
+  call insert_2ptv h_rsi h_rdx h_rcx
+  set h_rax to answer
+  if h_rax is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4f601
+  go to p4f678
+  place p4f603
+  place t4f603_42 on 42
+  set h_rax to cell c130 value
+  call lpta_loadp addr c130
+  call test_ptr
+  set h_rax to answer
+  if h_rax is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4f62d
+  give up
+  place p4f62f
+  place t4f62f_46 on 46
+  set h_rsi to 48
+  call bspush_ca_scan h_rsi
+  set h_rax to answer
+  set h_rsi to 4
+  set h_rdx to 6
+  set h_rcx to 2
+  go to p4f51a
+  place p4f647
+  place t4f647_48 on 48
+  set h_rsi to 4
+  set h_rdx to 6
+  set h_rcx to 3
+  go to p4f51a
+  place p4f654
+  set h_rsi to 42
+  call bspush_ca_scan h_rsi
+  set h_rax to answer
+  place p4f65f
+  place t4f65f_43 on 43
+  call advanc
+  set h_rax to answer
+  if h_rax is 0
+    go to p4f654
+  end
+  place p4f66b
+  set unwind to 0
+  backtrack
+  place p4f678
+  set h_rdx to addr c130
+  set h_rsi to addr g228
+  call insert_suffix h_rsi h_rdx
+  set h_rax to answer
+  match
+  place tm_53 on 53
+  match
+end
+
+rule fin_compounds takes 4
+  instead
+  local c100 bytes 8
+  local c110 bytes 8
+  local c120 bytes 8
+  local c130 bytes 8
+  place p4f77c
+  place p4f7be
+  place p4f7f1
+  call get_parm addr c120 arg 1 -6
+  call get_parm addr c130 arg 2 -6
+  call get_parm addr c100 arg 3 -6
+  call push_ptr_init addr c110
+  call fence 0 sym eti_null
+  call starttest 2
+  call lpta_rpta_loadp addr c120 addr c130
+  call actd_lookup 1 addr c110 0
+  if answer is 0
+    go to p4f8d2
+  end
+  give up
+  place p4f8d2
+  place p4f8dc
+  place t4f8dc_3 on 3
+  call actd_goto
+  set unwind to 0
+  backtrack
+  place p4f90f
+  place t4f90f_1 on 1
+  place t4f90f_4 on 4
+  place t4f90f_6 on 6
+  call lpta_loadpn addr c100
+  call rpta_loadpn addr c110
+  call compare_ptas
+  if answer is not 0
+    go to p4f953
+  end
+  place p4f939
+  call testneq
+  if answer is not 0
+    go to p4f953
+  end
+  place p4f945
+  set cell c100 value to cell c110 value
+  place p4f953
+  place t4f953_5 on 5
+  put cell c100 value into arg 3 at 4
+  match
+end
+
+rule fin_roots takes 4
+  instead
+  local c110 bytes 8
+  local c120 bytes 8
+  local c138 bytes 8
+  local c158 bytes 20
+  local c168 bytes 8
+  local vf8 word
+  local v100 word
+  local h_r12
+  local h_r13
+  local h_r14
+  local h_rcx
+  local h_rdx
+  local h_rsi
+  local s4fc4c
+  local s4fce0
+  local s4fd59
+  variable g218 word 280
+  variable g228 word 288
+  place p4f98c
+  set h_r14 to arg 3
+  set h_r13 to arg 1
+  place p4f9ce
+  place p4fa01
+  set h_rsi to addr c120
+  set h_r12 to -6
+  set h_rdx to arg 1
+  set h_rcx to -6
+  call get_parm h_rsi h_rdx h_rcx
+  set h_r13 to addr c168
+  set h_rsi to addr c168
+  set h_rdx to arg 2
+  set h_rcx to -6
+  call get_parm h_rsi h_rdx h_rcx
+  set h_rsi to addr c110
+  set h_rdx to arg 3
+  set h_rcx to -6
+  call get_parm h_rsi h_rdx h_rcx
+  and 0 into cell c138 half 0
+  set c138 to -65533
+  set cell c158 word 0 to 0
+  set cell c158 word 4 to 0
+  set cell c158 word 8 to 0
+  set cell c158 word 12 to 0
+  set c158 to -65534
+  set h_rdx to global byte 152
+  set h_rsi to h_rdx
+  call fence 1 sym eti_fence_0500
+  set h_rsi to addr c120
+  set h_rdx to addr c168
+  call lpta_rpta_loadp h_rsi h_rdx
+  set h_rcx to 0
+  set h_rsi to 2
+  set h_rdx to 0
+  call actd_lookup h_rsi h_rdx h_rcx
+  if answer is 0
+    go to p4fb00
+  end
+  give up
+  place p4fb00
+  set vf8 to addr g218
+  set h_rsi to 14
+  set h_r14 to 15
+  set h_r12 to 1
+  set h_r13 to 0
+  set v100 to addr g228
+  place p4fb2a
+  set global word 284 to cell c120 value
+  set global word 292 to cell c168 value
+  call starttest_l h_rsi
+  set h_rsi to 15
+  call bspush_ca_boa h_rsi
+  set h_rsi to addr g228
+  set h_r14 to addr c110
+  set h_rdx to addr c110
+  call is_suffix_sequence h_rsi h_rdx
+  if answer is 0
+    set h_r13 to 1
+  end
+  set h_rsi to h_r13
+  set unwind to h_rsi
+  backtrack
+  go to p4fbb5
+  place t4fbb5_1 on 1
+  set h_r13 to unwind
+  set h_r12 to 5
+  place p4fbb5
+  set h_r14 to sym eti_s_fb266
+  go to p4fcb7
+  go to p4fbc1
+  place t4fbc1_2 on 2
+  set h_r13 to unwind
+  set h_r12 to 5
+  place p4fbc1
+  set h_r14 to sym eti_s_fb26b
+  go to p4fcb7
+  go to p4fbcd
+  place t4fbcd_3 on 3
+  set h_r13 to unwind
+  set h_r12 to 5
+  place p4fbcd
+  set h_r12 to 7
+  set h_r14 to sym eti_s_fb270
+  go to p4fcb7
+  go to p4fbdc
+  place t4fbdc_4 on 4
+  set h_r13 to unwind
+  set h_r12 to 5
+  place p4fbdc
+  set h_r12 to 6
+  set h_r14 to sym eti_s_fb277
+  go to p4fcb7
+  go to p4fbeb
+  place t4fbeb_5 on 5
+  set h_r13 to unwind
+  set h_r12 to 5
+  place p4fbeb
+  set h_r12 to 4
+  set h_r14 to sym eti_s_fb27d
+  go to p4fcb7
+  go to p4fbfa
+  place t4fbfa_6 on 6
+  set h_r13 to unwind
+  set h_r12 to 5
+  place p4fbfa
+  set h_r12 to 2
+  set h_r14 to sym eti_s_fb281
+  go to p4fcb7
+  go to p4fc09
+  place t4fc09_7 on 7
+  set h_r13 to unwind
+  set h_r12 to 5
+  place p4fc09
+  set h_r12 to 6
+  set h_r14 to sym eti_s_fb283
+  go to p4fcb7
+  go to p4fc18
+  place t4fc18_8 on 8
+  set h_r13 to unwind
+  set h_r12 to 5
+  place p4fc18
+  set h_r12 to 6
+  set h_r14 to sym eti_s_fb289
+  go to p4fcb7
+  go to p4fc27
+  place t4fc27_9 on 9
+  set h_r13 to unwind
+  set h_r12 to 5
+  place p4fc27
+  set h_rsi to addr g218
+  set h_rdx to addr g228
+  call lpta_rpta_loadp h_rsi h_rdx
+  set h_rsi to 2
+  set h_rdx to 1
+  set h_rcx to sym eti_s_fb28f
+  call insert_2pt_s h_rsi h_rdx h_rcx 0
+  set s4fc4c to answer
+  set h_rsi to h_r13
+  if s4fc4c is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p4fc5c
+  set h_r12 to addr c158
+  set h_rsi to addr c158
+  set h_rdx to 29
+  call settvar_s h_rsi h_rdx
+  set h_r14 to 0
+  set h_rsi to 0
+  call npush_s h_rsi
+  set cell c158 field to 11
+  set h_rsi to addr c158
+  call npop h_rsi
+  set h_rsi to 2
+  set h_rdx to addr c158
+  set h_rcx to 0
+  set h_r14 to addr c110
+  call insert_lv h_rsi h_rdx h_rcx
+  go to p4fcf7
+  go to p4fcad
+  place t4fcad_10 on 10
+  set h_r13 to unwind
+  set h_r12 to 5
+  place p4fcad
+  set h_r12 to 7
+  set h_r14 to sym eti_s_fb290
+  place p4fcb7
+  set h_rsi to addr g218
+  set h_rdx to addr g228
+  call lpta_rpta_loadp h_rsi h_rdx
+  set h_rdx to h_r12
+  set h_rsi to 2
+  set h_rcx to h_r14
+  call insert_2pt_s h_rsi h_rdx h_rcx 0
+  set s4fce0 to answer
+  set h_rsi to h_r13
+  set h_r14 to addr c110
+  if s4fce0 is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  go to p4fcf7
+  place t4fcf7_13 on 13
+  place t4fcf7_16 on 16
+  set h_r13 to unwind
+  set h_r12 to 5
+  place p4fcf7
+  set h_rsi to addr g218
+  set h_rdx to addr g228
+  call lpta_rpta_loadp h_rsi h_rdx
+  set h_r14 to addr c138
+  set h_rsi to addr c138
+  set h_r12 to 1
+  set h_rdx to 1
+  call settvar_s h_rsi h_rdx
+  set h_rsi to 1
+  call npush_s h_rsi
+  set cell c138 field to 1
+  set h_rsi to addr c138
+  call npop h_rsi
+  set h_rsi to 3
+  set h_rdx to addr c138
+  set h_r14 to addr c110
+  set h_rcx to 0
+  call insert_2ptv h_rsi h_rdx h_rcx
+  set s4fd59 to answer
+  set h_rsi to h_r13
+  if s4fd59 is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  match
+  go to p4fd6b
+  place t4fd6b_14 on 14
+  set h_r13 to unwind
+  set h_r12 to 5
+  place p4fd6b
+  call actd_goto
+  set h_rsi to h_r13
+  set unwind to h_rsi
+  backtrack
+  go to p4fd7b
+  place t4fd7b_12 on 12
+  set h_r13 to unwind
+  set h_r12 to 5
+  place p4fd7b
+  set h_rsi to 14
+  set h_r12 to 1
+  set h_r14 to 15
+  go to p4fb2a
+  go to p4fd9a
+  place t4fd9a_15 on 15
+  set h_r13 to unwind
+  set h_r12 to 5
+  place p4fd9a
+  call bspop_boa
+  give up
+end

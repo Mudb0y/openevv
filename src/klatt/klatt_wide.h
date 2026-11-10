@@ -35,4 +35,10 @@ int            klatt_wide_feed(WideBand *w, const int32_t *s, int32_t n);
 const int32_t *klatt_wide_mix(WideBand *w, const int32_t *in, int32_t n,
                               int32_t *made);
 
+/* How many of the partner's samples of nothing bring everything already
+   mixed out the far side of the join, ringing and all; and forgetting what
+   the join holds, so the next run starts from silence. */
+int32_t        klatt_wide_tail(const WideBand *w);
+void           klatt_wide_clear(WideBand *w);
+
 #endif

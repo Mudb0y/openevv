@@ -18,6 +18,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "eci_synththread.h"
 #include "evv_abi.h"
@@ -441,6 +442,34 @@ THIS void stb_synthCallback(SynthThread *t, int32_t count, int32_t *samples)
         stb_sendSamplesToUser(t, count, samples);
     if (ST_CONVERTER(t))
         pcm_cvt_storeHistory(ST_CONVERTER(t));
+}
+
+struct delta_state;
+extern struct delta_state *ew_machine(void *engine);
+extern int flushSynthesisTail(struct delta_state *d);
+extern int32_t pcm_cvt_tail(const void *c);
+extern void pcm_cvt_clear(void *c);
+
+/* Ours. The end of a run with nothing queued behind it: what the wideband
+   join and the rate converter still hold is pushed out now, the join's
+   through the converter, so the utterance ends with its own last samples
+   and the next starts from silence. src/klatt/klatt_run.c says why. */
+void stb_flushTail(SynthThread *t)
+{
+    struct delta_state *d = ew_machine(ST_ENGINE(t));
+
+    if (d)
+        flushSynthesisTail(d);
+    if (ST_CONVERTER(t)) {
+        int32_t n = pcm_cvt_tail(ST_CONVERTER(t));
+        int32_t *zeros = n > 0 ? calloc((size_t)n, sizeof(int32_t)) : 0;
+
+        if (zeros) {
+            stb_synthCallback(t, n, zeros);
+            free(zeros);
+        }
+        pcm_cvt_clear(ST_CONVERTER(t));
+    }
 }
 
 /* The engine has reached a mark. Where it goes depends on whether there is a

@@ -64,6 +64,11 @@ typedef void (*VoiceCallback)(int32_t, int16_t *, int16_t *, int16_t *,
 
 typedef ENGCALL int32_t (*EngCommand)(void *engine, const char *line);
 typedef ENGCALL int32_t (*EngReset)(void *engine, int32_t how);
+
+struct delta_state;
+extern struct delta_state *ew_machine(void *engine);
+extern void clearSynthesisTail(struct delta_state *d);
+extern void pcm_cvt_clear(void *c);
 typedef ENGCALL void (*EngSetPhonemes)(void *engine, int32_t on);
 typedef ENGCALL void (*EngSetIndex)(void *engine, IndexCallback cb, void *p);
 typedef ENGCALL void (*EngSetUser)(void *engine, UserCallback cb, void *p);
@@ -337,6 +342,8 @@ static void stl_build(SynthThread *t, void *app, void *state)
     ST_WIDEBAND(t) = 0;
     ST_PAUSES(t) = PAUSES_DEFAULT;
     ST_TAIL(t) = 0;
+    ST_TEXTMODE(t) = 0;
+    ST_BUILTIN(t) = BUILTIN_DEFAULT;
 
     p = cpp_new(rm_bytes);
     ST_ROMAN(t) = p ? rz_ctor(p, t) : 0;
@@ -502,6 +509,7 @@ THIS int32_t stl_initialize(SynthThread *t, LangIdentifier *want)
     }
 
     ST_ENGINE(t) = engine;
+    stw_tellBuiltin(t);
     stw_isOldEngine(t);
 
     ST_LANG(t)->packed = want->packed;
@@ -589,7 +597,13 @@ THIS int32_t stl_stop(SynthThread *t)
 
         if (reset(ST_ENGINE(t), 0))
             rc = ERR_ENGINE;
+        /* What the filters still held belongs to what was stopped; left,
+           it would be the first thing heard of whatever is said next. */
+        if (ew_machine(ST_ENGINE(t)))
+            clearSynthesisTail(ew_machine(ST_ENGINE(t)));
     }
+    if (ST_CONVERTER(t))
+        pcm_cvt_clear(ST_CONVERTER(t));
 
     ST_INDEXQ(t)->total = 0;
     el_listReset(ST_INDEXQ(t));

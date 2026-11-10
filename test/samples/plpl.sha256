@@ -21,6 +21,7 @@ plain 4 e320999747621e2a 2111889ce8b0e4ab Test 1 2 3, ABC XYZ, wyrazy-z-laczniki
 plain 5 8f2ef8f03db03eef e05318edcb584794 Jedno slowo w wierszu. I jeszcze jedno; plus "tekst w cudzyslowie" w srodku.
 plain 6 22537baefc8e3896 2f6261d96796f8a5 Konstantynopolitanczykowianeczka, Szczebrzeszyn, 42% z 3,14159, i pan Nowak-Wisniewski junior.
 plain 7 b4ea3d4796f92905 3f9df4936976828b Powiedzial: nie rob tego! Potem (nawiasem mowiac) 1/2 + 3/4 = 5/4; zobacz s. 12.
+plain 8 9b8bd061298784db ee2e58e3aaa547bd Kiedy poranny deszcz cicho stukal w okna, Daniel siedzial przy biurku i porownywal wyniki dwoch syntezatorow mowy, sprawdzajac, jak kazdy z nich radzi sobie z nietypowymi nazwiskami, wyrazeniami technicznymi, wyrazami zlozonymi i drobnymi zmianami interpunkcji, gdy przyszla wiadomosc od jego kolezanki z ciekawym pytaniem, czy ostatnia aktualizacja poprawila rytm dlugich zdan, wyrazistosc skrotow i wymowe slow, ktore moga byc zarowno rzeczownikami, jak i czasownikami, wiec otworzyl ponownie swoj dokument testowy i uwaznie wsluchal sie w kazdy szczegol.
 utf8 1 24b828915fb66fbe bbf73cd0b2186def Zazolc gesla jazn to znany pangram bez ogonkow.
 utf8 2 14c2d2bcca807b4d 568dea4274af5e1a Zażółć gęślą jaźń to znany pangram z ogonkami.
 utf8 3 1eb40db1dd4061d8 8fbf6d3713c7989b Mężczyzna zjadł źdźbło trawy i pchnął łódź jeża.
@@ -95,6 +96,7 @@ dict 4 e320999747621e2a 86f866fb4439fdb3 Test 1 2 3, ABC XYZ, wyrazy-z-lacznikie
 dict 5 8f2ef8f03db03eef 9b7955e79ada4f06 Jedno slowo w wierszu. I jeszcze jedno; plus "tekst w cudzyslowie" w srodku.
 dict 6 22537baefc8e3896 2ed74e9dc8d74190 Konstantynopolitanczykowianeczka, Szczebrzeszyn, 42% z 3,14159, i pan Nowak-Wisniewski junior.
 dict 7 b4ea3d4796f92905 f6ccb42e8a6d1ae4 Powiedzial: nie rob tego! Potem (nawiasem mowiac) 1/2 + 3/4 = 5/4; zobacz s. 12.
+dict 8 9b8bd061298784db 15df9ba2443ebb66 Kiedy poranny deszcz cicho stukal w okna, Daniel siedzial przy biurku i porownywal wyniki dwoch syntezatorow mowy, sprawdzajac, jak kazdy z nich radzi sobie z nietypowymi nazwiskami, wyrazeniami technicznymi, wyrazami zlozonymi i drobnymi zmianami interpunkcji, gdy przyszla wiadomosc od jego kolezanki z ciekawym pytaniem, czy ostatnia aktualizacja poprawila rytm dlugich zdan, wyrazistosc skrotow i wymowe slow, ktore moga byc zarowno rzeczownikami, jak i czasownikami, wiec otworzyl ponownie swoj dokument testowy i uwaznie wsluchal sie w kazdy szczegol.
 second 1 3d6668611b22f6a6 bc61f02b791132fb Dzien dobry. Tu mowi syntezator mowy Eloquence.
 second 2 3eb41bb79f9d3736 cb065bf560535cdd Doktor Kowalski zaplacil 1234,56 zlotych 3 maja 2026 roku o 19:45.
 second 3 baa3f418f4667c9b 3a2ca835f91c7710 Zazolc gesla jazn, a pchnac w te lodz jeza lub osiem skrzyn fig; np. www.przyklad.pl/sciezka?q=1
@@ -102,20 +104,22 @@ second 4 8235c9af2130ba72 2443476572293f7c Test 1 2 3, ABC XYZ, wyrazy-z-lacznik
 second 5 1f5999959c8f05d3 dc8da690424d795f Jedno slowo w wierszu. I jeszcze jedno; plus "tekst w cudzyslowie" w srodku.
 second 6 600fb6e1018435f8 07107a37251b2152 Konstantynopolitanczykowianeczka, Szczebrzeszyn, 42% z 3,14159, i pan Nowak-Wisniewski junior.
 second 7 9ec22a96324e6135 b765a6ed4a153db2 Powiedzial: nie rob tego! Potem (nawiasem mowiac) 1/2 + 3/4 = 5/4; zobacz s. 12.
+second 8 be38fc39550e149e ef1bf949028fca13 Kiedy poranny deszcz cicho stukal w okna, Daniel siedzial przy biurku i porownywal wyniki dwoch syntezatorow mowy, sprawdzajac, jak kazdy z nich radzi sobie z nietypowymi nazwiskami, wyrazeniami technicznymi, wyrazami zlozonymi i drobnymi zmianami interpunkcji, gdy przyszla wiadomosc od jego kolezanki z ciekawym pytaniem, czy ostatnia aktualizacja poprawila rytm dlugich zdan, wyrazistosc skrotow i wymowe slow, ktore moga byc zarowno rzeczownikami, jak i czasownikami, wiec otworzyl ponownie swoj dokument testowy i uwaznie wsluchal sie w kazdy szczegol.
 ssml 1 d4af6da6da8da676 0be84ad84e4ce1d2 <speak version="1.0" xml:lang="pl-PL">Dzien dobry.</speak>
 ssml 2 8df7969f66d75d3b 3a3f5e8f031175cd <speak version="1.0" xml:lang="pl-PL"><prosody rate="slow">Teraz wolniej.</prosody> Znowu normalnie.</speak>
 ssml 3 852d5fa375096133 4f99b5737cdda094 <speak version="1.0" xml:lang="pl-PL"><prosody pitch="high" range="x-high" volume="loud">Wszystkie cztery naraz.</prosody></speak>
-ssml 4 faf7ff0d5343e01a 4565bfce263590e4 <speak version="1.0" xml:lang="pl-PL"><emphasis level="strong">Ten</emphasis>, nie tamten.</speak>
+ssml 4 7b7d1bcddf7d6ddc 7f9eed9d5688f34e <speak version="1.0" xml:lang="pl-PL"><emphasis level="strong">Ten</emphasis>, nie tamten.</speak>
 ssml 5 3f823aa1d73a9bbc fd59dbcd5e2b7a7a <speak version="1.0" xml:lang="pl-PL"><voice gender="female">Ona to powiedziala.</voice> A on nie.</speak>
 ssml 6 b7a088638e5cd05d ff103bf1043c4b12 <speak version="1.0" xml:lang="pl-PL">Kosztowalo <say-as interpret-as="cardinal">1234</say-as> dnia <say-as interpret-as="ordinal">3</say-as>.</speak>
 ssml 7 70935c3ebcd15bc1 6378786f389d0510 <speak version="1.0" xml:lang="pl-PL">Przeliteruj: <say-as interpret-as="letters">abc</say-as>, i zadzwon pod <say-as interpret-as="number" format="telephone">5551234</say-as>.</speak>
 ssml 8 bc5d59f1e60cad31 8bb3b998cf9721b7 <speak version="1.0" xml:lang="pl-PL">Poczekaj<break time="500ms"/>chwile.<mark name="tutaj"/> Tam.</speak>
 ssml 9 3db041aaaf1ea01a 4945ec3c8de9f4b2 <speak version="1.0" xml:lang="pl-PL"><sub alias="Siec ogolnoswiatowa">WWW</sub> i <phoneme ph="h.E.l.oU">czesc</phoneme>.</speak>
 ssml 10 73fd1d84d11539ed 330d4bfd43fa1c16 <speak version="1.0" xml:lang="pl-PL">Zażółć gęślą jaźń, z a &amp; b &lt; c.</speak>
-wide 1 aac87ae1c0c3ea55 337d1125379bba30 Dzien dobry. Tu mowi syntezator mowy Eloquence.
-wide 2 578ce31c86ec57c7 838b3f2e6ba97644 Doktor Kowalski zaplacil 1234,56 zlotych 3 maja 2026 roku o 19:45.
-wide 3 14833dffac0a4d51 b0b31361197729dc Zazolc gesla jazn, a pchnac w te lodz jeza lub osiem skrzyn fig; np. www.przyklad.pl/sciezka?q=1
-wide 4 bc5423eb115ff3c9 4326efe162eef5bb Test 1 2 3, ABC XYZ, wyrazy-z-lacznikiem i WIELKIE LITERY.
-wide 5 67a91ebdea904f07 666602edaec873cb Jedno slowo w wierszu. I jeszcze jedno; plus "tekst w cudzyslowie" w srodku.
-wide 6 7a006ec12b59200d 35270ec40297c089 Konstantynopolitanczykowianeczka, Szczebrzeszyn, 42% z 3,14159, i pan Nowak-Wisniewski junior.
-wide 7 611f9cb58a338c09 d14df1acf81a6547 Powiedzial: nie rob tego! Potem (nawiasem mowiac) 1/2 + 3/4 = 5/4; zobacz s. 12.
+wide 1 f4edbc3d038378c6 0b629f2f00dbecea Dzien dobry. Tu mowi syntezator mowy Eloquence.
+wide 2 9f805e0948250693 3657cd0e9f107916 Doktor Kowalski zaplacil 1234,56 zlotych 3 maja 2026 roku o 19:45.
+wide 3 322fd3a92e1ac742 e9fe50cab429e208 Zazolc gesla jazn, a pchnac w te lodz jeza lub osiem skrzyn fig; np. www.przyklad.pl/sciezka?q=1
+wide 4 94a35fbb9ad11027 b00bf7fa564ce26f Test 1 2 3, ABC XYZ, wyrazy-z-lacznikiem i WIELKIE LITERY.
+wide 5 9eb740d6152de6c9 60734918c170ba32 Jedno slowo w wierszu. I jeszcze jedno; plus "tekst w cudzyslowie" w srodku.
+wide 6 e8aa57ee65f8e0cd 23f4960a49b438f1 Konstantynopolitanczykowianeczka, Szczebrzeszyn, 42% z 3,14159, i pan Nowak-Wisniewski junior.
+wide 7 f4cab2c0f67e0b91 8da0676e4ef6d382 Powiedzial: nie rob tego! Potem (nawiasem mowiac) 1/2 + 3/4 = 5/4; zobacz s. 12.
+wide 8 a813fcc0528d44cd be0c20ad930783af Kiedy poranny deszcz cicho stukal w okna, Daniel siedzial przy biurku i porownywal wyniki dwoch syntezatorow mowy, sprawdzajac, jak kazdy z nich radzi sobie z nietypowymi nazwiskami, wyrazeniami technicznymi, wyrazami zlozonymi i drobnymi zmianami interpunkcji, gdy przyszla wiadomosc od jego kolezanki z ciekawym pytaniem, czy ostatnia aktualizacja poprawila rytm dlugich zdan, wyrazistosc skrotow i wymowe slow, ktore moga byc zarowno rzeczownikami, jak i czasownikami, wiec otworzyl ponownie swoj dokument testowy i uwaznie wsluchal sie w kazdy szczegol.

@@ -1,0 +1,1340 @@
+# The rules of Brazilian Portuguese, lifted by tools/rules/lift64.py out of ETI
+# Eloquence 6.1 as Apple ships it, by tools/module/lift61.py. Each says
+# `instead' because it is written afresh rather than re-expressed from one of
+# IBM's: nothing of IBM's is under it.
+
+rule tok_dict takes 3
+  instead
+  local cf0 bytes 8
+  local c100 bytes 8
+  place pd57
+  place pd90
+  place pdee
+  call get_parm addr c100 arg 1 -6
+  call get_parm addr cf0 arg 2 -6
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    match
+  end
+  place pe34
+  call starttest_e 2
+  call bspush_ca_boa 3
+  call por_tok_dict addr c100 addr cf0
+  if answer is 0
+    set unwind to 1
+  end
+  if answer is not 0
+    set unwind to 0
+  end
+  backtrack
+  place pea6
+  place tea6_3 on 3
+  call bspop_boa
+  give up
+  place tm_1 on 1
+  place tm_2 on 2
+  match
+end
+
+rule char_name takes 3
+  instead
+  local cf0 bytes 8
+  local c100 bytes 8
+  place peb8
+  place pef1
+  place pf4f
+  call get_parm addr c100 arg 1 -6
+  call get_parm addr cf0 arg 2 -6
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    match
+  end
+  place pf95
+  call starttest_e 2
+  call bspush_ca_boa 3
+  call por_char_name addr c100 addr cf0
+  if answer is 0
+    set unwind to 1
+  end
+  if answer is not 0
+    set unwind to 0
+  end
+  backtrack
+  place p1007
+  place t1007_3 on 3
+  call bspop_boa
+  give up
+  place tm_1 on 1
+  place tm_2 on 2
+  match
+end
+
+rule abbr takes 4
+  instead
+  local c100 bytes 8
+  local c110 bytes 8
+  local c120 bytes 8
+  place p1019
+  place p1057
+  place p10b7
+  call get_parm addr c110 arg 1 -6
+  call get_parm addr c100 arg 2 -6
+  call get_parm addr c120 arg 3 -6
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    go to p116c
+  end
+  place p1112
+  call starttest_e 2
+  call bspush_ca_boa 3
+  call por_abbr addr c110 addr c100
+  if answer is 0
+    set unwind to 1
+  end
+  if answer is not 0
+    set unwind to 0
+  end
+  backtrack
+  place p116c
+  place t116c_1 on 1
+  place t116c_2 on 2
+  put cell c100 value into arg 2 at 4
+  match
+  place p118f
+  place t118f_3 on 3
+  call bspop_boa
+  give up
+end
+
+rule normalize_letters takes 3
+  instead
+  local cf0 bytes 8
+  local c100 bytes 8
+  place p11a1
+  place p11da
+  place p1234
+  call get_parm addr c100 arg 1 -6
+  call get_parm addr cf0 arg 2 -6
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    match
+  end
+  place p127a
+  call normalize_por_letters addr c100 addr cf0
+  match
+end
+
+rule monetary_exp takes 3
+  instead
+  local cf0 bytes 8
+  local c100 bytes 8
+  place p12a4
+  place p12dd
+  place p133b
+  call get_parm addr c100 arg 1 -6
+  call get_parm addr cf0 arg 2 -6
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    go to p13db
+  end
+  place p1381
+  call starttest_e 2
+  call bspush_ca_boa 3
+  call por_monetary_exp addr c100 addr cf0
+  if answer is 0
+    set unwind to 1
+  end
+  if answer is not 0
+    set unwind to 0
+  end
+  backtrack
+  place p13db
+  place t13db_1 on 1
+  place t13db_2 on 2
+  put cell c100 value into arg 1 at 4
+  put cell cf0 value into arg 2 at 4
+  match
+  place p1409
+  place t1409_3 on 3
+  call bspop_boa
+  give up
+end
+
+rule acrotest takes 3
+  instead
+  local cf0 bytes 8
+  local c100 bytes 8
+  place p141b
+  place p1454
+  place p14b2
+  call get_parm addr c100 arg 1 -6
+  call get_parm addr cf0 arg 2 -6
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    match
+  end
+  place p14f8
+  call starttest_e 2
+  call bspush_ca_boa 3
+  call por_acrotest addr c100 addr cf0
+  if answer is 0
+    set unwind to 1
+  end
+  if answer is not 0
+    set unwind to 0
+  end
+  backtrack
+  place p156a
+  place t156a_3 on 3
+  call bspop_boa
+  give up
+  place tm_1 on 1
+  place tm_2 on 2
+  match
+end
+
+rule convert_lang_digits_to_words takes 3
+  instead
+  local cf0 bytes 8
+  local c100 bytes 8
+  place p157c
+  place p15b5
+  place p1613
+  call get_parm addr c100 arg 1 -6
+  call get_parm addr cf0 arg 2 -6
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    go to p166f
+  end
+  place p1659
+  call convert_por_digits_to_words addr c100 addr cf0
+  place p166f
+  put cell cf0 value into arg 2 at 4
+  match
+end
+
+rule insert_lang_large_number takes 3
+  instead
+  local cf0 bytes 8
+  local c100 bytes 8
+  place p168e
+  place p16c7
+  place p1725
+  call get_parm addr cf0 arg 1 -6
+  call get_parm addr c100 arg 2 -6
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    go to p1781
+  end
+  place p176b
+  call insert_por_large_number addr cf0 addr c100
+  place p1781
+  put cell cf0 value into arg 1 at 4
+  match
+end
+
+rule convert_single_digit takes 3
+  instead
+  local cf0 bytes 8
+  local c100 bytes 8
+  place p17a0
+  place p17d9
+  place p1837
+  call get_parm addr c100 arg 1 -6
+  call get_parm addr cf0 arg 2 -6
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    go to p1893
+  end
+  place p187d
+  call convert_por_single_digit addr c100 addr cf0
+  place p1893
+  put cell cf0 value into arg 2 at 4
+  match
+end
+
+rule convert_double takes 3
+  instead
+  local cf0 bytes 8
+  local c100 bytes 8
+  place p18b2
+  place p18eb
+  place p1949
+  call get_parm addr c100 arg 1 -6
+  call get_parm addr cf0 arg 2 -6
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    go to p19a5
+  end
+  place p198f
+  call convert_por_double addr c100 addr cf0
+  place p19a5
+  put cell cf0 value into arg 2 at 4
+  match
+end
+
+rule convert_hundreds takes 3
+  instead
+  local cf0 bytes 8
+  local c100 bytes 8
+  place p19c4
+  place p19fd
+  place p1a5b
+  call get_parm addr c100 arg 1 -6
+  call get_parm addr cf0 arg 2 -6
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    go to p1ab7
+  end
+  place p1aa1
+  call convert_por_hundreds addr c100 addr cf0
+  place p1ab7
+  put cell cf0 value into arg 2 at 4
+  match
+end
+
+rule convert_monetary_exp takes 5
+  instead
+  local cf0 bytes 8
+  local cf4 bytes 8
+  local c108 bytes 8
+  local c118 bytes 8
+  place p1ad6
+  place p1b17
+  place p1b77
+  call get_parm addr c118 arg 1 -6
+  call get_parm addr c108 arg 2 -6
+  call get_parm addr cf4 arg 3 -4
+  call get_parm addr cf0 arg 4 -4
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    go to p1c52
+  end
+  place p1bea
+  call starttest_l 2
+  call bspush_ca_boa 3
+  call convert_por_monetary_exp addr c118 addr c108 addr cf4 addr cf0
+  if answer is 0
+    set unwind to 1
+  end
+  if answer is not 0
+    set unwind to 0
+  end
+  backtrack
+  place p1c52
+  place t1c52_1 on 1
+  place t1c52_2 on 2
+  put cell c108 value into arg 2 at 4
+  match
+  place p1c75
+  place t1c75_3 on 3
+  call bspop_boa
+  give up
+end
+
+rule convert_roman_num takes 3
+  instead
+  local cf0 bytes 8
+  local c100 bytes 8
+  place p1c87
+  place p1cc0
+  place p1d1e
+  call get_parm addr c100 arg 1 -6
+  call get_parm addr cf0 arg 2 -6
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    go to p1dbe
+  end
+  place p1d64
+  call starttest_e 2
+  call bspush_ca_boa 3
+  call convert_por_roman_num addr c100 addr cf0
+  if answer is 0
+    set unwind to 1
+  end
+  if answer is not 0
+    set unwind to 0
+  end
+  backtrack
+  place p1dbe
+  place t1dbe_1 on 1
+  place t1dbe_2 on 2
+  put cell cf0 value into arg 2 at 4
+  match
+  place p1de1
+  place t1de1_3 on 3
+  call bspop_boa
+  give up
+end
+
+rule lang_hyphen_between_nums takes 5
+  instead
+  local c100 bytes 8
+  local c110 bytes 8
+  local c120 bytes 8
+  local c130 bytes 8
+  place p1df3
+  place p1e34
+  place p1e94
+  call get_parm addr c130 arg 1 -6
+  call get_parm addr c120 arg 2 -6
+  call get_parm addr c110 arg 3 -6
+  call get_parm addr c100 arg 4 -6
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    match
+  end
+  place p1f05
+  call por_hyphen_between_nums addr c130 addr c120 addr c110 addr c100
+  match
+end
+
+rule assign_gender_to_number takes 3
+  instead
+  local cf0 bytes 8
+  local c100 bytes 8
+  place p1f3d
+  place p1f76
+  place p1fd0
+  call get_parm addr c100 arg 1 -6
+  call get_parm addr cf0 arg 2 -6
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    match
+  end
+  place p2016
+  call assign_gender_to_por_number addr c100 addr cf0
+  match
+end
+
+rule adjust_num_in_ordinal takes 2
+  instead
+  local ce0 bytes 8
+  place p2040
+  place p2072
+  place p20c8
+  call get_parm addr ce0 arg 1 -6
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    match
+  end
+  place p20f5
+  call adjust_num_in_por_ordinal addr ce0
+  match
+end
+
+rule assign_gend_to_roman_num takes 3
+  instead
+  local c100 bytes 8
+  local c110 bytes 8
+  place p2115
+  place p2154
+  place p2183
+  call get_parm addr c110 arg 1 -6
+  call get_parm addr c100 arg 2 -6
+  call fence 0 sym eti_null
+  call assign_gend_to_por_roman_num addr c110 addr c100
+  match
+end
+
+rule insert_spr_phone takes 3
+  instead
+  local cf0 bytes 8
+  local c100 bytes 8
+  place p2205
+  place p223e
+  place p229c
+  call get_parm addr c100 arg 1 -6
+  call get_parm addr cf0 arg 2 -6
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    match
+  end
+  place p22e2
+  call starttest 2
+  call bspush_ca_boa 3
+  call insert_por_spr_phone addr c100 addr cf0
+  if answer is 0
+    set unwind to 1
+  end
+  if answer is not 0
+    set unwind to 0
+  end
+  backtrack
+  place p2354
+  place t2354_3 on 3
+  call bspop_boa
+  give up
+  place tm_1 on 1
+  place tm_2 on 2
+  match
+end
+
+rule breakup_spr_phones takes 3
+  instead
+  local cf0 bytes 8
+  local c100 bytes 8
+  place p2366
+  place p23a3
+  place p23d2
+  call get_parm addr c100 arg 1 -6
+  call get_parm addr cf0 arg 2 -6
+  call fence 0 sym eti_null
+  match
+end
+
+rule lang_specific_SPR takes 3
+  instead
+  local cf0 bytes 8
+  local c100 bytes 8
+  place p243e
+  place p2477
+  place p24d5
+  call get_parm addr c100 arg 1 -6
+  call get_parm addr cf0 arg 2 -6
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    go to p2575
+  end
+  place p251b
+  call starttest_e 2
+  call bspush_ca_boa 3
+  call print_por_SPR addr c100 addr cf0
+  if answer is 0
+    set unwind to 1
+  end
+  if answer is not 0
+    set unwind to 0
+  end
+  backtrack
+  place p2575
+  place t2575_1 on 1
+  place t2575_2 on 2
+  put cell cf0 value into arg 2 at 4
+  match
+  place p2598
+  place t2598_3 on 3
+  call bspop_boa
+  give up
+end
+
+rule gramm_cat_dict_lookup takes 5
+  instead
+  local c100 bytes 8
+  local c110 bytes 8
+  local c120 bytes 8
+  local c130 bytes 8
+  place p25aa
+  place p25eb
+  place p264b
+  call get_parm addr c110 arg 1 -6
+  call get_parm addr c130 arg 2 -6
+  call get_parm addr c120 arg 3 -6
+  call get_parm addr c100 arg 4 -6
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    match
+  end
+  place p26bc
+  call starttest_l 2
+  call bspush_ca_boa 3
+  call por_gramm_cat_dict addr c110 addr c100
+  if answer is 0
+    set unwind to 1
+  end
+  if answer is not 0
+    set unwind to 0
+  end
+  backtrack
+  place p272e
+  place t272e_3 on 3
+  call bspop_boa
+  give up
+  place tm_1 on 1
+  place tm_2 on 2
+  match
+end
+
+rule mark_function_word takes 5
+  instead
+  local c100 bytes 8
+  local c110 bytes 8
+  local c120 bytes 8
+  local c130 bytes 8
+  place p2740
+  place p2781
+  place p27e1
+  call get_parm addr c110 arg 1 -6
+  call get_parm addr c130 arg 2 -6
+  call get_parm addr c120 arg 3 -6
+  call get_parm addr c100 arg 4 -6
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    match
+  end
+  place p2852
+  call starttest_l 2
+  call bspush_ca_boa 3
+  call mark_por_funct_words addr c110 addr c100
+  if answer is 0
+    set unwind to 1
+  end
+  if answer is not 0
+    set unwind to 0
+  end
+  backtrack
+  place p28c4
+  place t28c4_3 on 3
+  call bspop_boa
+  give up
+  place tm_1 on 1
+  place tm_2 on 2
+  match
+end
+
+rule mark_content_word takes 5
+  instead
+  local c100 bytes 8
+  local c110 bytes 8
+  local c120 bytes 8
+  local c130 bytes 8
+  place p28d6
+  place p2917
+  place p2977
+  call get_parm addr c110 arg 1 -6
+  call get_parm addr c130 arg 2 -6
+  call get_parm addr c120 arg 3 -6
+  call get_parm addr c100 arg 4 -6
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    match
+  end
+  place p29e8
+  call mark_por_content_word addr c110 addr c100
+  match
+end
+
+rule disambiguate_single_word takes 3
+  instead
+  local cf0 bytes 8
+  local c100 bytes 8
+  place p2a12
+  place p2a4b
+  place p2aa5
+  call get_parm addr c100 arg 1 -6
+  call get_parm addr cf0 arg 2 -6
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    match
+  end
+  place p2aeb
+  call disambig_por_single_word addr c100 addr cf0
+  match
+end
+
+rule disambiguate_functword takes 3
+  instead
+  local cf0 bytes 8
+  local c100 bytes 8
+  place p2b15
+  place p2b4e
+  place p2ba8
+  call get_parm addr c100 arg 1 -6
+  call get_parm addr cf0 arg 2 -6
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    match
+  end
+  place p2bee
+  call disambig_por_functword addr c100 addr cf0
+  match
+end
+
+rule disambiguate_content_word takes 4
+  instead
+  local c100 bytes 8
+  local c110 bytes 8
+  local c120 bytes 8
+  place p2c18
+  place p2c56
+  place p2cb6
+  call get_parm addr c110 arg 1 -6
+  call get_parm addr c120 arg 2 -6
+  call get_parm addr c100 arg 3 -6
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    match
+  end
+  place p2d11
+  call disambig_por_content_word addr c110 addr c100
+  match
+end
+
+rule mark_subcategory takes 4
+  instead
+  local c100 bytes 8
+  local c110 bytes 8
+  local c120 bytes 8
+  place p2d3b
+  place p2d79
+  place p2dd9
+  call get_parm addr c110 arg 1 -6
+  call get_parm addr c120 arg 2 -6
+  call get_parm addr c100 arg 3 -6
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    match
+  end
+  place p2e34
+  call mark_por_subcategory addr c110 addr c100
+  match
+end
+
+rule lang_non_phrasal_comma takes 2
+  instead
+  local ce0 bytes 8
+  place p2e5e
+  place p2e90
+  place p2ee6
+  call get_parm addr ce0 arg 1 -6
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    match
+  end
+  place p2f13
+  call por_non_phrasal_comma addr ce0
+  match
+end
+
+rule find_lang_obligatory_phrase takes 4
+  instead
+  local cf0 bytes 8
+  local c100 bytes 8
+  local c110 bytes 8
+  place p2f33
+  place p2f71
+  place p2fd1
+  call get_parm addr c110 arg 1 -6
+  call get_parm addr c100 arg 2 -6
+  call get_parm addr cf0 arg 3 -4
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    go to p308d
+  end
+  place p302c
+  call starttest_l 2
+  call bspush_ca_boa 3
+  call find_por_obligatory_phrase addr c110 addr c100 addr cf0
+  if answer is 0
+    set unwind to 1
+  end
+  if answer is not 0
+    set unwind to 0
+  end
+  backtrack
+  place p308d
+  place t308d_1 on 1
+  place t308d_2 on 2
+  put cell cf0 field into arg 3 at 2 half
+  match
+  place p30b1
+  place t30b1_3 on 3
+  call bspop_boa
+  give up
+end
+
+rule find_lang_potential_phrase takes 4
+  instead
+  local cf0 bytes 8
+  local c100 bytes 8
+  local c110 bytes 8
+  place p30c3
+  place p3101
+  place p3161
+  call get_parm addr c110 arg 1 -6
+  call get_parm addr c100 arg 2 -6
+  call get_parm addr cf0 arg 3 -4
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    go to p31d9
+  end
+  place p31bc
+  call find_por_potential_phrase addr c110 addr c100 addr cf0
+  place p31d9
+  put cell c110 value into arg 1 at 4
+  put cell c100 value into arg 2 at 4
+  put cell cf0 field into arg 3 at 2 half
+  match
+end
+
+rule apply_lang_comma_rules takes 3
+  instead
+  local cf0 bytes 8
+  local c100 bytes 8
+  place p3210
+  place p3249
+  place p32a7
+  call get_parm addr c100 arg 1 -6
+  call get_parm addr cf0 arg 2 -6
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    go to p3347
+  end
+  place p32ed
+  call starttest_e 2
+  call bspush_ca_boa 3
+  call apply_por_comma_rules addr c100 addr cf0
+  if answer is 0
+    set unwind to 1
+  end
+  if answer is not 0
+    set unwind to 0
+  end
+  backtrack
+  place p3347
+  place t3347_1 on 1
+  place t3347_2 on 2
+  put cell cf0 value into arg 2 at 4
+  match
+  place p336a
+  place t336a_3 on 3
+  call bspop_boa
+  give up
+end
+
+rule isitWH takes 3
+  instead
+  local cf0 bytes 8
+  local c100 bytes 8
+  place p337c
+  place p33b5
+  place p3413
+  call get_parm addr cf0 arg 1 -6
+  call get_parm addr c100 arg 2 -6
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    match
+  end
+  place p3459
+  call starttest_e 2
+  call bspush_ca_boa 3
+  call isit_por_WH addr cf0
+  if answer is 0
+    set unwind to 1
+  end
+  if answer is not 0
+    set unwind to 0
+  end
+  backtrack
+  place p34c4
+  place t34c4_3 on 3
+  call bspop_boa
+  give up
+  place tm_1 on 1
+  place tm_2 on 2
+  match
+end
+
+rule isitAlt takes 3
+  instead
+  local cf0 bytes 8
+  local c100 bytes 8
+  place p34d6
+  place p350f
+  place p356d
+  call get_parm addr c100 arg 1 -6
+  call get_parm addr cf0 arg 2 -6
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    match
+  end
+  place p35b3
+  call starttest_e 2
+  call bspush_ca_boa 3
+  call isit_por_Alt addr c100 addr cf0
+  if answer is 0
+    set unwind to 1
+  end
+  if answer is not 0
+    set unwind to 0
+  end
+  backtrack
+  place p3625
+  place t3625_3 on 3
+  call bspop_boa
+  give up
+  place tm_1 on 1
+  place tm_2 on 2
+  match
+end
+
+rule adjust_lg_specific_accents takes 5
+  instead
+  local c100 bytes 8
+  local c110 bytes 8
+  local c120 bytes 8
+  local c130 bytes 8
+  place p3637
+  place p3678
+  place p36d8
+  call get_parm addr c110 arg 1 -6
+  call get_parm addr c100 arg 2 -6
+  call get_parm addr c130 arg 3 -6
+  call get_parm addr c120 arg 4 -6
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    match
+  end
+  place p3749
+  call adjust_por_accents addr c110 addr c100
+  match
+end
+
+rule estimate_lang_nsylls takes 4
+  instead
+  local cf0 bytes 8
+  local c100 bytes 8
+  local c110 bytes 8
+  place p3773
+  place p37b1
+  place p3811
+  call get_parm addr cf0 arg 1 -4
+  call get_parm addr c110 arg 2 -6
+  call get_parm addr c100 arg 3 -6
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    go to p3889
+  end
+  place p386c
+  call estimate_por_nsylls addr cf0 addr c110 addr c100
+  place p3889
+  put cell cf0 field into arg 1 at 2 half
+  match
+end
+
+rule lang_phrase_level_rules takes 3
+  instead
+  local cf0 bytes 8
+  local c100 bytes 8
+  place p38a9
+  place p38e2
+  place p393c
+  call get_parm addr c100 arg 1 -6
+  call get_parm addr cf0 arg 2 -6
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    match
+  end
+  place p3982
+  call por_phrase_level_rules addr c100 addr cf0
+  match
+end
+
+rule get_nuc_AV takes 1
+  instead
+  place p39ac
+  place p39d9
+  place p3a2d
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    match
+  end
+  place p3a45
+  call get_por_nuc_AV
+  match
+end
+
+rule con_vals takes 1
+  instead
+  place p3a5e
+  place p3a8b
+  place p3adf
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    match
+  end
+  place p3af7
+  call por_con_vals
+  match
+end
+
+rule nucleus_vals takes 1
+  instead
+  place p3b10
+  place p3b3d
+  place p3b91
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    match
+  end
+  place p3ba9
+  call por_vals
+  match
+end
+
+rule find_nucleus takes 1
+  instead
+  place p3bc2
+  place p3bef
+  place p3c43
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    match
+  end
+  place p3c5b
+  call find_por_nucleus
+  match
+end
+
+rule assign_cons_durs takes 3
+  instead
+  local cf0 bytes 8
+  local c100 bytes 8
+  place p3c74
+  place p3cad
+  place p3d07
+  call get_parm addr c100 arg 1 -6
+  call get_parm addr cf0 arg 2 -6
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    match
+  end
+  place p3d4d
+  call por_cons_durs addr c100 addr cf0
+  match
+end
+
+rule assign_nuc_durs takes 1
+  instead
+  place p3d77
+  place p3da4
+  place p3df8
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    match
+  end
+  place p3e10
+  call assign_por_nuc_durs
+  match
+end
+
+rule get_trans_dur takes 2
+  instead
+  local cd0 bytes 8
+  place p3e29
+  place p3e5b
+  place p3eb1
+  call get_parm addr cd0 arg 1 -4
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    go to p3eed
+  end
+  place p3ede
+  call get_por_trans_dur addr cd0
+  place p3eed
+  put cell cd0 field into arg 1 at 2 half
+  match
+end
+
+rule which_get_non_vowels takes 1
+  instead
+  place p3f0a
+  place p3f37
+  place p3f8b
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    match
+  end
+  place p3fa3
+  call get_por_non_vowels
+  match
+end
+
+rule prenucl_f0 takes 1
+  instead
+  place p3fbc
+  place p3fe9
+  place p403d
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    match
+  end
+  place p4055
+  call por_prenucl_f0
+  match
+end
+
+rule high_tone takes 1
+  instead
+  place p406e
+  place p409b
+  place p40ef
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    match
+  end
+  place p4107
+  call por_high_tone
+  match
+end
+
+rule low_tone takes 1
+  instead
+  place p4120
+  place p414d
+  place p41a1
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    match
+  end
+  place p41b9
+  call por_low_tone
+  match
+end
+
+rule low_high_star_tone takes 1
+  instead
+  place p41d2
+  place p41ff
+  place p4253
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    match
+  end
+  place p426b
+  call por_low_high_star_tone
+  match
+end
+
+rule low_star_high_tone takes 1
+  instead
+  place p4284
+  place p42b1
+  place p4305
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    match
+  end
+  place p431d
+  call por_low_star_high_tone
+  match
+end
+
+rule high_low_star_tone takes 1
+  instead
+  place p4336
+  place p4363
+  place p43b7
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    match
+  end
+  place p43cf
+  call por_high_low_star_tone
+  match
+end
+
+rule high_star_low_tone takes 1
+  instead
+  place p43e8
+  place p4415
+  place p4469
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    match
+  end
+  place p4481
+  call por_high_star_low_tone
+  match
+end
+
+rule postnucl_f0 takes 1
+  instead
+  place p449a
+  place p44c7
+  place p451b
+  call fence 0 sym eti_null
+  if global half 542 is not global half 526
+    go to p4543
+  end
+  place p4533
+  if global half 1474 is not global half 2148
+    give up
+  end
+  place p4543
+  if global half 3562 is not global half 3530
+    match
+  end
+  place p4553
+  call por_postnucl_f0
+  match
+end
+
+rule phr_initial_F0 takes 1
+  instead
+  place p456c
+  place p4599
+  place p45ed
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    match
+  end
+  place p4605
+  call por_phr_initial_F0
+  match
+end
+
+rule position_t_ptrs takes 1
+  instead
+  place p461e
+  place p464b
+  place p469f
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    match
+  end
+  place p46b7
+  call por_position_t_ptrs
+  match
+end
+
+rule nucl_high_tone takes 1
+  instead
+  place p46d0
+  place p46fd
+  place p4751
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    match
+  end
+  place p4769
+  call por_nucl_high_tone
+  match
+end
+
+rule nucl_low_tone takes 1
+  instead
+  place p4782
+  place p47af
+  place p4803
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    match
+  end
+  place p481b
+  call por_nucl_low_tone
+  match
+end
+
+rule nucl_low_high_star_tone takes 1
+  instead
+  place p4834
+  place p4861
+  place p48b5
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    match
+  end
+  place p48cd
+  call por_nucl_low_high_star_tone
+  match
+end
+
+rule nucl_high_low_star_tone takes 1
+  instead
+  place p48e6
+  place p4913
+  place p4967
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    match
+  end
+  place p497f
+  call por_nucl_high_low_star_tone
+  match
+end
+
+rule nucl_high_star_low_tone takes 1
+  instead
+  place p4998
+  place p49c5
+  place p4a19
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    match
+  end
+  place p4a31
+  call por_nucl_high_star_low_tone
+  match
+end
+
+rule nucl_low_star_high_tone takes 1
+  instead
+  place p4a4a
+  place p4a77
+  place p4acb
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    match
+  end
+  place p4ae3
+  call por_nucl_low_star_high_tone
+  match
+end
+
+rule phrase_tone takes 1
+  instead
+  place p4afc
+  place p4b29
+  place p4b7d
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    match
+  end
+  place p4b95
+  call por_phrase_tone
+  match
+end
+
+rule boundary_tone takes 1
+  instead
+  place p4bae
+  place p4be1
+  place p4c10
+  call fence 0 sym eti_null
+  match
+end
+
+rule init_lang_vars takes 1
+  instead
+  place p4c47
+  place p4c7a
+  place p4ca9
+  call fence 0 sym eti_null
+  call init_por_vars
+  match
+end
+
+rule reset_lang_sent_vars takes 1
+  instead
+  place p4ce8
+  place p4d15
+  place p4d69
+  call fence 0 sym eti_null
+  if global half 3562 is not global half 3530
+    match
+  end
+  place p4d81
+  call reset_por_sent_vars
+  match
+end
+
+rule set_lang_global_constants takes 1
+  instead
+  place p4d9a
+  place p4dcd
+  place p4dfc
+  call fence 0 sym eti_null
+  call set_por_global_constants
+  match
+end

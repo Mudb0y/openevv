@@ -1159,3 +1159,36 @@ at glob.obj ZZstring71 esus_evv_glob_data_3 160
 at glob.obj ZZstring91 esus_evv_glob_data_3 232
 at glob.obj ZZstring79 esus_evv_glob_data_3 188
 at glob.obj ZZstring98 esus_evv_glob_data_3 252
+
+# And the constants of our own, out of rules/constants by tools/rules/consts.py.
+store esus_evv_authored_data
+at * eti_null esus_evv_authored_data 0
+at * eti_s_e90f3 esus_evv_authored_data 1
+at * eti_s_e90f4 esus_evv_authored_data 2
+at * eti_s_e90f5 esus_evv_authored_data 3
+at * eti_s_e90f6 esus_evv_authored_data 4
+at * eti_s_e90f7 esus_evv_authored_data 5
+at * eti_s_e90f8 esus_evv_authored_data 6
+at * eti_s_e90f9 esus_evv_authored_data 7
+at * eti_s_e90fa esus_evv_authored_data 8
+at * eti_s_e9119 esus_evv_authored_data 9
+at * eti_s_e911b esus_evv_authored_data 10
+at * eti_s_e911c esus_evv_authored_data 11
+at * eti_s_e911d esus_evv_authored_data 12
+at * eti_s_e911e esus_evv_authored_data 13
+at * eti_s_e911f esus_evv_authored_data 14
+at * eti_s_e9120 esus_evv_authored_data 15
+at * eti_s_e9121 esus_evv_authored_data 16
+at * eti_s_e9134 esus_evv_authored_data 18
+at * eti_s_e9135 esus_evv_authored_data 19
+at * eti_s_e9136 esus_evv_authored_data 20
+at * eti_s_e9139 esus_evv_authored_data 21
+at * eti_s_e913a esus_evv_authored_data 22
+at * eti_s_e913b esus_evv_authored_data 23
+at * eti_s_e913c esus_evv_authored_data 24
+at * eti_s_e913d esus_evv_authored_data 25
+at * eti_s_e9143 esus_evv_authored_data 26
+at * eti_s_e9144 esus_evv_authored_data 27
+at * eti_s_e9146 esus_evv_authored_data 29
+at * eti_s_e9147 esus_evv_authored_data 30
+at * eti_s_e9149 esus_evv_authored_data 32

@@ -52,6 +52,7 @@ extern THIS int32_t st_setPhonemeIndicies(void *t, int32_t v)
     MANGLED("?setPhonemeIndicies@SynthThread@@QAEJJ@Z");
 extern int32_t st_setWideband(void *t, int32_t v);
 extern int32_t st_setPauses(void *t, int32_t v);
+extern int32_t st_setBuiltin(void *t, int32_t v);
 extern THIS int32_t st_changeFilter(void *t, int32_t a, int32_t b, int32_t c,
                                     int8_t d)
     MANGLED("?changeFilter@SynthThread@@QAEJJJJ_N@Z");
@@ -360,6 +361,11 @@ static THIS int32_t setGeneral(ECIstate *s, int32_t p, int32_t v,
         if (v < PAUSES_NONE || v > PAUSES_ALWAYS)
             return ECI_BAD_PARAM;
         return st_setPauses(thread, v);
+
+    case ECI_PARAM_BUILTIN:
+        if (v < 0 || v > 1)
+            return ECI_BAD_PARAM;
+        return st_setBuiltin(thread, v);
 
     case 19:
         return st_changeFilter(thread, p, v, extra, 0);

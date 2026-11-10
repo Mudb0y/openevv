@@ -21,13 +21,14 @@ plain 3 3878c09a94e66dbc 50996dc57c7c08ab Le rapide renard brun saute par-dessus
 plain 4 81fb7a34cfaba2f7 0daf4c7f3105d5b6 Essai 1 2 3, ABC XYZ, mots-avec-traits-d-union et MAJUSCULES.
 plain 5 7c1450b32078105e 0d77924fa347263e Un seul mot. Et un autre encore; avec "du texte cite" au milieu.
 plain 6 a6c6386d34b19143 d41581b26e3ab71a Anticonstitutionnellement, otorhinolaryngologiste, 42% de 3,14159, et monsieur Martin-Durand fils.
-plain 7 b7d9455d1b72bb65 1c88ff3a0d342ff8 Il a dit: ne fais pas cela! Puis (entre parentheses) 1/2 + 3/4 = 5/4; voir p. 12.
+plain 7 7a3735b47cb3aced 00d38d6bc69cc017 Il a dit: ne fais pas cela! Puis (entre parentheses) 1/2 + 3/4 = 5/4; voir p. 12.
+plain 8 7366da1a98f5a0bd 7e8eba9fcc67ebc4 Pendant que la pluie du matin tapait doucement contre les fenetres, Daniel etait assis a son bureau pour comparer les resultats de deux synthetiseurs vocaux, en notant la facon dont chacun traitait les noms inhabituels, les expressions techniques, les mots composes et les changements subtils de ponctuation, quand un message de sa collegue est arrive avec une question curieuse pour savoir si la derniere mise a jour avait ameliore le rythme des phrases longues, la clarte des abreviations et la prononciation des mots qui peuvent etre a la fois des noms et des verbes, ce qui l'a pousse a rouvrir son document de test et a ecouter chaque detail avec attention.
 utf8 1 221f8da7d9f569c0 e0e223f301497bfb Le cafe pres de la facade naive sert de la creme brulee.
-utf8 2 8e37be4d3dce2df8 35dbf3d03f3cc138 Le café près de la façade naïve sert de la crème brûlée.
+utf8 2 d555a6978b40a45f 66684e034746973d Le café près de la façade naïve sert de la crème brûlée.
 utf8 3 49034f97f2cfd670 8e8ae06a0766ecbe Où est allé le garçon élégant avec sa sœur aînée.
-utf8 4 8bb43bd4f29d75a8 d7651c6b3f4f38d8 Théâtre, hôpital, forêt, août, Noël et ambiguïté.
+utf8 4 2ac2ff466b9baed8 dc686d0bee880a5e Théâtre, hôpital, forêt, août, Noël et ambiguïté.
 utf8 5 229fa0453f4dc52e 8e8ae06a0766ecbe L'élève à Genève préfère le thé très chaud.
-utf8 6 dc3c05fbb67da816 42448250c2ec14de Ça coûte deux euros, dit-il en français, n'est-ce pas.
+utf8 6 1c859108afd1d862 4321941bac2a20ec Ça coûte deux euros, dit-il en français, n'est-ce pas.
 utf8 7 8eac4d9ff857b369 f44f908bc2bbb159 Une phrase entierement sans accents pour comparer.
 anno 1 65ca846f9032e0e9 70f62d2cb378f629 Parole normale `vs50 maintenant bien plus lente qu avant.
 anno 2 8492f8be1a9d12ce 70d1f2e4f2730479 Volume `vv30 plus bas, puis `vv90 plus haut de nouveau.
@@ -95,28 +96,31 @@ dict 3 3878c09a94e66dbc 107e0867711da359 Le rapide renard brun saute par-dessus 
 dict 4 81fb7a34cfaba2f7 0a5734aff0ab7565 Essai 1 2 3, ABC XYZ, mots-avec-traits-d-union et MAJUSCULES.
 dict 5 7c1450b32078105e e7807b58ce51dfaf Un seul mot. Et un autre encore; avec "du texte cite" au milieu.
 dict 6 a6c6386d34b19143 c6880717c5a53acf Anticonstitutionnellement, otorhinolaryngologiste, 42% de 3,14159, et monsieur Martin-Durand fils.
-dict 7 b7d9455d1b72bb65 93c19d48be6fe5fd Il a dit: ne fais pas cela! Puis (entre parentheses) 1/2 + 3/4 = 5/4; voir p. 12.
+dict 7 7a3735b47cb3aced 336b6083e04f98d3 Il a dit: ne fais pas cela! Puis (entre parentheses) 1/2 + 3/4 = 5/4; voir p. 12.
+dict 8 7366da1a98f5a0bd da896236a96d789a Pendant que la pluie du matin tapait doucement contre les fenetres, Daniel etait assis a son bureau pour comparer les resultats de deux synthetiseurs vocaux, en notant la facon dont chacun traitait les noms inhabituels, les expressions techniques, les mots composes et les changements subtils de ponctuation, quand un message de sa collegue est arrive avec une question curieuse pour savoir si la derniere mise a jour avait ameliore le rythme des phrases longues, la clarte des abreviations et la prononciation des mots qui peuvent etre a la fois des noms et des verbes, ce qui l'a pousse a rouvrir son document de test et a ecouter chaque detail avec attention.
 second 1 49de744577512861 04af600029b7acd5 Bonjour. Ici parle le synthetiseur de parole Eloquence.
 second 2 ae6f3523c03ea5bc 9adfdb3eafd56992 Le docteur Dupont a paye 1 234,56 euros le 3 mai 2026 a 19h45.
 second 3 8d7c13bba6b09251 de76282f8d658acc Le rapide renard brun saute par-dessus le chien paresseux; p.ex. www.exemple.fr/chemin?q=1
 second 4 803d336078a246e9 0f353ebf3a321488 Essai 1 2 3, ABC XYZ, mots-avec-traits-d-union et MAJUSCULES.
 second 5 6ddd8ec5d549beb3 76c453a66c279947 Un seul mot. Et un autre encore; avec "du texte cite" au milieu.
 second 6 4c13362a5d4d2dbb e28abf616e7bf20f Anticonstitutionnellement, otorhinolaryngologiste, 42% de 3,14159, et monsieur Martin-Durand fils.
-second 7 a12359fc7775c78b 97aa6340256bff13 Il a dit: ne fais pas cela! Puis (entre parentheses) 1/2 + 3/4 = 5/4; voir p. 12.
+second 7 54315507d2e0199b a0ce128cdf3c2343 Il a dit: ne fais pas cela! Puis (entre parentheses) 1/2 + 3/4 = 5/4; voir p. 12.
+second 8 92b8a991286c9897 2dbfb58a946d6326 Pendant que la pluie du matin tapait doucement contre les fenetres, Daniel etait assis a son bureau pour comparer les resultats de deux synthetiseurs vocaux, en notant la facon dont chacun traitait les noms inhabituels, les expressions techniques, les mots composes et les changements subtils de ponctuation, quand un message de sa collegue est arrive avec une question curieuse pour savoir si la derniere mise a jour avait ameliore le rythme des phrases longues, la clarte des abreviations et la prononciation des mots qui peuvent etre a la fois des noms et des verbes, ce qui l'a pousse a rouvrir son document de test et a ecouter chaque detail avec attention.
 ssml 1 507f11548c9b13eb 8f31dabeaec567b1 <speak version="1.0" xml:lang="fr-FR">Bonjour.</speak>
 ssml 2 a92a8182882d4a95 ebeca1c11c517e6f <speak version="1.0" xml:lang="fr-FR"><prosody rate="slow">Plus lentement.</prosody> De nouveau normal.</speak>
 ssml 3 20b32dcc81a0f8e4 d28263da525c8175 <speak version="1.0" xml:lang="fr-FR"><prosody pitch="high" range="x-high" volume="loud">Les quatre a la fois.</prosody></speak>
-ssml 4 be52f1f76792067c e293b826a00f91bc <speak version="1.0" xml:lang="fr-FR"><emphasis level="strong">Celui-ci</emphasis>, pas celui-la.</speak>
+ssml 4 e0cc7892cb26698e 75693e47d9768088 <speak version="1.0" xml:lang="fr-FR"><emphasis level="strong">Celui-ci</emphasis>, pas celui-la.</speak>
 ssml 5 820d40ac8248eff9 de37762f8930d6b8 <speak version="1.0" xml:lang="fr-FR"><voice gender="female">Elle l'a dit.</voice> Et lui non.</speak>
 ssml 6 d53f3a0c3741b6f8 305255eb8555c324 <speak version="1.0" xml:lang="fr-FR">Cela coutait <say-as interpret-as="cardinal">1234</say-as> le <say-as interpret-as="ordinal">3</say-as>.</speak>
-ssml 7 1bcb6ad13737bacd 4486778ba5a83448 <speak version="1.0" xml:lang="fr-FR">Epelez: <say-as interpret-as="letters">abc</say-as>, et appelez <say-as interpret-as="number" format="telephone">5551234</say-as>.</speak>
+ssml 7 bc7d220824ef83c5 0c01f30ba94ac736 <speak version="1.0" xml:lang="fr-FR">Epelez: <say-as interpret-as="letters">abc</say-as>, et appelez <say-as interpret-as="number" format="telephone">5551234</say-as>.</speak>
 ssml 8 c937aa403d96aabb 83725c5bc5c6df5f <speak version="1.0" xml:lang="fr-FR">Attends<break time="500ms"/>un peu.<mark name="ici"/> La.</speak>
 ssml 9 39545d2ade6f25ad b8e8e518f11feff3 <speak version="1.0" xml:lang="fr-FR"><sub alias="Toile mondiale">WWW</sub> et <phoneme ph="h.E.l.oU">bonjour</phoneme>.</speak>
 ssml 10 6182e4fe4dbaa684 a92ccb6a4590bef1 <speak version="1.0" xml:lang="fr-FR">Le café près de la façade naïve, avec a &amp; b &lt; c.</speak>
-wide 1 83208220202cb1ae 33976322cd904a5d Bonjour. Ici parle le synthetiseur de parole Eloquence.
-wide 2 7194b5e6632b6940 7bb6ffde70d242b9 Le docteur Dupont a paye 1 234,56 euros le 3 mai 2026 a 19h45.
-wide 3 ce5060a04104c87a 8c648f9c34730ac4 Le rapide renard brun saute par-dessus le chien paresseux; p.ex. www.exemple.fr/chemin?q=1
-wide 4 e145165d20e518b8 0bcd3849f8839209 Essai 1 2 3, ABC XYZ, mots-avec-traits-d-union et MAJUSCULES.
-wide 5 80085f02d5bc62d0 9692e9f9baa8250a Un seul mot. Et un autre encore; avec "du texte cite" au milieu.
-wide 6 0cc50d54e5c91c69 ca8f4f1f28e87f15 Anticonstitutionnellement, otorhinolaryngologiste, 42% de 3,14159, et monsieur Martin-Durand fils.
-wide 7 873e9ca981c93941 661bea3dabd85651 Il a dit: ne fais pas cela! Puis (entre parentheses) 1/2 + 3/4 = 5/4; voir p. 12.
+wide 1 7cca3e9e11bbd683 0d8f123cf3bc65dd Bonjour. Ici parle le synthetiseur de parole Eloquence.
+wide 2 4d3b229da26a2353 532895f43af005d5 Le docteur Dupont a paye 1 234,56 euros le 3 mai 2026 a 19h45.
+wide 3 e39c66daca383678 35d660048d27470a Le rapide renard brun saute par-dessus le chien paresseux; p.ex. www.exemple.fr/chemin?q=1
+wide 4 54def952b604c104 62ea93ff16ca3cf0 Essai 1 2 3, ABC XYZ, mots-avec-traits-d-union et MAJUSCULES.
+wide 5 74f649a5f6dac7b4 8f24e43373e16eb9 Un seul mot. Et un autre encore; avec "du texte cite" au milieu.
+wide 6 558e20b75189c5a4 2db6e59e3a1981f0 Anticonstitutionnellement, otorhinolaryngologiste, 42% de 3,14159, et monsieur Martin-Durand fils.
+wide 7 bef5631369b34a86 07a50e9dff9757f4 Il a dit: ne fais pas cela! Puis (entre parentheses) 1/2 + 3/4 = 5/4; voir p. 12.
+wide 8 86f7480fcf325553 a3cad5469ba09d5c Pendant que la pluie du matin tapait doucement contre les fenetres, Daniel etait assis a son bureau pour comparer les resultats de deux synthetiseurs vocaux, en notant la facon dont chacun traitait les noms inhabituels, les expressions techniques, les mots composes et les changements subtils de ponctuation, quand un message de sa collegue est arrive avec une question curieuse pour savoir si la derniere mise a jour avait ameliore le rythme des phrases longues, la clarte des abreviations et la prononciation des mots qui peuvent etre a la fois des noms et des verbes, ce qui l'a pousse a rouvrir son document de test et a ecouter chaque detail avec attention.

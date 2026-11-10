@@ -1,0 +1,4626 @@
+# The language's dictionaries. Written by tools/module/dict.py from the tables
+# and the rules, and read back by it to lay them down again.
+#
+# One section per dictionary, and inside it one entry per line, indented: the
+# word, then the two counts the rule steps the spine by, then the action
+# number it dispatches on, then what it says.
+#
+# What it says is written in ETI's phone letters where the section says sound,
+# spaced one phone apart, and in the language's own characters where it says
+# characters. A word laid down in more than one piece has its pieces written
+# out in order with `then' between them -- the currencies spell an
+# abbreviation, then a space, then a name -- and any piece the rule names
+# itself rather than the word is shared with every word using it and cannot be
+# changed for one of them, and neither can one the rule that lays it names for
+# itself, which is how a suffix that always says the same thing is written.
+# A word read one way before one thing and another
+# way before another has both written out with `or' between them; those are
+# shown as they are and cannot be changed, since which of the two is taken is
+# decided in code the other words using that test run through. A phone or a character that no name picks out on its own is
+# written as a hash and its number. An entry with nothing after its action
+# lays no record down, or lays one down a way this cannot yet read.
+#
+# To add a word, put a line in with the word `new' where its action number
+# goes and say what it is to sound like. Building gives it an action of its
+# own and writes the number back here. `tools/module/dict.py where <dictionary>
+# <word>' says which two words it belongs between, and `tools/module/dict.py find
+# <word>' says which dictionaries hold it and what each says it sounds like.
+#
+# What a word says belongs to its action rather than to the word, so two words
+# sharing an action say the same thing. Give one of them something else to say
+# and it is moved onto an action of its own, and building says so.
+#
+# The order is the one the engine searches in, which is by the language's own
+# character codes rather than by letter, so the vowels come first. A word put
+# in the wrong place will not be found; building says so rather than laying
+# down a dictionary that cannot be read.
+#
+# A word is written as its characters. A character the alphabet does not
+# spell as one ordinary letter is written in brackets, by name where that
+# name belongs to one code alone and by number where two codes share it.
+#
+# The names and the roots keep where a word is stressed as well as what it
+# says, and `stress' after the action number is that, written the way the
+# word's phonemes write it: a digit a syllable, 1 for the main
+# stress, 2 for a secondary one and 0 for none, counted back from the last
+# syllable, so that syllables before the first digit are unstressed. It is
+# shown where the word's own arm states it; without it the rules decide, and a
+# word added or moved onto an action of its own is given one only if it asks.
+
+dictionary noun_cmpnd1 statement 1 width 0 records sound
+  air 255 255 1
+  automobile 255 255 3
+  army 255 255 2
+  ice 255 255 19
+  oil 255 255 23
+  baby 255 255 4
+  back 255 255 5
+  bank 255 255 6
+  battle 255 255 7
+  bed 255 255 8
+  book 255 255 11
+  body 255 255 10
+  bottle 255 255 12
+  blood 255 255 9
+  broad 255 255 13
+  car 255 255 3
+  cigar 255 255 14
+  cigarette 255 255 14
+  defence 255 255 15
+  defense 255 255 15
+  fire 255 255 16
+  food 255 255 17
+  hair 255 255 18
+  marriage 255 255 20
+  moon 255 255 21
+  movie 255 255 22
+  paper 255 255 24
+  parking 255 255 25
+  peace 255 255 26
+  power 255 255 27
+  record 255 255 28
+  safety 255 255 29
+  sea 255 255 30
+  sugar 255 255 33
+  snow 255 255 31
+  sports 255 255 32
+  tax 255 255 34
+  traffic 255 255 35
+  wall 255 255 36
+  water 255 255 37
+  welfare 255 255 38
+
+dictionary noun_cmpnd2 statement 1 width 0 records sound
+  actor 255 255 18
+  actress 255 255 18
+  alert 255 255 27
+  antenna 255 255 28
+  antennae 255 255 28
+  area 255 255 29
+  engine 255 255 59
+  industry 255 255 79
+  insurance 255 255 80
+  oil 255 255 9
+  outfit 255 255 19
+  uniform 255 255 19
+  bag 255 255 30
+  basket 255 255 31
+  bear 255 255 32
+  bed 255 255 33
+  bell 255 255 34
+  belt 255 255 35
+  bike 255 255 36
+  bill 255 255 37
+  bin 255 255 38
+  bird 255 255 39
+  board 255 255 41
+  boat 255 255 42
+  book 255 255 1
+  bottle 255 255 43
+  box 255 255 44
+  building 255 255 2
+  block 255 255 40
+  bread 255 255 7
+  brush 255 255 45
+  call 255 255 46
+  can 255 255 47
+  car 255 255 48
+  card 255 255 49
+  case 255 255 50
+  cell 255 255 51
+  coat 255 255 53
+  court 255 255 12
+  code 255 255 54
+  collection 255 255 55
+  collector 255 255 55
+  college 255 255 5
+  command 255 255 57
+  company 255 255 23
+  control 255 255 56
+  cover 255 255 58
+  coverage 255 255 24
+  cut 255 255 60
+  chair 255 255 52
+  crash 255 255 59
+  day 255 255 61
+  deal 255 255 24
+  deposit 255 255 62
+  deposition 255 255 62
+  device 255 255 63
+  director 255 255 4
+  doctor 255 255 64
+  dog 255 255 65
+  fan 255 255 22
+  farm 255 255 8
+  farmer 255 255 8
+  field 255 255 12
+  file 255 255 66
+  fire 255 255 67
+  fish 255 255 68
+  frame 255 255 69
+  game 255 255 13
+  gear 255 255 70
+  guard 255 255 72
+  gun 255 255 73
+  group 255 255 71
+  head 255 255 74
+  heap 255 255 38
+  helmet 255 255 75
+  house 255 255 78
+  hole 255 255 77
+  holder 255 255 76
+  jack 255 255 81
+  job 255 255 82
+  key 255 255 83
+  lamp 255 255 84
+  lane 255 255 85
+  language 255 255 86
+  law 255 255 87
+  leg 255 255 88
+  level 255 255 89
+  life 255 255 90
+  light 255 255 91
+  line 255 255 92
+  list 255 255 93
+  machine 255 255 94
+  maker 255 255 95
+  manager 255 255 96
+  mark 255 255 97
+  mat 255 255 98
+  mechanic 255 255 59
+  menu 255 255 99
+  note 255 255 100
+  number 255 255 101
+  pad 255 255 102
+  pan 255 255 103
+  paper 255 255 104
+  party 255 255 105
+  personality 255 255 17
+  pile 255 255 38
+  pin 255 255 106
+  point 255 255 109
+  pole 255 255 110
+  polish 255 255 111
+  polisher 255 255 111
+  power 255 255 113
+  powder 255 255 112
+  pump 255 255 116
+  place 255 255 107
+  plan 255 255 108
+  player 255 255 14
+  problem 255 255 114
+  program 255 255 115
+  programme 255 255 115
+  project 255 255 3
+  race 255 255 117
+  rack 255 255 118
+  rate 255 255 119
+  record 255 255 120
+  remover 255 255 121
+  report 255 255 122
+  ride 255 255 123
+  ring 255 255 26
+  room 255 255 124
+  sale 255 255 125
+  salt 255 255 10
+  saw 255 255 126
+  season 255 255 15
+  seat 255 255 128
+  service 255 255 129
+  set 255 255 130
+  side 255 255 134
+  sign 255 255 135
+  signal 255 255 136
+  site 255 255 137
+  suit 255 255 19
+  supply 255 255 141
+  school 255 255 5
+  screen 255 255 127
+  sheet 255 255 131
+  shoe 255 255 16
+  shop 255 255 25
+  shopper 255 255 25
+  shot 255 255 132
+  show 255 255 133
+  stand 255 255 138
+  star 255 255 17
+  station 255 255 139
+  stick 255 255 20
+  story 255 255 140
+  student 255 255 6
+  system 255 255 142
+  table 255 255 21
+  tape 255 255 143
+  time 255 255 144
+  top 255 255 145
+  tower 255 255 146
+  trip 255 255 147
+  truck 255 255 148
+  trunk 255 255 11
+  warning 255 255 27
+  wash 255 255 149
+  washer 255 255 149
+  washing 255 255 149
+  water 255 255 151
+  watch 255 255 150
+  wave 255 255 152
+  wax 255 255 153
+  wire 255 255 155
+  wood 255 255 156
+  work 255 255 157
+  wheel 255 255 154
+  writer 255 255 158
+  zone 255 255 159
+
+dictionary eng_gramm_cat_dict statement 1 width 0 records sound
+  a 255 255 1 says e
+  ain't 255 255 4 says e n t
+  about 255 255 2 says x b W t
+  ago 255 255 3 says x g o
+  albeit 255 255 5 says c l b i X t
+  already 255 255 6 says c l r E d i
+  am 255 255 7 says A m
+  an 255 255 8 says A n
+  and 255 255 9
+  any 255 255 10 says E n i
+  anyone 255 255 12 says E n i w H n
+  anybody 255 255 11 says E n i b H@ d i
+  anything 255 255 13 says E n i T I G
+  anythin' 255 255 200 says E n i T X n
+  anywhere 255 255 14 says E n i w e r
+  an' 255 255 199
+  are 255 255 15 says a r
+  aren't 255 255 16 says a r n t
+  as 255 255 17
+  at 255 255 18 says A t
+  awhile 255 255 19 says x w Y l
+  el 255 255 46 says E l
+  everyone 255 255 48 says E v r i w H n
+  everybody 255 255 47 says E v r i b H@ d i
+  everything 255 255 49 says E v r i T I G
+  everythin' 255 255 201 says E v r i T X n
+  everywhere 255 255 50 says E v r i w e r
+  i 255 255 75 says Y
+  if 255 255 77 says I f
+  in 255 255 78 says I n
+  into 255 255 79 says I n t u
+  is 255 255 80 says I z
+  isn't 255 255 81 says I z Xx n t
+  it 255 255 82 says I t
+  its 255 255 83 says I t s
+  i'm 255 255 76 says Y m
+  ought 255 255 118 says c t
+  oughtn't 255 255 119 says c t
+  our 255 255 120 says W r
+  ours 255 255 121 says W r z
+  of 255 255 110 says @ v
+  on 255 255 111 says a@ n
+  one 255 255 112 says w H n
+  ones 255 255 113 says w H n z
+  only 255 255 114 says o n l i
+  onto 255 255 115 says a@ n t u
+  or 255 255 116
+  other 255 255 117 says H D x r
+  o'er 255 255 109 says c r
+  under 255 255 161 says H n d x r
+  until 255 255 162 says x n t I l
+  us 255 255 163 says H s
+  be 255 255 20 says b i
+  been 255 255 22 says b i n
+  being 255 255 23 says b i I G
+  because 255 255 21 says b X k @ z
+  but 255 255 24 says b H t
+  by 255 255 25 says b Y
+  can 255 255 26 says k A n
+  cannot 255 255 28 says k A n @ t
+  canst 255 255 29 says k A n s t
+  can't 255 255 27 says k a n t
+  could 255 255 30 says k U d
+  couldn't 255 255 31 says k U d
+  couldst 255 255 32 says k U d s t
+  de 255 255 34 says d i or d x
+  del 255 255 35 says d E l
+  did 255 255 36 says d I d
+  didn't 255 255 37 says d I d
+  do 255 255 38 says d u
+  does 255 255 39 says d o z or d H z
+  doesn't 255 255 40 says d H z Xx n t
+  doing 255 255 41 says d u I G
+  done 255 255 43 says d H n
+  don't 255 255 42 says d o n t
+  dost 255 255 44 says d H s t
+  doth 255 255 45 says d H T
+  d'ye 255 255 33 says d X y x
+  for 255 255 51 says f c r
+  from 255 255 52 says f r @ m
+  get 255 255 53 says g E t
+  gets 255 255 54 says g E t s
+  getting 255 255 55 says g E t I G
+  gonna 255 255 56 says g H n x
+  got 255 255 57 says g a@ t
+  gotta 255 255 58 says g a@ t x
+  gotten 255 255 59 says g a@ t X n
+  had 255 255 60 says h A d
+  hadn't 255 255 61 says h A d
+  has 255 255 62 says h A z
+  hasn't 255 255 63 says h A z Xx n t
+  hast 255 255 64 says h A s t
+  have 255 255 65 says h A v
+  haven't 255 255 66 says h A v Xx n t
+  having 255 255 67 says h A v I G
+  he 255 255 68 says h i
+  her 255 255 69 says h R
+  here 255 255 71 says h i r
+  hers 255 255 70 says h R z
+  him 255 255 72 says h I m
+  his 255 255 73 says h I z
+  how 255 255 74 says h W
+  la 255 255 84 says l a
+  las 255 255 86 says l a s
+  le 255 255 85 says l x
+  like 255 255 87 says l Y k
+  los 255 255 86 says l a s
+  may 255 255 88 says m e
+  mayest 255 255 89 says m e X s t
+  mayn't 255 255 90 says m e Xx n t
+  mayst 255 255 91 says m e s t
+  me 255 255 92 says m i
+  might 255 255 93 says m Y t
+  mightest 255 255 94 says m Y t X s t
+  mightn't 255 255 95 says m Y t
+  mine 255 255 96 says m Y n
+  must 255 255 97 says m H s t
+  mustn't 255 255 98 says m H s Xx n t
+  my 255 255 99 says m Y
+  no 255 255 100 says n o
+  nobody 255 255 101 says n o b x d i
+  none 255 255 102 says n H n
+  nor 255 255 103 says n c r
+  not 255 255 104 says n a@ t
+  nothing 255 255 105 says n H T I G
+  nothings 255 255 106 says n H T I G z
+  nothin' 255 255 202 says n H T X n
+  now 255 255 107 says n W
+  nowhere 255 255 108 says n o w e r
+  per 255 255 122 says p R
+  san 255 255 123 says s A n
+  santa 255 255 124 says s A n t x
+  says 255 255 125 says s E z
+  since 255 255 133 says s I n s
+  so 255 255 134 says s o
+  some 255 255 135 says s H m
+  someone 255 255 137 says s H m w H n
+  somebody 255 255 136 says s H m b x d i
+  something 255 255 138 says s H m T I G
+  somethin' 255 255 203 says s H m T X n
+  somewhere 255 255 139 says s H m w e r
+  such 255 255 141 says s H C
+  shall 255 255 126 says S A l
+  shalt 255 255 127 says S A l t
+  shan't 255 255 128 says S a n t
+  she 255 255 129 says S i
+  should 255 255 130 says S U d
+  shouldn't 255 255 131 says S U d
+  shouldst 255 255 132 says S U d s t
+  still 255 255 140 says s t I l
+  till 255 255 158 says t I l
+  to 255 255 159
+  too 255 255 160 says t u
+  than 255 255 142 says D A n
+  that 255 255 143 says D A t
+  the 255 255 144 says D H
+  thee 255 255 145 says D i
+  their 255 255 146 says D e r
+  theirs 255 255 147 says D e r z
+  them 255 255 148 says D E m
+  then 255 255 149 says D E n
+  there 255 255 150 says D e r
+  these 255 255 151 says D i z
+  they 255 255 152 says D e
+  thine 255 255 153 says D Y n
+  this 255 255 154 says D I s
+  thou 255 255 156 says D W
+  those 255 255 155 says D o z
+  thy 255 255 157 says D Y
+  very 255 255 164 says v E r i
+  wanna 255 255 165 says w a@ n x
+  was 255 255 166 says w @ z
+  wasn't 255 255 167 says w @ z X n t
+  we 255 255 168 says w i
+  were 255 255 169 says w R
+  weren't 255 255 170 says w R n t
+  will 255 255 183 says w I l
+  willst 255 255 184 says w I l s t
+  with 255 255 185 says w I D
+  within 255 255 186 says w X D I n
+  would 255 255 188 says w U d
+  wouldn't 255 255 189 says w U d
+  wouldst 255 255 190 says w U d s t
+  won't 255 255 187 says w o n t
+  wun 255 255 191 says w H n
+  what 255 255 171 says w @ t
+  when 255 255 172 says w E n
+  where 255 255 173 says w e r
+  which 255 255 174 says w I C
+  while 255 255 175 says w Y l
+  whilst 255 255 176 says w Y l s t
+  who 255 255 177 says h u
+  whoever 255 255 178 says h u E v x r
+  whom 255 255 179 says h u m
+  whomever 255 255 180 says h u m E v x r
+  whose 255 255 181 says h u z
+  why 255 255 182 says w Y
+  ya 255 255 193 says y x
+  ye 255 255 194 says y i
+  yet 255 255 195 says y E t
+  you 255 255 196 says #73 r or y u
+  your 255 255 197 says y c r
+  yours 255 255 198 says y c r z
+  y' 255 255 204 says y x
+  y'r 255 255 192 says y x r
+  'em 255 255 205 says x m
+  'im 255 255 206 says X m
+  'm 255 255 207 says x m
+  'til 255 255 208 says t X l
+  'tis 255 255 209 says t I z
+  'twas 255 255 210 says t w @ z
+  've 255 255 211 says x v
+
+dictionary eng_gramm_cat_disambig_dict statement 1 width 0 records sound
+  either 255 255 3
+  else 255 255 4
+  enough 255 255 5
+  even 255 255 6
+  only 255 255 9
+  own 255 255 10
+  back 255 255 1
+  co 255 255 2
+  just 255 255 7
+  long 255 255 8
+  point 255 255 11
+  very 255 255 12
+  well 255 255 13
+
+dictionary homog_roots statement 1 width 0 records sound
+  abuse 255 255 1 says x b y u s or x b y u z
+  allied 255 255 2 says x l Y d
+  ally 255 255 3 says A l Y
+  analyse 255 255 4 says x n A l Xx s i or A n x l a y z
+  articulate 255 255 5 says a r t I k y x l Xx t or a r t I k y x l e t
+  inter 255 255 19 says I n t R
+  overall 255 255 31 says o v R c l
+  use 255 255 50 says y u z or y u s
+  usurious 255 255 51 says y u z y U r i x s
+  bass 255 255 6 says b e s or b A s
+  baton 255 255 8 says t F Z p b or b x t a n
+  batman 255 255 7 says b A t m A n or b A t m X n
+  bologna 255 255 9 says b x l o n y x or b x l o n i
+  bow 255 255 10 says b W
+  buffet 255 255 12 says b H f X t or b U f e
+  breath 255 255 11 says b r i D or b r E T
+  contract 255 255 14 says k x n t r A k t or k a@ n t r A k t
+  close 255 255 13 says k l o s or k l o z or r b n C
+  crooked 255 255 15 says k r U k t or k r U k X d
+  dogged 255 255 16 says d c@ g d or d c@ g X d
+  dove 255 255 17 says d H v or d o v
+  house 255 255 18 says h W z or h W s
+  kilo 255 255 20 says k i l o or k I l x
+  lead 255 255 21 says l i d or l E d
+  lech 255 255 22 says l E k
+  live 255 255 23 says l Y v or l I v
+  louis 255 255 24 says l u i or l u I s
+  minute 255 255 25 says m Y n y u t or m Y n u t or m I n X t
+  mobile 255 255 26 says m o b i l or m o b x l
+  moped 255 255 27 says m o p E d
+  neuroses 255 255 28 says n
+  newfoundland 255 255 29 says n
+  news 255 255 30 says n
+  pince 255 255 32 says p I n s or p A n s
+  polish 255 255 33
+  puerile 255 255 36 says p y U x r Y l
+  putting 255 255 37 says p U t I G or p H t I G
+  princess 255 255 34 says p r I n s E s
+  produce 255 255 35 says p r o d y u s or p r x d y u s
+  ragged 255 255 38 says r A g d or r A g X d
+  read 255 255 39 says r i d
+  rein 255 255 41 says r e n
+  rebus 255 255 40 says r i b x s or r i b H s
+  ros 255 255 42 says r a@ z or r o z
+  separate 255 255 44 says s E p x r e t or s E p r Xx t
+  sceptic 255 255 43 says s k E p t X s or s k E p t X k
+  slough 255 255 45 says s l W or s l H f
+  stein 255 255 46 says s t Y n or s t i n
+  tangier 255 255 47
+  tear 255 255 48 says t E r or t i r
+  ton 255 255 49 says t H n or t a@ n
+  vice 255 255 52 says v Y s or v Y s X
+  wind 255 255 54 says w I n d or w Y n d
+  wound 255 255 56 says w u n d or w W n d
+  won 255 255 55 says w a@ n or w H n
+  whoop 255 255 53 says w u p or w U p
+
+dictionary eng_homog_words statement 1 width 0 records sound
+  always 255 255 1 says c l w e z
+  en 255 255 5 says a n or E n
+  itself 255 255 26 says X t s E l f or I t s E l f
+  ourselves 255 255 31 says W x s E l v z
+  upstairs 255 255 48 says H p s t e r z
+  des 255 255 2 says m t or d E z or d e
+  downstairs 255 255 3 says d W n s t e r z
+  during 255 255 4 says d y U r I G
+  fein 255 255 6 says f Y n or f e n
+  forever 255 255 7 says f x r E v x r
+  francisco 255 255 8 says f r A n s I s k o or f r Xx n s I s k o
+  hereafter 255 255 9 says h i
+  hereas 255 255 10 says h i
+  hereat 255 255 11 says h i
+  herein 255 255 12 says h i
+  hereinafter 255 255 13 says h i
+  hereinbefore 255 255 14 says h i
+  hereinto 255 255 15 says h i
+  hereof 255 255 17 says h i
+  hereon 255 255 18 says h i
+  hereunder 255 255 19 says h i
+  hereunto 255 255 20 says h i
+  hereupon 255 255 21 says h i r x p a@ n
+  hereto 255 255 16 says h i
+  herewith 255 255 22 says h i
+  herself 255 255 23 says h R s E l f
+  himself 255 255 24 says h X m s E l f or h I m s E l f
+  hurriedly 255 255 25 says h H r X d l i
+  jean 255 255 27 says Z c n or J i n
+  lima 255 255 28 says l Y m x or l i m x
+  macho 255 255 29 says m A C o
+  myself 255 255 30 says m a y s E l f
+  rapprochements 255 255 32 says r A p r @ S m @ n
+  sinn 255 255 33 says S I n
+  somewhat 255 255 34 says s H m w @ t
+  supposed 255 255 35 says s x p o z d or s x p o s t or s x p o z X d
+  toward 255 255 45 says t x w c d
+  towards 255 255 46 says t x w c d z
+  themselves 255 255 36 says D E m s E l v z
+  thereas 255 255 37 says D e r A z
+  thereunto 255 255 41 says D e r H n t u
+  thereby 255 255 38 says D e r b Y
+  therefor 255 255 39 says D e r f c r
+  theretofore 255 255 40 says D E
+  therewith 255 255 42 says D E
+  therewithal 255 255 43 says D E
+  thoroughly 255 255 44 says T H r x l i
+  thyself 255 255 47 says D a y s E l f
+  voyage 255 255 49 says v O x J or v O a Z
+  whatever 255 255 50 says w @ t E v x r
+  whatsoever 255 255 51 says w @ t s o E v x r
+  whereas 255 255 52 says w e r A z
+  whereunto 255 255 58 says w E r x n t u
+  whereby 255 255 53 says w e r b Y
+  wherefor 255 255 54 says w e r f c r
+  wherefrom 255 255 55 says w e r f r H@ m
+  wheretofore 255 255 57 says w e r t x f c r
+  wherethrough 255 255 56 says w e r T r u
+  wherewith 255 255 59 says w E
+  wherewithal 255 255 60 says w E
+  yourself 255 255 61 says y x s E l f or y c s E l f
+  yourselves 255 255 62 says y x s E l v z or y c s E l v z
+
+dictionary compounds statement 1 width 0 records sound
+  absentmind 6 255 1
+  allover 3 255 1
+  allstate 3 255 1
+  anteat 3 255 1
+  areaway 4 255 1
+  armrest 3 255 1
+  atwater 2 255 1
+  atwood 2 255 1
+  axgrind 2 255 1
+  eastleigh 4 255 1
+  ecosystem 3 255 1
+  endgame 3 255 1
+  endtable 3 255 1
+  ethernet 5 255 1
+  everlast 4 255 1
+  inboard 2 255 1
+  inboard 2 255 1
+  inbred 2 255 1
+  infield 2 255 1
+  infix 2 255 1
+  inkstain 3 255 1
+  inline 2 255 1
+  inmate 2 255 1
+  input 2 255 1
+  inroad 2 255 1
+  inset 2 255 1
+  insight 2 255 1
+  inshore 2 255 1
+  instep 2 255 1
+  internet 5 255 1
+  oilcan 3 255 1
+  outlet 3 255 1
+  outset 3 255 1
+  offbeat 3 255 1
+  offset 3 255 1
+  offstage 3 255 1
+  oncome 2 255 1
+  ongo 2 255 1
+  online 2 255 1
+  onlook 2 255 1
+  onset 2 255 1
+  onshore 2 255 1
+  onslaught 2 255 1
+  organgrind 5 255 1
+  usenet 3 255 1
+  backrest 4 255 1
+  ballplay 4 255 1
+  bartend 3 255 1
+  batman 3 255 1
+  battersea 6 255 1
+  beefeater 4 255 1
+  beehive 3 255 1
+  beesting 3 255 1
+  bedrest 3 255 1
+  bestsell 4 255 1
+  birthbed 5 255 1
+  boilover 4 255 1
+  bobsled 3 255 1
+  buildup 5 255 1
+  bumblebee 6 255 1
+  bunkbed 4 255 1
+  blackeyed 5 255 1
+  blockbust 5 255 1
+  blowup 4 255 1
+  breakup 5 255 1
+  breastfeed 6 255 1
+  breaststroke 6 255 1
+  bridebed 5 255 1
+  broadsword 5 255 1
+  bygone 2 255 1
+  byline 2 255 1
+  bypass 2 255 1
+  byproduct 2 255 1
+  bystand 2 255 1
+  byway 2 255 1
+  cardtable 4 255 1
+  carmichael 3 255 1
+  carryover 5 255 1
+  catnip 3 255 1
+  cinemago 6 255 1
+  coatrack 4 255 1
+  cockeyed 4 255 1
+  cockroach 4 255 1
+  codepage 4 255 1
+  coleridge 4 255 1
+  coleslaw 4 255 1
+  coverup 5 255 1
+  cowlick 3 255 1
+  cutover 3 255 1
+  chalkdust 5 255 1
+  changeover 6 255 1
+  checkup 5 255 1
+  checklist 5 255 1
+  chickenfeed 7 255 1
+  childbed 5 255 1
+  cleanup 5 255 1
+  clothespin 7 255 1
+  crosseyed 5 255 1
+  crossbreed 5 255 1
+  daybed 3 255 1
+  deathbed 5 255 1
+  dialup 4 255 1
+  doublebed 6 255 1
+  dogsled 3 255 1
+  dunkirk 3 255 1
+  dreadnaught 5 255 1
+  dreadnought 5 255 1
+  featherbed 7 255 1
+  fiberglass 5 255 1
+  fibreglass 5 255 1
+  foolhardy 4 255 1
+  footrest 4 255 1
+  folklore 4 255 1
+  forthcome 5 255 1
+  flatbed 4 255 1
+  floodgate 5 255 1
+  floodlamp 5 255 1
+  floodlit 5 255 1
+  flyby 3 255 1
+  freelance 4 255 1
+  gainsaid 4 255 1
+  gallblad 4 255 1
+  gaslamp 3 255 1
+  gearbox 4 255 1
+  goaltend 4 255 1
+  guidemap 5 255 1
+  guidestar 5 255 1
+  guildhall 5 255 1
+  grandson 5 255 1
+  grapevine 5 255 1
+  grasshop 5 255 1
+  gravesend 6 255 1
+  greenspan 5 255 1
+  grownup 5 255 1
+  hairdo 4 255 1
+  handicap 5 255 1
+  handlebar 6 255 1
+  haymarket 3 255 1
+  haywire 3 255 1
+  headrest 4 255 1
+  heartbeat 5 255 1
+  heartstop 5 255 1
+  heatwave 4 255 1
+  henceforth 5 255 1
+  hereby 4 255 1
+  hijack 2 255 1
+  hillslope 4 255 1
+  hindsight 4 255 1
+  hitherto 6 255 1
+  holdover 4 255 1
+  holdup 4 255 1
+  honeybee 5 255 1
+  hotbed 3 255 1
+  jackhammer 4 255 1
+  keepsake 4 255 1
+  lackluster 4 255 1
+  lakebed 4 255 1
+  landown 4 255 1
+  landlady 4 255 1
+  layover 3 255 1
+  leftover 4 255 1
+  leningrad 5 255 1
+  lineup 4 255 1
+  lockheed 4 255 1
+  login 3 255 1
+  logon 3 255 1
+  londonderry 6 255 1
+  longsword 4 255 1
+  lowestoft 4 255 1
+  lukewarm 4 255 1
+  mainframe 4 255 1
+  magpie 3 255 1
+  manhunt 3 255 1
+  manslaughter 3 255 1
+  matchup 5 255 1
+  mayfair 3 255 1
+  mayhem 3 255 1
+  millbrae 4 255 1
+  minesweep 4 255 1
+  motorbike 5 255 1
+  motorcade 5 255 1
+  motown 2 255 1
+  moviego 5 255 1
+  muscleflex 6 255 1
+  namesake 4 255 1
+  newhaven 3 255 1
+  newlywed 5 255 1
+  newmarket 3 255 1
+  newparagraph 3 255 1
+  nowise 2 255 1
+  nowhere 2 255 1
+  nutmeg 3 255 1
+  parsnip 3 255 1
+  passerby 6 255 1
+  passersby 7 255 1
+  passover 4 255 1
+  pathfind 4 255 1
+  payroll 3 255 1
+  pickaxe 4 255 1
+  pickpocket 4 255 1
+  popover 3 255 1
+  poptart 3 255 1
+  postbag 4 255 1
+  postcode 4 255 1
+  pullover 4 255 1
+  pushover 4 255 1
+  primrose 4 255 1
+  prorate 3 255 1
+  railpass 4 255 1
+  racecourse 4 255 1
+  racego 4 255 1
+  racehorse 4 255 1
+  ratepay 4 255 1
+  rawhide 3 255 1
+  rearguard 4 255 1
+  redgrave 3 255 1
+  redhead 3 255 1
+  ridgecrest 5 255 1
+  ringlead 4 255 1
+  riverbed 5 255 1
+  roadbed 4 255 1
+  roebuck 3 255 1
+  roundup 5 255 1
+  rottweil 4 255 1
+  sandbar 4 255 1
+  seabed 3 255 1
+  seaway 3 255 1
+  seedbed 4 255 1
+  sevenoak 5 255 1
+  sickbed 4 255 1
+  sightsee 5 255 1
+  signpost 4 255 1
+  singlebed 6 255 1
+  somersault 5 255 1
+  sunup 3 255 1
+  scapegoat 5 255 1
+  shakeup 5 255 1
+  shillyshally 6 255 1
+  showup 4 255 1
+  sledgehammer 6 255 1
+  slipover 4 255 1
+  smashup 5 255 1
+  speakeasy 5 255 1
+  spreadeagle 6 255 1
+  standby 5 255 1
+  startup 5 255 1
+  steadfast 5 255 1
+  steeplechase 7 255 1
+  stingray 5 255 1
+  stonehenge 5 255 1
+  strathclyde 6 255 1
+  streambed 6 255 1
+  strongroom 6 255 1
+  takeover 4 255 1
+  taxpay 3 255 1
+  teargas 4 255 1
+  technobabble 6 255 1
+  telltale 4 255 1
+  testbed 4 255 1
+  tightrope 5 255 1
+  toolshed 4 255 1
+  tophat 3 255 1
+  tossup 4 255 1
+  thenceforth 6 255 1
+  thereby 5 255 1
+  thinkpad 5 255 1
+  thunderclap 7 255 1
+  thundercloud 7 255 1
+  throughput 7 255 1
+  trailblaze 5 255 1
+  trashcan 5 255 1
+  videocam 5 255 1
+  videotape 5 255 1
+  wavelength 4 255 1
+  wedbed 3 255 1
+  windup 4 255 1
+  wisecrack 4 255 1
+  wiseman 4 255 1
+  whereby 5 255 1
+  wrongdo 5 255 1
+
+dictionary nonlex_prefixes statement 1 width 0 records sound
+  a 255 255 1 says e
+  aero 255 255 3 says E
+  audio 255 255 11 says c d i o
+  auto 255 255 12 says c t o
+  ambi 255 255 4 says A m b i
+  andre 255 255 5 says A n d r i
+  anglo 255 255 6 says A G g l o
+  anti 255 255 7 says A n t i
+  arc 255 255 8 says a r k
+  arch 255 255 9 says a r C
+  astro 255 255 10 says A s t r o
+  a- 255 255 2 says x
+  electro 255 255 30 says x l E k t r o
+  equi 255 255 31 says i k w x
+  extra 255 255 32 says E k s t r x
+  il 255 255 43 says I l
+  im 255 255 44 says I m
+  in 255 255 45 says I n
+  infra 255 255 42 says I n f r x
+  inter 255 255 46 says I n t x r
+  intra 255 255 47 says I n t r x
+  ir 255 255 48 says i r
+  out 255 255 71 says W t
+  oleo 255 255 68 says o l i o
+  omni 255 255 69 says a@ m n X
+  osteo 255 255 70 says c s t i o
+  over 255 255 72 says o v x r
+  oxy 255 255 73 says a@ k s i
+  o' 255 255 67 says o
+  ultra 255 255 102 says H l t r x
+  un 255 255 103 says H n
+  uni 255 255 105 says y u n X
+  under 255 255 104 says H n d x r
+  up 255 255 106 says H p
+  bi 255 255 13 says b Y
+  bio 255 255 14 says b Y o
+  bona 255 255 15 says b a@ n x
+  cardio 255 255 16 says k a r d i o
+  co 255 255 18 says k o
+  counter 255 255 20 says k W n t x r
+  contra 255 255 19 says k a@ n t r x
+  chemo 255 255 17 says k i m o
+  czecho 255 255 21 says C E k x
+  de 255 255 22 says d i
+  deoxy 255 255 25 says d i a@ k s i
+  dela 255 255 23 says d E l x
+  delos 255 255 24 says d E l x s
+  des 255 255 26 says d e z or d e
+  di 255 255 27 says d Y
+  dis 255 255 28 says d I s
+  du 255 255 29 says d u
+  fitz 255 255 33 says f I t s
+  fore 255 255 34 says f c r
+  geo 255 255 35 says J i o
+  hetero 255 255 36 says h E t x r o
+  homeo 255 255 37 says h o m i o
+  homo 255 255 38 says h o m o
+  hydro 255 255 39 says h Y d r o
+  hyper 255 255 40 says h Y p x r
+  hypo 255 255 41 says h Y p o
+  la 255 255 49 says l x
+  le 255 255 50 says l X
+  love 255 255 51 says l H v
+  mac 255 255 52 says m Xx k
+  macro 255 255 53 says m A k r o
+  mal 255 255 54 says m A l
+  mary 255 255 55 says m e r i
+  meta 255 255 56 says m E t x
+  micro 255 255 57 says m Y k r o
+  mid 255 255 58 says m I d
+  mini 255 255 59 says m I n i
+  mis 255 255 60 says m I s
+  mono 255 255 61 says m a@ n x
+  multi 255 255 62 says m H l t i
+  mc 255 255 52 says m Xx k
+  neo 255 255 63 says n i o
+  nitro 255 255 64 says n Y t r o
+  non 255 255 65 says n a@ n
+  north 255 255 66 says n o r T
+  para 255 255 74 says p A r x
+  poly 255 255 77 says p a@ l i
+  post 255 255 78 says p o s t
+  photo 255 255 76 says f o t o
+  physio 255 255 75 says f I z i o
+  pre 255 255 79 says p r i
+  pro 255 255 80 says p r o
+  proto 255 255 81 says p r o t o
+  pseudo 255 255 82 says s
+  psycho 255 255 83 says s Y k o
+  pyro 255 255 84 says p Y r o
+  quadri 255 255 85 says k w a@ d r X
+  quasi 255 255 86 says k w a z i
+  radio 255 255 87 says r e d i o
+  re 255 255 88 says r i
+  retro 255 255 89 says r E t r o
+  ribo 255 255 90 says r Y b o
+  rose 255 255 91 says r o z
+  self 255 255 92 says s E l f
+  semi 255 255 93 says s E m i
+  south 255 255 95 says s W T
+  socio 255 255 94 says s o s i o
+  sub 255 255 96 says s H b
+  super 255 255 97 says s u p x r
+  tele 255 255 98 says t E l X
+  thermo 255 255 99 says T R m o
+  trans 255 255 100 says t r A n z
+  tri 255 255 101 says t r Y
+  villa 255 255 107 says v I l x
+  villal 255 255 108 says v I l x l
+  villan 255 255 109 says v I l x n
+  villar 255 255 110 says v I l x r
+  with 255 255 111 says w I D
+  yama 255 255 112 says y a m x
+
+dictionary lex_prefixes statement 1 width 0 records sound
+  a 255 255 1 says x
+  em 255 255 4 says X m
+  en 255 255 5 says X n
+  be 255 255 2 says b X
+  circum 255 255 3 says s R k x m
+
+dictionary clitics statement 1 width 0 records sound
+  'd 255 255 1 says d or X d
+  'll 255 255 2 says l or x l
+  're 255 255 3 says r or R
+  've 255 255 4 says v or x v
+
+dictionary suffixes statement 1 width 0 records sound
+  ability 255 255 2 says x b I l X t i
+  able 255 255 1 says x b x l
+  age 255 255 3 says X J
+  al 255 255 5 says x l
+  ality 255 255 6 says A l X t i
+  ane 255 255 8 says A n
+  ance 255 255 7 says x n s
+  ann 255 255 8 says A n
+  anna 255 255 9 says A n x
+  anne 255 255 8 says A n
+  arily 255 255 11 says e r X l i
+  ary 255 255 10 says x r i
+  ate 255 255 4 says X t
+  ation 255 255 12 says e S x n
+  ee 255 255 20 says i
+  eer 255 255 21 says i r
+  ed 255 255 17 says d
+  edly 255 255 18 says d l i or X d l i
+  edness 255 255 19 says d n Xx s or X d n Xx s
+  ella 255 255 22 says E l x
+  elle 255 255 23 says E l
+  ellen 255 255 24 says E l X n
+  er 255 255 25 says x r
+  esque 255 255 26 says E s k
+  ess 255 255 27 says X s
+  est 255 255 28 says X s t
+  eth 255 255 29 says Xx T
+  etta 255 255 30 says E t x
+  ette 255 255 31 says E t
+  ic 255 255 40 says X k
+  ical 255 255 41 says X k x l
+  in 255 255 43 says X n
+  ing 255 255 42 says I G
+  ish 255 255 44 says X S
+  ism 255 255 45 says I z x m
+  ist 255 255 46 says I s t or X s t
+  istic 255 255 47 says I s t X k
+  ize 255 255 48 says X z or Y z
+  or 255 255 62 says x r
+  boro 255 255 13 says b r x
+  borough 255 255 13 says b r x
+  bury 255 255 14 says b r i
+  dom 255 255 15 says d x m
+  dove 255 255 16 says d H v
+  fell 255 255 32 says f E l
+  ford 255 255 33 says f x d
+  ful 255 255 34 says f x l
+  ham 255 255 35 says x m
+  hart 255 255 36 says h a r t
+  hood 255 255 38 says h U d
+  holm 255 255 37 says h o l m
+  hurst 255 255 39 says h R s t
+  land 255 255 49 says l x n d
+  less 255 255 50 says l Xx s
+  let 255 255 51 says l Xx t
+  ley 255 255 52 says l i
+  like 255 255 53 says l Y k
+  louise 255 255 54 says l x w i z
+  love 255 255 55 says l H v
+  ly 255 255 52 says l i
+  man 255 255 56 says m Xx n
+  mann 255 255 56 says m Xx n
+  maria 255 255 57 says m x r i x
+  men 255 255 56 says m Xx n
+  ment 255 255 58 says m Xx n t
+  mouth 255 255 60 says m x T
+  mor 255 255 59 says m c r
+  ness 255 255 61 says n Xx s
+  quist 255 255 63 says k w I s t
+  ress 255 255 64 says r X s
+  ry 255 255 65 says r i
+  sen 255 255 66 says s Xx n
+  some 255 255 69 says s x m
+  son 255 255 70 says s x n
+  ship 255 255 67 says S I p
+  shire 255 255 68 says S I
+  ston 255 255 71 says s t X n
+  strom 255 255 72 says s t r x m
+  ton 255 255 74 says t Xx n
+  thal 255 255 73 says T c l
+  ward 255 255 75 says w x d
+  west 255 255 76 says w E s t
+  y 255 255 77 says i
+
+dictionary pnames statement 1 width 0 records sound
+  aaron 255 255 1 says e r X n
+  abraham 255 255 2 says e b r x h A m
+  achilles 255 255 3 says x k I l i z
+  ada 255 255 4 says e d x
+  adler 255 255 5 says A d l x r
+  agnes 255 255 6 says A g n Xx s
+  agnew 255 255 7 says A g n y u
+  ahmed 255 255 8 says a m E d
+  alastair 255 255 9 says A l x s t x r
+  alexander 255 255 10 says A l X g z A n d x r
+  alistair 255 255 9 says A l x s t x r
+  alzheimer 255 255 11 says c l t s h Y m x r
+  amis 255 255 12 says e m Xx s
+  amos 255 255 12 says e m Xx s
+  andreas 255 255 13 says A n d r e x s
+  anheuser 255 255 14 stress 120 says A n h Y z x r
+  antoine 255 255 15 says A n t w a@ n
+  aquinas 255 255 16 says x k w Y n X s
+  aquino 255 255 17 says x k i n o
+  ares 255 255 18 says E r i z
+  ariel 255 255 19 says A r i x l
+  archimedes 255 255 21 says a r k x m i d i z
+  arwood 255 255 20 says a r w U d
+  asa 255 255 23 says e s x
+  asimov 255 255 22 says A z X m c@ v
+  awac 255 255 252 says e w A k
+  ebenezer 255 255 75 says E b Xx n i z x r
+  edgar 255 255 76 says E d g x r
+  elisabeth 255 255 77 says X l I z x b Xx T
+  elizabeth 255 255 77 says X l I z x b Xx T
+  elwood 255 255 78 says E l w U d
+  enoch 255 255 79 says i n a@ k
+  enrique 255 255 80 says E n r i k e
+  epstein 255 255 81 says E p s t i n
+  espanol 255 255 82 says E s p x n y o l
+  exxonmobil 255 255 83 says E k s a n m o b X l
+  iain 255 255 115 says i Xx n
+  ian 255 255 115 says i Xx n
+  iliad 255 255 253 says I l i Xx d
+  inglethorp 255 255 116 says I G g x l T c r p
+  iroquois 255 255 117 says I r x k w c y
+  isaac 255 255 118 says Y z Xx k
+  isabel 255 255 119 says I z x b E l
+  isabelle 255 255 120 says I z x b E l
+  ito 255 255 121 says i t o
+  oate 255 255 184 says o t
+  october 255 255 250 says a@ k t o b x r
+  odysseus 255 255 185 says o d I s i x s
+  orestes 255 255 186 says c r E s t i z
+  osamu 255 255 187 says o s a m u
+  overby 255 255 188 says o v R b i
+  oxo 255 255 189 says a@ k s o
+  ulysses 255 255 237 says y x l I s i z
+  unesco 255 255 260 says y u n E s k o
+  unisys 255 255 261 says y u n X s I s
+  urdu 255 255 262 says u r d u
+  barbara 255 255 24 says b a r b r x
+  beaujolais 255 255 27 says b o Z x l e
+  beauvais 255 255 28 says b o v e
+  beatrice 255 255 25 says b i x t r I s
+  beatrix 255 255 26 says b i x t r I k s
+  beethoven 255 255 29 says b e t o v Xx n
+  buchanan 255 255 32 says b y u k A n Xx n
+  blyth 255 255 30 says b l Y
+  brien 255 255 31 says b r Y x n
+  calais 255 255 33 says k x l e
+  callaghan 255 255 34 says k A l x h A n
+  campbell 255 255 36 says k A m b x l
+  carlisle 255 255 35 says k a r l Y l
+  cecilia 255 255 37 says s X s i l y x
+  coate 255 255 47 says k o t
+  courtney 255 255 51 says k c r t n i
+  cohen 255 255 48 says k o Xx n
+  confucius 255 255 49 says k x n f y u S x s
+  copeland 255 255 50 says k o p l x n d
+  copland 255 255 50 says k o p l x n d
+  cowan 255 255 52 says k W Xx n
+  cowes 255 255 53 says k W z
+  charlemagne 255 255 39 says S a r l x m e n
+  charles 255 255 40 says C a r l z
+  charlotte 255 255 38 says S a r l x t
+  chelsea 255 255 41 says C E l s i
+  chevrolet 255 255 42 says S E v r x l e
+  chirac 255 255 43 says S i r a k
+  chisholm 255 255 44 says C I z x l m
+  claus 255 255 46 says k l c z
+  clara 255 255 45 says k l e r x
+  cybele 255 255 54 says s I b x l i
+  daewoo 255 255 55 says d e w u
+  daimler 255 255 56 says d Y m l x r
+  daimlerchrysler 255 255 57 says d Y m l x r k r Y s l x r
+  daniela 255 255 59 says d A n y E l x
+  daniele 255 255 58 says d A n y E l
+  deborah 255 255 60 says d E b r x
+  degas 255 255 61 says d e g a
+  dejesus 255 255 62 says d x h e z u s
+  denise 255 255 63 says d Xx n i s
+  desrosier 255 255 64 stress 2201 says d e r o z i e
+  dewayne 255 255 65 says d x w e n
+  dewey 255 255 66 says d u w i
+  diangelo 255 255 67 says d i A n J X l o
+  dior 255 255 69 says d i c r
+  dilettante 255 255 68 says d I l X t a n t
+  dos 255 255 70 says d a@ s
+  dow 255 255 71 says d W
+  duchesne 255 255 72 says d u S e n
+  dupuis 255 255 74 says d u p w i
+  dupriest 255 255 73 says d u p r i s t
+  farrakhan 255 255 84 says f E r x k a n
+  february 255 255 249 says f E b y u E r i
+  felipe 255 255 85 says f x l i p e
+  ferguson 255 255 86 says f R g x s x n
+  fermat 255 255 87 says f x r m a
+  fiat 255 255 88 says f i x t
+  frans 255 255 89 says f r a n s
+  franz 255 255 89 says f r a n s
+  frazier 255 255 90 says f r e Z x r
+  freud 255 255 91 says f r O d
+  gallagher 255 255 92 says g A l x g x r
+  garcia 255 255 93 says g a r s i x
+  geiger 255 255 96 says g Y g x r
+  geoff 255 255 94 says J E f
+  geoffrey 255 255 95 says J E f r i
+  gerhard 255 255 97 says g e r h a r t
+  gerhardt 255 255 98 says g e r h a r t
+  gerhardtgephardt 255 255 99 says g E p h a r t
+  ginsberg 255 255 100 says g I n z b x r g
+  ginsburg 255 255 100 says g I n z b x r g
+  goode 255 255 102 says g U d
+  gonzalez 255 255 101 says g x n z a l X s
+  gowan 255 255 103 says g W Xx n
+  guido 255 255 106 says g w i d o
+  graeme 255 255 104 says g r e x m
+  grahame 255 255 104 says g r e x m
+  grosvenor 255 255 105 says g r o v n x r
+  hayes 255 255 108 says h e z
+  haydn 255 255 107 says h Y d Xx n
+  hearst 255 255 109 says h R s t
+  heimlich 255 255 110 says h Y m l I k
+  heseltine 255 255 111 says h e z x l t i n
+  hough 255 255 112 says h a@ k
+  howe 255 255 113 says h W
+  huang 255 255 114 says h w a G
+  jacob 255 255 123 says J e k x b
+  jacque 255 255 124 says Z a@ k
+  jacqueline 255 255 125 says J A k x l X n
+  jacquelynn 255 255 125 says J A k x l X n
+  jacques 255 255 124 says Z a@ k
+  jada 255 255 122 says J e d x
+  janke 255 255 126 says y A n k x
+  jesse 255 255 127 says J E s i
+  joane 255 255 128 says J o A n
+  johann 255 255 129 says y o h a n
+  john 255 255 130 says J a@ n
+  johnnie 255 255 131 says J a@ n i
+  johnny 255 255 131 says J a@ n i
+  jong 255 255 132 says y H G
+  jose 255 255 133 says h o z e
+  kauai 255 255 134 says k x w a y i
+  kerr 255 255 135 says k R
+  kimi 255 255 137 says k I m i
+  kuaui 255 255 134 says k x w a y i
+  khrushchev 255 255 136 says k r u S C c@ f
+  knowl 255 255 138 says n o l
+  kyoto 255 255 139 says k y o t o
+  laughlin 255 255 141 says l a f l x n
+  laplante 255 255 140 says l x p l A n t
+  leane 255 255 143 says l i A n
+  leander 255 255 142 says l i A n d x r
+  leandro 255 255 145 says l i A n d r o
+  leonard 255 255 146 says l E n x r d
+  ley 255 255 144 says l i
+  lia 255 255 147 says l i x
+  lili 255 255 148 says l I l i
+  lincoln 255 255 149 says l I G k Xx n
+  lindsay 255 255 150 says l I n z i
+  lindsey 255 255 150 says l I n z i
+  lois 255 255 151 says l o I s
+  lowell 255 255 152 says l o x l
+  lowry 255 255 153 says l W r i
+  luigi 255 255 154 says l u i J i
+  lufthansa 255 255 255 says l U f t h a n z x
+  luftwaffe 255 255 254 says l U f t v a f x
+  luther 255 255 155 says l u T x r
+  macintosh 255 255 156 says m A k X n t a@ S
+  maclean 255 255 157 says m x k l e n
+  macleod 255 255 158 says m x k l W d
+  mahon 255 255 160 says m A n
+  malcolm 255 255 161 says m A l k x m
+  manuel 255 255 162 says m a n w E l
+  maria 255 255 163 says m x r i x
+  margaret 255 255 159 says m a r g r X t
+  meier 255 255 165 says m Y x r
+  mercedes 255 255 164 says m x r s e d i z
+  meyer 255 255 165 says m Y x r
+  michaelangelo 255 255 168 stress 20100 says m Y k x l A n J x l o
+  michaelmas 255 255 166 says m I k x l m x s
+  michel 255 255 167 says m X S E l
+  michelangelo 255 255 168 stress 20100 says m Y k x l A n J x l o
+  michele 255 255 167 says m X S E l
+  mitsubishi 255 255 256 says m I t s u b i S i
+  mitterand 255 255 169 says m i t x r a n
+  moore 255 255 171 says m c r
+  moores 255 255 172 says m c r s
+  mohamed 255 255 174 says m x h a m Xx d
+  mohammad 255 255 174 says m x h a m Xx d
+  mohammed 255 255 174 says m x h a m Xx d
+  mongol 255 255 170 says m a@ G g o l
+  montague 255 255 175 says m a@ n t x g y u
+  moses 255 255 173 says m o z X s
+  mozart 255 255 176 says m o t s a r t
+  mugabe 255 255 177 says m u g a b i
+  muhammad 255 255 174 says m x h a m Xx d
+  murray 255 255 178 says m R i
+  navajo 255 255 179 says n a v x h o
+  neil 255 255 180 says n i l
+  neill 255 255 180 says n i l
+  neiman 255 255 181 says n i m x n
+  nikkei 255 255 257 stress 11 says n i k e
+  noah 255 255 182 says n o x
+  noel 255 255 183 says n o x l
+  paolo 255 255 190 says p W l o
+  peres 255 255 191 says p E r E z
+  persephone 255 255 192 says p x r s E f x n i
+  picheny 255 255 195 says p I C E n i
+  piquante 255 255 194 says p i k x n t
+  pugh 255 255 198 says p y u
+  pfeifer 255 255 193 says f Y f x r
+  pfeiffer 255 255 193 says f Y f x r
+  plante 255 255 196 says p l A n t
+  presley 255 255 197 says p r E s l i
+  pythagorean 255 255 199 stress 2010 says p x T A g x r i x n
+  qantas 255 255 258 says k w a@ n t x s
+  quijote 255 255 200 says k i h o t e
+  raoul 255 255 204 says r a u l
+  rachael 255 255 201 says r e C x l
+  rajinder 255 255 202 says r x J I n d x r
+  ramsay 255 255 203 says r A m z i
+  reagan 255 255 205 says r e g Xx n
+  reid 255 255 207 says r i d
+  reuter 255 255 209 says r O t x r
+  reggie 255 255 206 says r E J i
+  remax 255 255 259 says r i m A k s
+  rene 255 255 208 says r x n e
+  reynolds 255 255 210 says r E n x l d z
+  roosevelt 255 255 212 says r o z x v E l t
+  rodriguez 255 255 211 says r a d r i g X z
+  roquefort 255 255 213 says r o k f x r t
+  ros 255 255 214 says r a@ z
+  roxane 255 255 215 says r a@ k s A n
+  sara 255 255 216 says s e r x
+  sawyer 255 255 217 says s O x r
+  sean 255 255 219 says S c n
+  senor 255 255 220 says s E n y c r
+  senora 255 255 221 says s E n y c r x
+  senorita 255 255 222 says s E n y c r i t x
+  senyor 255 255 220 says s E n y c r
+  senyora 255 255 221 says s E n y c r x
+  senyorita 255 255 222 says s E n y c r i t x
+  seymour 255 255 223 says s i m c r
+  sioux 255 255 227 says s u
+  signior 255 255 226 says s i n y c r
+  signor 255 255 226 says s i n y c r
+  sofia 255 255 228 says s o f i x
+  schwarz 255 255 218 says S w c r t s
+  shakespeare 255 255 224 says S e k s p i r
+  shakespearean 255 255 225 says S e k s p i r i Xx n
+  shakespearian 255 255 225 says S e k s p i r i Xx n
+  stanger 255 255 229 says s t A G x r
+  stephane 255 255 230 says s t E f A n
+  stephanie 255 255 232 says s t E f x n i
+  stephen 255 255 231 says s t i v Xx n
+  sylvester 255 255 233 says s X l v E s t x r
+  telemachus 255 255 234 says t x l E m x k x s
+  tokyo 255 255 235 says t o k i o
+  tricia 255 255 236 says t r I S x
+  vaughan 255 255 238 says v c n
+  vaughn 255 255 238 says v c n
+  versace 255 255 239 says v R s a C i
+  vidal 255 255 240 says v i d a l
+  volkswagen 255 255 263 says v c l k s w A g Xx n
+  waugh 255 255 241 says w c
+  weiner 255 255 242 says w i n x r
+  wednesday 255 255 251 says w E n z d e
+  wilhelmina 255 255 243 says w I l x m i n x
+  woolf 255 255 244 says w U l f
+  worcester 255 255 245 says w U s t x r
+  worcestersire 255 255 246 says w U s t x S i r
+  worcestershire 255 255 246 says w U s t x S i r
+  wycoff 255 255 247 says w Y k c f
+  yitzak 255 255 248 says y I t z a k
+  yitzhak 255 255 248 says y I t z a k
+
+dictionary places statement 1 width 0 records sound
+  airdrie 255 255 4 says E r d r i
+  auschwitz 255 255 23 says W S v I t z
+  abu 255 255 1 says a b u
+  adur 255 255 2 says e d x
+  afghanistan 255 255 3 says A f g A n X s t A n
+  alban 255 255 243 says c l b x n
+  albuquerque 255 255 5 says A l b x k x r k i
+  algiers 255 255 6 says A l J i r z
+  allerdale 255 255 7 says A l x d e l
+  alnwick 255 255 8 says A n I k
+  andrei 255 255 9 says a n d r e
+  angeles 255 255 10 says A n J x l x s
+  anglesey 255 255 11 says A G g x l s i
+  ankara 255 255 244 says A G k x r x
+  antares 255 255 12 says A n t a r i z
+  antipodean 255 255 13 says A n t I p x d i Xx n
+  antoinette 255 255 14 says A n t w x n E t
+  appalachian 255 255 15 says A p x l e C Xx n
+  arun 255 255 19 says A r x n
+  argyll 255 255 16 says a r g Y l
+  arkansas 255 255 18 says a r k Xx n s c
+  arles 255 255 17 says a r l z
+  armagh 255 255 245 says a r m a
+  assad 255 255 20 says x s a d
+  assam 255 255 21 says A s A m
+  aston 255 255 246 says A s t x n
+  atherton 255 255 22 says A T x r t Xx n
+  azerbaidzhan 255 255 24 says a z x r b Y J a n
+  azerbaidzhani 255 255 25 says a z x r b Y J a n i
+  azerbaijan 255 255 24 says a z x r b Y J a n
+  azerbaijani 255 255 25 says a z x r b Y J a n i
+  euphrates 255 255 76 says y u f r e t i z
+  ebbw 255 255 267 says E b u
+  ecuador 255 255 73 says E k w x d c r
+  edinburgh 255 255 74 says E d X n b R o
+  england 255 255 75 says I G g l Xx n d
+  evesham 255 255 77 says i v S x m
+  illinois 255 255 108 says I l X n O
+  indochina 255 255 109 says I n d o C Y n x
+  inge 255 255 282 says I G g x
+  iran 255 255 110 says i r a n
+  iraq 255 255 111 says i r a k
+  israel 255 255 112 says I z r i x l
+  italian 255 255 113 says I t A l y Xx n
+  italy 255 255 114 says I t x l i
+  oahu 255 255 166 says x w a h u
+  ojibwa 255 255 167 says o J I b w e
+  ojibway 255 255 167 says o J I b w e
+  omagh 255 255 294 says o m x
+  ukraine 255 255 217 says y u k r e n
+  ukrainian 255 255 218 says y u k r e n i Xx n
+  uraguay 255 255 308 says y U r x g w Y
+  uruguay 255 255 219 says u r x g w Y
+  uruguayan 255 255 220 says u r x g w Y x n
+  utrecht 255 255 309 says y u t r E k t
+  uttlesford 255 255 221 says H t x l z f c d
+  barbados 255 255 26 says b a r b e d o s
+  bassetlaw 255 255 27 says b A s I t l c
+  bayern 255 255 28 says b Y x r n
+  beijing 255 255 29 says b e Z I G
+  belgium 255 255 30 says b E l J x m
+  belvoir 255 255 247 says b i v x r
+  berlin 255 255 248 says b R l I n
+  berwick 255 255 31 says b E r I k
+  betelgeuse 255 255 32 says b i t x l J u s
+  bideford 255 255 249 says b I d X f x r d
+  bissau 255 255 33 says b X s W
+  boise 255 255 38 says b O z i
+  bourgogne 255 255 251 says b c r g o n y x
+  boleyn 255 255 250 says b x l I n
+  bosworth 255 255 39 says b a@ z w x T
+  buenas 255 255 46 says b w E n Xx s
+  buenos 255 255 47 says b w E n Xx s
+  bucharest 255 255 45 says b u k x r E s t
+  budapest 255 255 48 says b u d x p E s t
+  bulawayo 255 255 254 says b U l x w e o
+  bulgaria 255 255 255 says b H l g E r i x
+  burgher 255 255 256 says b R g x r
+  blaenau 255 255 36 says b l Y n Y
+  blaby 255 255 34 says b l e b X
+  blackpool 255 255 35 says b l A k p u l
+  blyth 255 255 37 says b l Y T
+  braintree 255 255 41 says b r e n t r i
+  bracknell 255 255 40 says b r A k n x L
+  bravura 255 255 252 says b r x v y U r x
+  brea 255 255 42 says b r e x
+  brezhnev 255 255 253 says b r E Z n E f
+  bridgend 255 255 43 says b r I J E n d
+  bridgnorth 255 255 44 says b r I J n c T
+  caerphilly 255 255 49 says k R f I l i
+  cairo 255 255 50 says k Y r o
+  caithness 255 255 257 says k e T n E s
+  california 255 255 51 says k A l X f c r n y x
+  caribbean 255 255 52 says k x r I b i x n
+  carnoustie 255 255 258 says k a r n u s t i
+  cayuga 255 255 53 says k x y u g x
+  ceredigion 255 255 54 says k E r x d I g i a@ n
+  ceylon 255 255 55 says s I l a@ n
+  congleton 255 255 62 says k a@ G g x l t x n
+  connecticut 255 255 63 says k Xx n E t I k x t
+  constantinople 255 255 64 says k a@ n s t A n t X n o p x l
+  cumberland 255 255 259 says k H m b x r l x n d
+  chernobyl 255 255 56 says C E r n o b x l
+  cheshire 255 255 57 says C E S I x
+  cheyenne 255 255 58 says S Y A n
+  chichester 255 255 59 says C I C I s t x
+  chile 255 255 60 says C I l i
+  chiswick 255 255 61 says C I z X k
+  crimea 255 255 65 says k r Y m i x
+  crimean 255 255 66 says k r Y m i x n
+  croat 255 255 67 says k r o A t
+  croatia 255 255 68 says k r o e S x
+  croatian 255 255 69 says k r o e S Xx n
+  dagenham 255 255 70 says d A g x n x m
+  dal 255 255 260 says d a l
+  dalton 255 255 261 says d c l t x n
+  daventry 255 255 262 says d A v x n t r i
+  delors 255 255 263 says d x l c r
+  delhi 255 255 71 says d E l i
+  denbighshire 255 255 72 says d E n b i S I x
+  donegal 255 255 264 says d a@ n i g c l
+  dundalk 255 255 265 says d H n d c k
+  durham 255 255 266 says d H r x m
+  fermanagh 255 255 268 says f x r m A n x
+  folkestone 255 255 78 says f o k s t x n
+  forsyth 255 255 269 says f c r s Y T
+  fylde 255 255 79 says f Y l d
+  georgia 255 255 81 says J c r J x
+  gedling 255 255 80 says g E d l I G
+  goebbel 255 255 271 says g R b x l
+  goethe 255 255 272 says g R t x
+  gogh 255 255 273 says g o
+  gorbachev 255 255 274 says g c r b x C a@ f
+  gosport 255 255 275 says g a@ s p c r t
+  gow 255 255 84 says g W
+  guantanamo 255 255 87 says g w a n t a n x m o
+  guernsey 255 255 88 says g R n z i
+  guildford 255 255 90 says g I l f x r d
+  guinea 255 255 89 says g I n i
+  gladstone 255 255 82 says g l A d s t x n
+  glastonbury 255 255 270 stress 1020 says g l A s t x n b x r i
+  gloucester 255 255 83 says g l c@ s t x r
+  grainger 255 255 276 says g r e n J x r
+  greenwich 255 255 85 says g r E n X C
+  grenada 255 255 86 says g r x n e d x
+  gwynedd 255 255 91 says g w I n x D
+  haiti 255 255 93 says h e t i
+  hades 255 255 92 says h e d i z
+  halton 255 255 94 says h c l t x n
+  haringey 255 255 95 says h A r I G g e
+  harlech 255 255 277 says h a r l x k
+  harrod 255 255 278 says h A r x d
+  harrogate 255 255 96 says h A r x g x t
+  hartlepool 255 255 279 says h a r t l X p u l
+  harwich 255 255 97 says h A r X C
+  havant 255 255 99 says h A v x n t
+  hawaii 255 255 98 says h x w Y i
+  hawai'i 255 255 98 says h x w Y i
+  haworth 255 255 280 says h W R T
+  hemingway 255 255 281 says h E m X G w e
+  hereford 255 255 100 says h E r Xx f x r d
+  hertford 255 255 101 says h a r t f x r d
+  hertsmere 255 255 102 says h a t s m i x
+  hillingdon 255 255 103 says h I L I G d x n
+  himalaya 255 255 104 says h I m x l e y x
+  houston 255 255 106 says h y u s t x n
+  honduran 255 255 105 says h a n d R X n
+  humber 255 255 107 says h H m b R
+  janeiro 255 255 115 says Z x n e r o
+  johan 255 255 283 says y o h A n
+  johnstone 255 255 284 says J a@ n s t x n
+  jolla 255 255 116 says h O x
+  karpov 255 255 285 says k a r p a@ f
+  keighley 255 255 117 says k i T l i
+  kensing 255 255 118 says k E n z I G
+  kesteven 255 255 119 says k E s t i v x n
+  keswick 255 255 120 says k E z X k
+  keynes 255 255 286 says k i n z
+  kiev 255 255 121 says k i E v
+  kilmarnock 255 255 288 says k I l m a r n x k
+  klingon 255 255 122 says k l I G a n
+  krushchev 255 255 287 says k r U S C a@ f
+  laos 255 255 126 says l a o s
+  ladbroke 255 255 125 says l A d b r U k
+  lagos 255 255 123 says l e g o s
+  lambeth 255 255 124 says l A m b x T
+  leicester 255 255 127 says l E s t x r
+  liechtenstein 255 255 132 says l I k t Xx n s t Y n
+  liberia 255 255 128 says l Y b i r i x
+  liberian 255 255 129 says l Y b i r i x n
+  libya 255 255 130 says l I b i x
+  lichfield 255 255 131 says l I C f i l d
+  louisiana 255 255 133 says l u i z i A n x
+  lough 255 255 289 says l H f
+  louvre 255 255 134 says l u v
+  lumpur 255 255 135 says l H m p u r
+  maidstone 255 255 138 says m e d s t x n
+  mainwaring 255 255 290 says m A n x r I G
+  macclesfield 255 255 136 says m A k x l z f i l d
+  mahal 255 255 137 says m x h a l
+  maldon 255 255 139 says m c l d x n
+  malvern 255 255 291 says m c l v x r n
+  maradona 255 255 292 says m A r x d a@ n x
+  margot 255 255 293 says m a r g o
+  marseilles 255 255 140 says m a r s e
+  marylebone 255 255 141 says m A r l Xx b x n
+  massachusetts 255 255 142 says m A s x C u s Xx t s
+  mediterranean 255 255 143 says m E F X t x r e n i Xx n
+  merced 255 255 144 says m x r s E d
+  merseyside 255 255 145 says m R z X s Y d
+  middlesbrough 255 255 146 says m I d x l z b r x
+  missouri 255 255 147 says m X z R i
+  moines 255 255 149 says m O n
+  moorlands 255 255 155 says m c l x n d z
+  mogadishu 255 255 148 says m o g x d i S u
+  montana 255 255 150 says m a n t A n x
+  monterey 255 255 151 says m a n t x r e
+  montpelier 255 255 152 says m a n t p i l y R
+  montreal 255 255 153 says m a@ n t r i c l
+  montreux 255 255 154 says m a n t r o
+  morecambe 255 255 156 says m c r k x m
+  myanmar 255 255 157 says m y a n m a r
+  nairobi 255 255 158 says n Y r o b i
+  nepal 255 255 159 says n E p a l
+  neptune 255 255 160 says n E p t u n
+  netanyahu 255 255 161 says n E t x n y a h u
+  niagara 255 255 162 says n Y A g r x
+  nicosia 255 255 163 says n I k x s i x
+  nigeria 255 255 164 says n Y J i r i x
+  nuneaton 255 255 165 says n H n i t x n
+  palermo 255 255 168 says p x l R m o
+  panmunjom 255 255 169 says p A n m u n J a m
+  penzance 255 255 295 says p E n z A n s
+  portuguese 255 255 172 says p c r C x g i z
+  powys 255 255 173 says p o I s
+  powys 255 255 296 says p W X s
+  puerto 255 255 174 says p w e r t o
+  pulaski 255 255 175 says p x l A s k i
+  phnom 255 255 170 says p x n a@ m
+  plymouth 255 255 171 says p l I m x T
+  pyongyang 255 255 176 stress 11 says p y H G y a G
+  quandary 255 255 297 says k w a@ n d R i
+  quito 255 255 177 says k i t o
+  raleigh 255 255 178 says r a l i
+  reigate 255 255 180 says r Y g e t
+  redcar 255 255 179 says r E d k a
+  regnier 255 255 181 says r E n y e
+  restormel 255 255 182 says r E s t c m E l
+  reykjavik 255 255 183 says r e k y x v X k
+  roquefort 255 255 298 says r a@ k f c r t
+  rother 255 255 184 says r a@ D x
+  rotherham 255 255 185 says r a@ D x r x m
+  runnymede 255 255 186 says r H n X m i d
+  rushmore 255 255 187 says r H S m c
+  rutland 255 255 188 says r H t l x n d
+  rutland 255 255 299 says r H t l x n d
+  sahara 255 255 189 says s x h e r x
+  salisbury 255 255 190 says s c l z b x r i
+  salford 255 255 300 says s c l f x r d
+  sarajevo 255 255 191 says s A r x y e v o
+  seattle 255 255 192 says s i A t x l
+  seoul 255 255 193 says s o l
+  siobhan 255 255 200 says S x v a@ n
+  siberia 255 255 197 says s Y b i r i x
+  siberian 255 255 198 says s Y b i r i Xx n
+  sichuan 255 255 205 says s E C w a n
+  sinai 255 255 199 says s Y n Y
+  southwark 255 255 201 says s H D x r k
+  solihull 255 255 301 says s a@ l i h H l
+  suiz 255 255 303 says s u X z
+  sucre 255 255 203 says s u k r e
+  shanghai 255 255 194 says S A G h Y
+  sheila 255 255 195 says S i l x
+  shrewsbury 255 255 196 says S r u z b x r X
+  stranraer 255 255 302 says s t r A n r x r
+  strasbourg 255 255 202 says s t r a s b x r g
+  swansea 255 255 204 says s w a@ n z i
+  szechwan 255 255 205 says s E C w a n
+  taj 255 255 206 says t a Z
+  talbot 255 255 304 says t c l b x t
+  tanzania 255 255 207 says t A n z x n i x
+  teheran 255 255 208 says t e r a n
+  tijuana 255 255 211 says t i w a n x
+  toulouse 255 255 213 says t u l u z
+  tolstoy 255 255 305 says t a@ l s t O
+  torquay 255 255 212 says t c r k i
+  toshiba 255 255 306 says t x S i b x
+  tucson 255 255 215 says t u s a n
+  thames 255 255 209 says t E m z
+  thurrock 255 255 210 says T H r x k
+  trafford 255 255 214 says t r A f x d
+  transkei 255 255 307 says t r A n s k Y
+  tydfil 255 255 216 says t I d v I l
+  vancouver 255 255 222 says v A n k u v x r
+  venezuelan 255 255 223 says v E n Xx z w e l x n
+  versailles 255 255 224 says v x r s Y
+  vietnam 255 255 225 says v i E t n a m
+  volga 255 255 310 says v a@ l g x
+  walsall 255 255 226 says w c s c l
+  walsall 255 255 311 says w a@ l s c l
+  warwick 255 255 227 says w c@ r X k
+  waveney 255 255 228 says w A v x n i
+  welwyn 255 255 229 says w E l I n
+  westmoreland 255 255 312 says w E s t m x r l x n d
+  westmorland 255 255 312 says w E s t m x r l x n d
+  wigan 255 255 314 says w I g x n
+  wilkes 255 255 230 says w I l k s
+  wimbledon 255 255 231 says w I m b x l d x n
+  wokingham 255 255 232 says w o k I G x m
+  whalley 255 255 313 says w a@ l i
+  wrekin 255 255 234 says r i k I n
+  wyoming 255 255 233 says w Y o m I G
+  wycombe 255 255 315 says w I k x m
+  yeovil 255 255 316 says y o v X l
+  yosemite 255 255 235 says y o s E m X t i
+  yugoslavia 255 255 236 says y u g x s l a v i x
+  yugoslavian 255 255 237 says y u g x s l a v i x n
+  zaire 255 255 238 says z Y i r
+  zairean 255 255 239 says z Y i r i Xx n
+  zairian 255 255 239 says z Y i r i Xx n
+  zimbabwe 255 255 240 says z I m b a b w e
+  zimbabwean 255 255 241 says z I m b a b w i Xx n
+  zouch 255 255 317 says z u S
+  zurich 255 255 242 says z U r X k
+
+dictionary roots1a statement 1 width 0 records sound
+  aisle 255 255 13 says Y l
+  aubergine 255 255 60 says o b x r Z i n
+  aunt 255 255 61 says Aa n t
+  auntie 255 255 62 says Aa n t i
+  aunty 255 255 62 says Aa n t i
+  auteur 255 255 63 says o t R
+  auxiliary 255 255 64 says c g z I l y x r i
+  abalone 255 255 1 stress 2010 says A b x l o n i
+  aborigine 255 255 3 stress 20100 says A b x r I J X n i
+  ably 255 255 2 says e b l i
+  absurd 255 255 4 says x b s R d
+  absurdity 255 255 5 says x b s R d X t i
+  acorn 255 255 8 says e k c r n
+  ache 255 255 6 says e k
+  acknowledg 255 255 7 says Xx k n a@ l X J
+  acknowledge 255 255 7 says Xx k n a@ l X J
+  adjectival 255 255 9 says A J X k t Y v x l
+  adjourn 255 255 10 says x J R n
+  affidavit 255 255 11 says A f x d e v X t
+  agate 255 255 12 says A g Xx t
+  alibi 255 255 15 says A l X b Y
+  algorithm 255 255 14 says A l g x r I D x m
+  allege 255 255 16 says x l E J
+  allele 255 255 17 says x l i l
+  allow 255 255 18 says x l W
+  almond 255 255 19 says a m x n d
+  alsatian 255 255 20 says A l s e S x n
+  alto 255 255 21 says A l t o
+  amateur 255 255 22 says A m x C x r
+  ameliorate 255 255 26 says x m i l y x r e t
+  amen 255 255 27 says e y m E n
+  ambiguate 255 255 23 says A m b I g y u e t
+  ambiguation 255 255 24 says A m b I g y u e S Xx n
+  ambiguity 255 255 25 says A m b X g y u X t i
+  amphetamine 255 255 28 stress 2102 says A m f E t x m i n
+  amphitheater 255 255 29 says A m f X T i x t x r
+  anarchic 255 255 30 stress 210 says A n a r k X k
+  anarchy 255 255 31 says A n x r k i
+  aneurism 255 255 34 says A n y x r I z x m
+  aneurysm 255 255 34 says A n y x r I z x m
+  anemone 255 255 33 says x n E m x n i
+  anise 255 255 35 says A n I s
+  ancient 255 255 32 says e n C Xx n t
+  annihilate 255 255 36 says x n Y x l e t
+  annihilation 255 255 37 says x n Y x l e S Xx n
+  answer 255 255 38 says Aa n s x r
+  antenatal 255 255 39 says A n t i n e t x l
+  anxiety 255 255 40 says A G z Y Xx t i
+  any 255 255 41 says E n i
+  apotheosis 255 255 43 says x p a@ T i o s X s
+  aphid 255 255 42 says e f I d
+  appetit 255 255 44 says a p Xx t i
+  appropriation 255 255 45 says x p r o p r i e S Xx n
+  arithmetically 255 255 49 says e r X T m E t I k l i
+  arbitrage 255 255 46 says a r b X t r a Z
+  architectural 255 255 47 says a r k X t E k C x r x l
+  argue 255 255 48 says a r g y u
+  armoury 255 255 50 says a r m x r i
+  asap 255 255 51 says e s A p
+  asean 255 255 53 says a s i a n
+  asiatic 255 255 54 says e Z i A t X k
+  ascii 255 255 52 says A s k i
+  asthma 255 255 55 says A z m x
+  asthmatic 255 255 56 says A z m A t X k
+  athe 255 255 57 says e T i
+  attache 255 255 58 says A t A S e
+  attorney 255 255 59 says x t R n i
+  avant 255 255 65 says A v a n t
+  avon 255 255 66 says e v a n
+  away 255 255 67 says x w e
+  awfully 255 255 68 says c f l i
+  ayatollah 255 255 69 says Y x t o l x
+  azure 255 255 70 says A Z x r
+  badminton 255 255 71 says b A d m I t Xx n
+  bagel 255 255 72 says b e g x l
+  ballet 255 255 73 says b A l e
+  barrage 255 255 74 says b R a Z
+  bayou 255 255 75 says b Y y u
+  bazooka 255 255 76 says b x z u k x
+  beaucoup 255 255 78 says b o k u
+  beautification 255 255 81 says b y u t X f X k e S Xx n
+  beautiful 255 255 79 says b y u t X f x l
+  beautifully 255 255 82 says b y u t Xx f l i
+  beautify 255 255 80 says b y u t X f Y
+  beauty 255 255 83 says b y u t i
+  beatify 255 255 77 says b i A t X f Y
+  beige 255 255 86 says b e Z
+  bebop 255 255 84 says b i b a@ p
+  behaviour 255 255 85 says b X h e v y x r
+  behavior 255 255 85 says b X h e v y x r
+  beleaguer 255 255 87 says b x l i g x r
+  beloved 255 255 88 says b x l H v X d
+  beret 255 255 89 says b x r e
+  betroth 255 255 90 says b x t r o D
+  biennial 255 255 92 says b Y E n i x l
+  bidet 255 255 91 says b i d e
+  billionaire 255 255 93 says b I l y Xx n e r
+  binomial 255 255 94 says b Y n o m i x l
+  biped 255 255 95 says b Y p E d
+  biscuit 255 255 96 says b I s k X t
+  boer 255 255 103 says b u r
+  booger 255 255 104 says b U g x r
+  bouillon 255 255 110 says b u l y x n
+  bough 255 255 109 says b W
+  boulevard 255 255 111 says b U l x v a r d
+  boundary 255 255 112 says b W n d r i
+  bouquet 255 255 113 says b u k e
+  bourgeois 255 255 114 says b u r Z w a
+  bourgeoisie 255 255 115 says b u r Z w a z i
+  bonhomie 255 255 105 says b a@ n x m i
+  borough 255 255 106 says b R o
+  borrough 255 255 106 says b R o
+  borrow 255 255 107 says b a@ r o
+  bosom 255 255 108 says b U z x m
+  bower 255 255 116 says b W x r
+  bowl 255 255 117 says b o l
+  bueno 255 255 131 says b w e n o
+  buick 255 255 132 says b y u X k
+  build 255 255 133 says b I l d
+  built 255 255 134 says b I l t
+  builtin 255 255 135 says b I l t I n
+  buoy 255 255 137 says b u w i
+  buoyancy 255 255 138 says b O Xx n s i
+  buoyant 255 255 139 says b O Xx n t
+  buddh 255 255 129 says b u d
+  buddha 255 255 130 says b u d x
+  bullion 255 255 136 says b U l y x n
+  bureaucracy 255 255 140 says b y R a@ k r Xx s i
+  bureaucrat 255 255 141 says b y u r x k r A t
+  bureaucratic 255 255 142 says b y R x k r A t X k
+  burial 255 255 143 says b e r i x l
+  burrough 255 255 106 says b R o
+  bury 255 255 144 says b e r i
+  business 255 255 145 says b I z n Xx s
+  busy 255 255 146 says b I z i
+  blackguard 255 255 97 says b l A g x r d
+  blancmange 255 255 98 says b l x m c n Z
+  blood 255 255 99 says b l H d
+  bloody 255 255 100 says b l H d i
+  blown 255 255 101 says b l o n
+  bludgeon 255 255 102 says b l H J Xx n
+  brassiere 255 255 118 says b r x z i r
+  brazier 255 255 119 says b r e z i x r
+  breast 255 255 120 says b r E s t
+  breathy 255 255 121 says b r E T i
+  brigadier 255 255 122 says b r I g x d i r
+  broad 255 255 123 says b r c d
+  broaden 255 255 124 says b r c d Xx n
+  brooch 255 255 126 says b r o C
+  brochure 255 255 125 says b r o S u r
+  brow 255 255 127 says b r W
+  browse 255 255 128 says b r W z
+  cauliflower 255 255 163 says k a@ l I f l W x r
+  cabal 255 255 147 says k x b a l
+  cabaret 255 255 148 says k A b x r e
+  cacciatore 255 255 149 says k A C x t c r i
+  caffeine 255 255 150 says k A f i n
+  cahoots 255 255 151 says k x h u t s
+  calle 255 255 152 says k a y e
+  camouflage 255 255 153 says k A m x f l a Z
+  canoe 255 255 154 says k x n u
+  carbohydrate 255 255 155 stress 2012 says k a r b o h Y d r e t
+  carriage 255 255 156 says k e r X J
+  caryatid 255 255 157 says k A r i A t X d
+  casein 255 255 159 says k e s i n
+  cashier 255 255 158 says k A S i r
+  cassowary 255 255 160 says k A s x w E r i
+  catholic 255 255 161 says k A T l X k
+  catholicism 255 255 162 says k x T a@ l Xx s I z x m
+  cavalier 255 255 164 says k A v x l i r
+  caveat 255 255 165 says k A v i a t
+  caviar 255 255 166 says k A v i a r
+  caviare 255 255 166 says k A v i a r
+  ceiling 255 255 167 says s i l I G
+  cellist 255 255 168 says C E l X s t
+  cello 255 255 169 says C E l o
+  cellular 255 255 170 says s E l y x l x r
+  cellulose 255 255 171 says s E l y x l o s
+  censure 255 255 172 says s E n S x r
+  centi 255 255 174 says s E n t X
+  centime 255 255 173 says s a@ n t i m
+  ciao 255 255 197 says C W
+  cicada 255 255 199 says s X k e d x
+  circuit 255 255 200 says s x r k X t
+  coercion 255 255 207 says k o R Z Xx n
+  cough 255 255 232 says k c@ f
+  coup 255 255 233 says k u
+  coupon 255 255 234 says k u p a@ n
+  courage 255 255 235 says k x r X J
+  courier 255 255 236 says k R i x r
+  courgette 255 255 237 says k u r Z E t
+  couture 255 255 238 says k u t u r
+  cocoa 255 255 206 says k o k o
+  cognac 255 255 208 says k a@ n y A k
+  colonel 255 255 210 says k R n x l
+  columnist 255 255 211 says k a@ l x m n I s t
+  collage 255 255 209 says k x l a Z
+  comer 255 255 212 says k H m x r
+  comfortable 255 255 213 says k H m f t x r b x l
+  commandeer 255 255 214 says k a@ m x n d i r
+  communique 255 255 215 says k x m y u n X k e
+  communism 255 255 216 says k a@ m y x n I z x m
+  comparable 255 255 217 says k a m p r x b x l
+  comptroller 255 255 218 says k Xx n t r o l x r
+  concerto 255 255 219 says k Xx n C E r t o
+  confidante 255 255 220 says k a n f X d a n t
+  contiguity 255 255 221 says k a@ n t X g y u X t i
+  continuum 255 255 222 says k Xx n t I n y u x m
+  contribute 255 255 223 says k x n t r I b y u t
+  convey 255 255 224 says k Xx n v e
+  cordial 255 255 226 says k c r J x l
+  corporate 255 255 225 says k o r p r X t
+  corps 255 255 227 says k c r
+  corral 255 255 229 says k x r A l
+  corsage 255 255 228 says k c r s a Z
+  cosmos 255 255 230 says k a@ z m o s
+  coterie 255 255 231 says k o t x r i
+  covetous 255 255 239 says k H v Xx t Xx s
+  cow 255 255 240 says k W
+  coward 255 255 241 says k W x r d
+  coyote 255 255 242 says k Y o t i
+  cuisine 255 255 251 says k w X z i n
+  cupboard 255 255 250 says k H b x r d
+  curate 255 255 252 says k y R Xx t
+  curmudgeon 255 255 253 says k R m H J Xx n
+  cushion 255 255 254 says k U S Xx n
+  chauffeur 255 255 183 says S o f x r
+  chauvin 255 255 184 says S o v X n
+  chablis 255 255 175 says S x b l i
+  chalet 255 255 176 says S A l e
+  chamois 255 255 179 says S A m i
+  chamber 255 255 177 says C e m b x r
+  chamberlain 255 255 178 says C e m b x r l X n
+  chandelier 255 255 180 says S A n d x l i r
+  changeling 255 255 181 says C e n J l I G
+  chassis 255 255 182 says C A s i
+  chemise 255 255 185 says S X m i z
+  cheroot 255 255 186 says S Xx r u t
+  chevy 255 255 187 says S E v i
+  chez 255 255 188 says S e
+  chic 255 255 189 says S i k
+  chihuahua 255 255 190 says C X w a w x
+  chili 255 255 191 says C I l i
+  chiropractic 255 255 192 says k Y r o p r A k t X k
+  chiropractor 255 255 193 says k Y r o p r A k t x r
+  choir 255 255 195 says k w Y r
+  chocolate 255 255 194 says C c@ k l Xx t
+  chorale 255 255 196 says k x r A l
+  chow 255 255 197 says C W
+  christmas 255 255 198 says k r I s m x s
+  classificatory 255 255 201 says k l A s X f I k x t c r i
+  cleanliness 255 255 202 says k l E n l i n Xx s
+  cleanse 255 255 203 says k l E n z
+  cliche 255 255 204 says k l i S e
+  cliquey 255 255 205 says k l i k i
+  creme 255 255 243 says k r E m
+  crepe 255 255 244 says k r e p
+  crescendo 255 255 245 says k r Xx S E n d o
+  criteria 255 255 246 says k r a y t I r i x
+  criterion 255 255 247 says k r a y t I r i Xx n
+  croissant 255 255 248 says k r x s a n t
+  croquet 255 255 249 says k r o k e
+  czar 255 255 255 says z a r
+  tsar 255 255 255 says z a r
+
+dictionary roots1b statement 1 width 0 records sound
+  eerily 255 255 62 says i r X l i
+  eighteen 255 255 64 says e t t i n
+  eighteenth 255 255 65 says e t t i n T
+  eighteenthe 255 255 65 says e t t i n T
+  eighth 255 255 66 says e t T
+  either 255 255 67 says i D x r
+  european 255 255 101 says y R r x p i x n
+  echelon 255 255 58 says E S x l a@ n
+  eczema 255 255 59 says E k z X m x
+  educable 255 255 61 says E J X k x b x l
+  edh 255 255 60 says E D
+  eh 255 255 63 says e
+  electronic 255 255 68 says X l E k t r a n I k
+  elitism 255 255 69 says X l i t I z m
+  elongate 255 255 70 says i l c@ G g e t
+  emigre 255 255 73 says E m X g r e
+  embouchure 255 255 71 says a@ m b x S x r
+  empiricist 255 255 74 says E m p I r X s X s t
+  employee 255 255 72 says E m p l O y i
+  enough 255 255 82 says X n H f
+  enumerable 255 255 90 says X n u m x r x b x l
+  enumere 255 255 89 says X n u m x r
+  encore 255 255 76 says a@ G k c r
+  enclave 255 255 75 says a n k l e v
+  endow 255 255 77 says X n d W
+  endtable 255 255 81 says E n d t e b x l
+  english 255 255 78 says I G g l I S
+  ennui 255 255 79 says a n w i
+  ensemble 255 255 80 says a@ n s a@ m b x l
+  entendre 255 255 83 says a n t a n d
+  entente 255 255 84 says a n t a n t
+  entourage 255 255 85 says a@ n t x r a Z
+  entree 255 255 86 says a@ n t r e
+  entrepreneur 255 255 87 says a@ n t r x p r x n R
+  entrepreneurial 255 255 88 says a@ n t r x p r x n R i x l
+  environment 255 255 91 says X n v Y x r n m Xx n t
+  epee 255 255 92 says E p e
+  epitome 255 255 93 says X p I t x m i
+  equation 255 255 94 says X k w e Z Xx n
+  era 255 255 95 says i r x
+  erasure 255 255 96 says X r e S x r
+  eschew 255 255 97 says X s C u
+  espionage 255 255 98 says E s p i x n a Z
+  esprit 255 255 99 says X s p r i
+  ether 255 255 100 says i T x r
+  evacuee 255 255 102 says X v A k y u i
+  evening 255 255 103 says i v n I G
+  every 255 255 104 says E v r i
+  evidence 255 255 105 says E v X d Xx n s
+  exaggerate 255 255 106 says X g z A J x r e t
+  exaggeration 255 255 107 says X g z A J x r e S Xx n
+  exeunt 255 255 111 says E k s I U n t
+  exec 255 255 110 says X g z E k
+  exchequer 255 255 108 says X k s C E k x r
+  exclusivity 255 255 109 says E k s k l u s I v X t i
+  exhalant 255 255 112 says X k s h e l X n t
+  exhalation 255 255 114 says E k s h x l e S Xx n
+  exhale 255 255 113 says E k s h e l
+  exhortation 255 255 115 says E g z c r t e S Xx n
+  exhumation 255 255 116 says E g z y u m e S Xx n
+  exhume 255 255 117 says X g z y u m
+  expediency 255 255 118 says X k s p i d y Xx n s i
+  expertise 255 255 119 says E k s p x r t i z
+  exploitation 255 255 120 says E k s p l c y t e S Xx n
+  extraordinarily 255 255 122 says E k s t r c r d I n e r X l i
+  extraordinary 255 255 121 says E k s t r c r d I n e r i
+  eye 255 255 123 says Y
+  eyed 255 255 124 says Y d
+  dandelion 255 255 2 says d A n d X l Y x n
+  danger 255 255 3 says d e n J x r
+  data 255 255 4 says d e t x
+  deutsch 255 255 23 says d O C
+  deutsche 255 255 23 says d O C
+  debauch 255 255 6 says d x b c C
+  debacle 255 255 5 says d e b a k x l
+  debut 255 255 9 says d e b y u
+  debutante 255 255 10 says d E b y u t a n t
+  debris 255 255 7 says d x b r i
+  debtor 255 255 8 says d E t x r
+  deci 255 255 11 says d E s X
+  decor 255 255 12 says d e k c r
+  deja 255 255 13 says d e Z a
+  denouement 255 255 15 says d e n u m c
+  denotative 255 255 14 says d X n o t x t X v
+  departmental 255 255 16 says d X p a r t m E n t x l
+  depot 255 255 17 says d i p o
+  dessert 255 255 18 says d X z R t
+  detente 255 255 19 says d e t a n t
+  deterrence 255 255 20 says d X t R X n s
+  deterrent 255 255 21 says d X t R X n t
+  devour 255 255 22 says d X v W r
+  diabetes 255 255 24 says d Y x b i t i z
+  diem 255 255 26 says d i E m
+  dichotomy 255 255 25 says d Y k a t x m i
+  dinghy 255 255 27 says d I G i
+  discourage 255 255 30 says d X s k R X J
+  discoteque 255 255 29 says d I s k o t E k
+  discotheque 255 255 29 says d I s k o t E k
+  discharge 255 255 28 says d I s C a r J
+  discrepancy 255 255 31 says d X s k r E p Xx n s i
+  dishearten 255 255 32 says d X s h a r t x n
+  dismount 255 255 33 says d I s m W n t
+  dissection 255 255 34 says d Y s E k S Xx n
+  dissolve 255 255 35 says d X z a@ l v
+  distribute 255 255 36 says d X s t r I b y u t
+  do 255 255 37 says d u
+  does 255 255 38 says d H z
+  door 255 255 41 says d c r
+  doubly 255 255 42 says d H b l i
+  domaine 255 255 40 says d o m e n
+  done 255 255 39 says d H n
+  doves 255 255 43 says d H v z
+  dowager 255 255 44 says d W X J x r
+  downtown 255 255 45 says d W n t W n
+  downwind 255 255 46 says d W n w I n d
+  dowry 255 255 47 says d W r i
+  dumbfound 255 255 53 says d H m f W n d
+  dutifully 255 255 54 says d u t X f l i
+  draught 255 255 49 says d r A f t
+  dramatist 255 255 48 says d r a m x t I s t
+  drawer 255 255 50 says d r c r
+  drought 255 255 51 says d r W t
+  drowse 255 255 52 says d r W z
+  dysentery 255 255 57 says d I s Xx n t e r i
+  dyslexia 255 255 55 says d X s l E k s i x
+  dyslexic 255 255 56 says d X s l E k s X k
+  d'oeuvre 255 255 1 says d R v
+  faux 255 255 135 says f o
+  facade 255 255 125 says f x s a d
+  fahrenheit 255 255 126 says f e r Xx n h Y t
+  family 255 255 127 says f A m l i
+  fancifully 255 255 128 says f A n s X f l i
+  farewell 255 255 129 says f e r w E l
+  farthest 255 255 130 says f a r D x s t
+  fascism 255 255 131 says f A S I z x m
+  fascist 255 255 132 says f A S X s t
+  fashion 255 255 133 says f A S Xx n
+  fathom 255 255 134 says f A D x m
+  feather 255 255 136 says f E D x r
+  feline 255 255 137 says f i l Y n
+  female 255 255 138 says f i m e l
+  fete 255 255 139 says f e t
+  fettucine 255 255 140 stress 2010 says f E t x C i n i
+  fettuccine 255 255 140 stress 2010 says f E t x C i n i
+  fiance 255 255 141 says f i a@ n s e
+  fiancee 255 255 141 says f i a@ n s e
+  fiend 255 255 143 says f i n d
+  fiesta 255 255 144 says f i E s t x
+  fibrosis 255 255 142 says f Y b r o s X s
+  filet 255 255 145 says f I l e
+  financial 255 255 146 says f Y n A n S x l
+  financier 255 255 147 says f I n A n s i r
+  foot 255 255 153 says f U t
+  footsie 255 255 154 says f U t s i
+  footsy 255 255 154 says f U t s i
+  four 255 255 155 says f c r
+  fourteen 255 255 156 says f c r t i n
+  fourteene 255 255 156 says f c r t i n
+  fourteenthe 255 255 157 says f c r t i n T
+  fourth 255 255 158 says f c r T
+  focaccia 255 255 152 says f x k a S x
+  foccaccia 255 255 152 says f x k a S x
+  fuchsia 255 255 166 says f y u S x
+  fungi 255 255 167 says f H G g Y
+  fuselage 255 255 168 says f y u s x l a Z
+  flood 255 255 148 says f l H d
+  floor 255 255 149 says f l c r
+  flourish 255 255 150 says f l R I S
+  flown 255 255 151 says f l o n
+  frankenstein 255 255 159 says f r A G k Xx n s t Y n
+  freudian 255 255 160 says f r O d i Xx n
+  frey 255 255 161 says f r i
+  friend 255 255 162 says f r E n d
+  frontier 255 255 163 says f r H n t i r
+  fruit 255 255 164 says f r u t
+  fruity 255 255 165 says f r u t i
+
+dictionary roots2 statement 1 width 0 records sound
+  icelandic 255 255 89 says Y s l A n d X k
+  iconoclast 255 255 90 says Y k a n x k l A s t
+  iconoclastic 255 255 91 says Y k a n x k l A s t I k
+  ideal 255 255 92 says Y d i l
+  idealistic 255 255 93 says Y d i l I s t I k
+  idling 255 255 94 says Y d l I G
+  imagery 255 255 95 says I m X J r i
+  impetigo 255 255 96 says I m p x t Y g o
+  impugn 255 255 97 says X m p y u n
+  inure 255 255 112 says X n y u r
+  incarnate 255 255 98 says X n k a r n e t
+  incarnation 255 255 99 says I n k a r n e S Xx n
+  inchoative 255 255 100 says I n k o x t X v
+  incline 255 255 101 says I G k l Y n
+  indict 255 255 102 says X n d Y t
+  indoeuropean 255 255 103 says I n d o y R x p i x n
+  indoor 255 255 104 says I n d c r
+  indoors 255 255 105 says I n d c r z
+  indubite 255 255 106 says I n d u b X t
+  infantry 255 255 107 says I n f Xx n t r i
+  infestation 255 255 108 says I n f E s t e S x n
+  injudicious 255 255 109 says I n J u d I S x s
+  insouciant 255 255 110 says I n s u s i x n t
+  interest 255 255 111 says I n t r X s t
+  iron 255 255 113 says Y x r n
+  isosceles 255 255 116 says Y s a s x l i z
+  island 255 255 114 says Y l Xx n d
+  isle 255 255 115 says Y l
+  oases 255 255 256 says o e s i z
+  oasis 255 255 255 says o e s X s
+  ouija 255 255 273 says w i J i
+  obeisance 255 255 257 says o b e s Xx n s
+  obey 255 255 258 says o b e
+  obituary 255 255 259 says o b I C u e r i
+  ocean 255 255 260 says o S Xx n
+  oceanic 255 255 261 says o S i A n I k
+  oceanography 255 255 262 says o S Xx n a@ g r x f i
+  odometer 255 255 263 says o d a@ m X t x r
+  often 255 255 264 says c@ f Xx n
+  ok 255 255 265 says o k e
+  oleomargarine 255 255 266 says o l i o m a r J x r X n
+  omelet 255 255 267 says a@ m l Xx t
+  omelette 255 255 267 says a@ m l Xx t
+  one 255 255 268 says w H n
+  oneself 255 255 269 says w H n s E l f
+  onomatopoeia 255 255 270 says a@ n x m a t x p i x
+  opera 255 255 271 says a@ p r x
+  other 255 255 272 says H D x r
+  over 255 255 274 says o v x r
+  overly 255 255 275 says o v x r l i
+  ow 255 255 276 says W
+  own 255 255 277 says o n
+  gauche 255 255 4 says g o S
+  gauge 255 255 5 says g e J
+  gala 255 255 1 says g e l x
+  garage 255 255 2 says g x r a Z
+  gaseous 255 255 3 says g A S x s
+  geisha 255 255 6 says g e S x
+  gemini 255 255 7 says J E m X n Y
+  genius 255 255 8 says J i n y x s
+  genre 255 255 9 says Z a n r x
+  gestapo 255 255 10 says g X s t a p o
+  geyser 255 255 11 says g Y z x r
+  giant 255 255 12 says J Y x n t
+  gigantic 255 255 13 says J Y g A n t X k
+  gigolo 255 255 14 says J I g x l o
+  ginger 255 255 15 says J I n J x r
+  gingko 255 255 16 says g I G k o
+  give 255 255 17 says g I v
+  given 255 255 18 says g I v Xx n
+  giver 255 255 19 says g I v x r
+  goer 255 255 22 says g o x r
+  good 255 255 23 says g U d
+  goodbye 255 255 24 says g U d b Y
+  gourmet 255 255 25 says g c r m e
+  guacamole 255 255 33 says g w a k x m o l i
+  guaranty 255 255 34 says g A r x n t i
+  guatemalan 255 255 35 says g w a t Xx m a l Xx n
+  guillotine 255 255 36 says g i y x t i n
+  gunwale 255 255 37 says g H n x l
+  glacier 255 255 20 says g l e S x r
+  glaswegian 255 255 21 says g l A z w i J Xx n
+  graham 255 255 26 says g r e x m
+  grandam 255 255 27 says g r a n d a m
+  grandma 255 255 28 says g r A m x
+  grandpa 255 255 29 says g r A m p x
+  gravure 255 255 30 says g r x v y U r
+  grocery 255 255 31 says g r o s r i
+  grown 255 255 32 says g r o n
+  gynaecological 255 255 40 says g Y n Xx k x l a@ J X k x l
+  gynaecologist 255 255 39 says g Y n Xx k a@ l x J X s t
+  gynaecology 255 255 38 says g Y n Xx k a@ l x J i
+  gynecological 255 255 40 says g Y n Xx k x l a@ J X k x l
+  gynecologist 255 255 39 says g Y n Xx k a@ l x J X s t
+  gynecology 255 255 38 says g Y n Xx k a@ l x J i
+  haemorrhage 255 255 61 says h E m r X J
+  haemorrhoid 255 255 62 says h E m x r O d
+  haiku 255 255 42 says h Y k u
+  haute 255 255 47 says h o t
+  hallelujah 255 255 41 says h A l X l u y x
+  handsome 255 255 43 says h A n s x m
+  hangar 255 255 44 says h A G x r
+  haphazard 255 255 45 says h A p h A z x r d
+  harangue 255 255 46 says h x r A G
+  hawaiian 255 255 48 says h x w Y x n
+  heard 255 255 49 says h R d
+  hearse 255 255 50 says h R s
+  hearth 255 255 51 says h a r T
+  heathen 255 255 52 says h i D x n
+  heighten 255 255 54 says h Y t Xx n
+  heir 255 255 55 says e r
+  heirloom 255 255 56 says e r l u m
+  heist 255 255 57 says h Y s t
+  hebrew 255 255 53 says h i b r u
+  heli 255 255 58 says h E l X
+  helices 255 255 59 says h E l x s i z
+  hematite 255 255 60 says h i m x t Y t
+  hemorrhage 255 255 61 says h E m r X J
+  hemorrhoid 255 255 62 says h E m x r O d
+  hereabout 255 255 63 says h i r x b W t
+  heroin 255 255 64 says h E r o X n
+  heroine 255 255 64 says h E r o X n
+  heroism 255 255 65 says h E r o X z x m
+  herpes 255 255 66 says h R p i z
+  hieroglyphic 255 255 67 says h Y r o g l I f X k
+  hireling 255 255 68 says h Y x r l I G
+  hood 255 255 79 says h U d
+  hour 255 255 81 says W r
+  house 255 255 82 says h W z or h W s
+  homage 255 255 70 says a@ m X J
+  homemade 255 255 69 says h o m e d
+  homophone 255 255 71 says h a@ m x f o n
+  honest 255 255 72 says a@ n X s t
+  honesty 255 255 73 says a@ n X s t i
+  honor 255 255 74 says a@ n x r
+  honoraria 255 255 76 says a@ n x r e r i x
+  honorarium 255 255 77 says a@ n x r e r i x m
+  honorary 255 255 75 says a@ n x r e r i
+  honorific 255 255 78 says a@ n x r I f X k
+  hormonal 255 255 80 says h c r m o n x l
+  hover 255 255 83 says h H@ v x r
+  how 255 255 84 says h W
+  hygiene 255 255 85 says h Y J i n
+  hygienic 255 255 86 says h Y J E n X k
+  hyperbole 255 255 87 says h Y p x r b x l i
+  hypnoses 255 255 88 says h I p n o s i z
+  jeopardise 255 255 117 says J E p x r d Y z
+  jeopardize 255 255 117 says J E p x r d Y z
+  jeopardy 255 255 118 says J E p x r d i
+  jesuit 255 255 119 says J E z y u X t
+  jewellery 255 255 120 says J u l r i
+  jewelry 255 255 120 says J u l r i
+  journal 255 255 122 says J R n x l
+  johnston 255 255 121 says J a@ n s t Xx n
+  judaism 255 255 123 says J u d i I z x m
+  judaize 255 255 124 says J u d i Y z
+  judeo 255 255 125 says J u d e o
+  kaiser 255 255 126 says k Y z x r
+  kaleido 255 255 127 says k x l Y d x
+  key 255 255 128 says k i
+  kowtow 255 255 133 says k W t W
+  kmart 255 255 129 says k e m a r t
+  knowledge 255 255 130 says n a@ l X J
+  known 255 255 131 says n o n
+  knownst 255 255 132 says n o n s t
+  laity 255 255 136 says l e X t i
+  laugh 255 255 138 says l Aa f
+  laughter 255 255 139 says l Aa f t x r
+  laboratory 255 255 134 says l A b r x t c r i
+  lager 255 255 135 says l a g x r
+  lasagna 255 255 137 says l x z a n y x
+  lavaliere 255 255 140 says l A v x l i r
+  lawyer 255 255 141 says l O x r
+  leather 255 255 142 says l E D x r
+  leatherette 255 255 143 says l E D x r E t
+  leisure 255 255 147 says l i Z x r
+  leopard 255 255 148 says l E p x r d
+  legate 255 255 144 says l E g Xx t
+  legislation 255 255 145 says l E J X s l e S Xx n
+  legislature 255 255 146 says l E J X s l e C x r
+  leprechaun 255 255 149 says l E p r Xx k a n
+  letup 255 255 152 says l E F H p
+  lethal 255 255 150 says l i T x l
+  lettuce 255 255 151 says l E t X s
+  liaise 255 255 153 says l i e z
+  liaison 255 255 154 says l i e z a@ n
+  lieu 255 255 156 says l u
+  lieutenant 255 255 157 says l u t E n Xx n t
+  librarian 255 255 155 says l Y b r E r i x n
+  likely 255 255 158 says l Y k l i
+  lineage 255 255 159 says l I n i X J
+  lingerie 255 255 160 says l a n Z x r e
+  liqueur 255 255 162 says l I k R
+  liquor 255 255 161 says l I k x r
+  louver 255 255 168 says l u v x r
+  logarithm 255 255 163 says l c@ g x r I D x m
+  logarithmic 255 255 164 says l c@ g x r I D m I k
+  longest 255 255 165 says l c@ G g X s t
+  longue 255 255 166 says l c@ G
+  lose 255 255 167 says l u z
+  lovely 255 255 169 says l H v l i
+  lower 255 255 170 says l o w x r
+  luncheon 255 255 171 says l H n C Xx n
+  luxuriant 255 255 172 says l H g Z R i Xx n t
+  luxurious 255 255 173 says l H g Z R i Xx s
+  luxury 255 255 174 says l H k S R i
+  maestro 255 255 176 says m Y s t r o
+  machete 255 255 175 says m x S E t i
+  makeup 255 255 178 says m e k H p
+  maker 255 255 177 says m e k x r
+  malleability 255 255 180 says m A l y x b I l X t i
+  malleable 255 255 179 says m A l y x b x l
+  manoeuver 255 255 181 says m x n u v x r
+  manoeuvre 255 255 181 says m x n u v x r
+  manuscript 255 255 182 says m A n y x s k r I p t
+  marijuana 255 255 185 says m E r X w a n x
+  marbleize 255 255 183 says m a r b x l Y z
+  margarine 255 255 184 says m a r J x r X n
+  marquess 255 255 186 says m a r k E s s
+  marquis 255 255 187 says m a r k i
+  marriage 255 255 188 says m e r X J
+  masquerade 255 255 189 says m A s k x r e d
+  massage 255 255 190 says m x s a Z
+  masterfully 255 255 191 says m A s t x r f l i
+  matinee 255 255 192 says m A t X n e
+  matriarch 255 255 193 says m e t r i a r k
+  matron 255 255 194 says m e t r Xx n
+  meander 255 255 195 says m i A n d x r
+  meiosis 255 255 197 says m Y o s X s
+  meow 255 255 204 says m i W
+  medieval 255 255 196 says m i d i i v x l
+  melee 255 255 198 says m e l e
+  menagerie 255 255 201 says m X n A Z x r i
+  menu 255 255 202 says m E n y u
+  menstrual 255 255 199 says m E n s t r x l
+  meringue 255 255 200 says m x r A G
+  mercifully 255 255 203 says m R s X f l i
+  mezzi 255 255 205 says m E t s i
+  mezzo 255 255 206 says m E t s o
+  microphone 255 255 207 says m Y k r x f o n
+  microscope 255 255 208 says m Y k r x s k o p
+  midi 255 255 209 says m I d i
+  mignon 255 255 210 says m I n y c n
+  migraine 255 255 211 says m Y g r e n
+  milli 255 255 212 says m I l X
+  millionaire 255 255 213 says m I l y Xx n e r
+  mini 255 255 214 says m I n i
+  miniature 255 255 215 says m I n Xx C x r
+  mirage 255 255 216 says m x r a Z
+  miserable 255 255 220 says m I z r x b x l
+  mischief 255 255 217 says m I s C X f
+  mischievous 255 255 218 says m I s C X v Xx s
+  miscreant 255 255 219 says m I s k r i Xx n t
+  moustache 255 255 230 says m H s t A S
+  mouths 255 255 227 says m W D z
+  mobility 255 255 221 says m o b I l X t i
+  monotheist 255 255 224 says m a@ n o T i I s t
+  monsieur 255 255 223 says m x s y R
+  monsignor 255 255 222 says m a@ n s i n y x r
+  mortgage 255 255 225 says m c r g X J
+  mosquito 255 255 226 says m Xx s k i t o
+  mown 255 255 228 says m o n
+  mu 255 255 229 says m y u
+  myrrh 255 255 231 says m R
+  naive 255 255 232 says n Y i v
+  naivete 255 255 233 says n Y i v Xx t i
+  naivety 255 255 233 says n Y i v Xx t i
+  national 255 255 234 says n A S Xx n x l
+  nationality 255 255 235 says n A S Xx n A l X t i
+  nazi 255 255 236 says n a t s i
+  nazism 255 255 237 says n a t s I z x m
+  neanderthal 255 255 238 says n i A n d x r T a l
+  neighbor 255 255 240 says n e b x r
+  negotiable 255 255 239 says n X g o S x b x l
+  nigerian 255 255 241 says n Y J i r i x n
+  nihil 255 255 242 says n i x l
+  nineteen 255 255 243 says n Y n t i n
+  nineteene 255 255 243 says n Y n t i n
+  nineteenthe 255 255 244 says n Y n t i n T
+  ninety 255 255 245 says n Y n d i
+  noise 255 255 247 says n O z
+  nourish 255 255 252 says n R X S
+  nobly 255 255 246 says n o b l i
+  nonchalance 255 255 248 says n a@ n S x l a n s
+  nonchalant 255 255 249 says n a@ n S x l a n t
+  nonpareil 255 255 250 says n a@ n p x r e
+  nothingness 255 255 251 says n H T I G n x s
+  nuance 255 255 253 says n u a n s
+  nuclei 255 255 254 says n u k l i Y
+
+dictionary roots3 statement 1 width 0 records sound
+  paella 255 255 1 says p a e y x
+  painstaking 255 255 2 says p e n s t e k I G
+  pancreatic 255 255 3 says p A G k r i A t I k
+  papiermache 255 255 4 says p e p x r m x S e
+  parishioner 255 255 5 says p x r I S x n x r
+  parliament 255 255 6 says p a r l x m Xx n t
+  parliamentarian 255 255 8 says p a r l x m Xx n t e r i Xx n
+  parliamentary 255 255 7 says p a r l x m E n t r i
+  parmesan 255 255 9 says p a r m X Z a n
+  parquet 255 255 10 says p a r k e
+  pastiche 255 255 12 says p A s t i S
+  patio 255 255 13 stress 100 says p A t i o
+  patriarch 255 255 11 says p e t r i a r k
+  patron 255 255 14 says p e t r x n
+  people 255 255 18 says p i p x l
+  pecunious 255 255 15 says p X k y u n i x s
+  penance 255 255 16 says p E n Xx n s
+  penitentiary 255 255 17 stress 20100 says p E n X t E n S x r i
+  permeability 255 255 20 says p x r m i x b I l X t i
+  permeable 255 255 19 says p x r m i x b x l
+  piranha 255 255 24 says p x r a n x
+  pitifully 255 255 25 says p I t X f l i
+  pizza 255 255 26 says p i t s x
+  poem 255 255 31 says p o x m
+  poet 255 255 32 says p o X t
+  poetic 255 255 33 says p o E t X k
+  poignance 255 255 35 says p O n y Xx n s
+  poignant 255 255 34 says p O n y Xx n t
+  pour 255 255 37 says p c r
+  posthumous 255 255 36 says p a@ s t y x m x s
+  pow 255 255 38 says p W
+  powwow 255 255 39 says p W w W
+  pueblo 255 255 68 says p w E b l o
+  puerility 255 255 69 says p y u r I l X t i
+  puree 255 255 70 says p y u r e
+  pursuit 255 255 71 says p x r s u t
+  purvey 255 255 72 says p R v e
+  putted 255 255 73 says p H t X d
+  pharaoh 255 255 21 says f e r o
+  phosphorus 255 255 22 says f a@ s f x r x s
+  physiognomy 255 255 23 says f I z i a@ g n x m i
+  plaid 255 255 27 says p l A d
+  plentifully 255 255 28 says p l E n t X f l i
+  plough 255 255 29 says p l W
+  ploughshare 255 255 30 says p l W S e r
+  plow 255 255 29 says p l W
+  plowshare 255 255 30 says p l W S e r
+  practise 255 255 40 says p r A k t X s
+  prayer 255 255 41 says p r e r
+  preempt 255 255 43 says p r i E m p t
+  precept 255 255 42 says p r i s E p t
+  prefect 255 255 44 says p r i f E k t
+  preferable 255 255 45 says p r E f x r x b x l
+  prelude 255 255 48 says p r e l u d
+  premier 255 255 49 says p r x m i r
+  premiere 255 255 49 says p r x m i r
+  presage 255 255 46 says p r E s X J
+  prestige 255 255 50 says p r E s t i Z
+  pretense 255 255 51 says p r i t E n s
+  pretty 255 255 47 says p r I t i
+  prioritise 255 255 52 says p r Y c@ r Xx t Y z
+  prioritize 255 255 52 says p r Y c@ r Xx t Y z
+  prix 255 255 53 says p r i
+  procedural 255 255 55 says p r x s i J x r x l
+  procedure 255 255 54 says p r x s i J x r
+  prognoses 255 255 56 stress 212 says p r c@ g n o s i z
+  prohibition 255 255 57 says p r o X b I S Xx n
+  prologue 255 255 58 says p r o l c@ g
+  pronoun 255 255 59 says p r o n W n
+  propagandize 255 255 60 says p r a@ p x g A n d Y z
+  protein 255 255 62 says p r o t i n
+  protege 255 255 61 says p r o t x Z e
+  protegee 255 255 61 says p r o t x Z e
+  protocol 255 255 63 says p r o t x k c l
+  protozoa 255 255 64 says p r o t Xx z o Xx
+  protozoan 255 255 65 says p r o t Xx z o Xx n
+  prow 255 255 66 says p r W
+  psychoses 255 255 67 says s Y k o s i z
+  pygmy 255 255 74 says p I g m i
+  que 255 255 75 says k e
+  queue 255 255 76 says k y u
+  quiche 255 255 77 says k i S
+  ragout 255 255 78 says r A g u
+  rapport 255 255 79 says r x p c r
+  raspberry 255 255 80 says r A z b e r i
+  react 255 255 81 says r i A k t
+  reaction 255 255 82 says r i A k S Xx n
+  reactionary 255 255 83 says r i A k S Xx n e r i
+  readme 255 255 84 says r i d m i
+  realism 255 255 85 stress 1020 says r i x l I z x m
+  realist 255 255 86 says r i x l X s t
+  realistic 255 255 87 says r i x l I s t X k
+  reality 255 255 88 says r i A l X t i
+  reindeer 255 255 104 says r e n d i r
+  reinforce 255 255 105 stress 201 says r i X n f c r s
+  receipt 255 255 89 says r X s i t
+  recipe 255 255 92 says r E s X p i
+  recognise 255 255 90 says r E k x g n Y z
+  recognize 255 255 90 says r E k x g n Y z
+  recommendation 255 255 91 stress 20010 says r E k x m x n d e S x n
+  reconnaissance 255 255 93 says r X k a@ n x s Xx n s
+  recover 255 255 94 says r X k H v x r
+  recuperate 255 255 96 says r X k u p x r e t
+  recuperation 255 255 97 says r X k u p x r e S x n
+  recruit 255 255 95 says r X k r u t
+  reform 255 255 99 says r i f c r m
+  reformat 255 255 100 says r i f c r m A t
+  reflex 255 255 98 says r i f l E k s
+  regime 255 255 101 says r e Z i m
+  rehash 255 255 102 says r i h A S
+  rehearse 255 255 103 says r X h R s
+  relapse 255 255 106 says r i l A p s
+  relaxation 255 255 107 says r i l A k s e S x n
+  renaissance 255 255 108 says r E n X s a n s
+  renege 255 255 110 says r X n I g
+  rendezvous 255 255 109 says r a@ n d e v u
+  research 255 255 111 says r i s R C
+  reseller 255 255 112 says r i s E l R
+  resource 255 255 113 says r i s c r s
+  restaurant 255 255 114 says r E s t x r a@ n t
+  retail 255 255 115 says r i t e l
+  retaliate 255 255 116 says r X t A l i e t
+  retaliation 255 255 117 says r X t A l i e S Xx n
+  retaliatory 255 255 118 stress 10020 says r X t A l i Xx t c r i
+  retardation 255 255 119 stress 2210 says r i t a r d e S x n
+  reveille 255 255 120 says r E v X l i
+  revue 255 255 121 says r X v y u
+  reward 255 255 122 says r X w c r d
+  rigor 255 255 126 says r I g x r
+  righteous 255 255 125 says r Y C Xx s
+  risque 255 255 127 says r I s k e
+  roommate 255 255 129 says r u m e t
+  rouge 255 255 130 says r u Z
+  rough 255 255 131 says r H f
+  roughen 255 255 132 says r H f Xx n
+  roughie 255 255 133 says r H f i
+  roller 255 255 128 says r o l x r
+  rutabaga 255 255 134 says r u t x b e g x
+  rhythm 255 255 123 says r I D x m
+  rhythmic 255 255 124 says r I D m I k
+
+dictionary roots4 statement 1 width 0 records sound
+  said 255 255 4 says s E d
+  sabotage 255 255 1 says s A b x t a Z
+  sacredness 255 255 2 says s e k r x d n Xx s
+  safety 255 255 3 says s e f t i
+  salmon 255 255 5 says s A m x n
+  sapphire 255 255 6 says s A f Y r
+  satiable 255 255 7 says s e S x b x l
+  savagery 255 255 8 says s A v X J r i
+  saviour 255 255 9 says s e v y x r
+  savior 255 255 9 says s e v y x r
+  savoury 255 255 10 says s e v x r i
+  savory 255 255 10 says s e v x r i
+  seance 255 255 16 says s e a n s
+  seer 255 255 18 says s i x r
+  seismologist 255 255 20 says s Y z m a@ l x J X s t
+  seismology 255 255 21 says s Y z m a@ l x J i
+  seize 255 255 22 says s i z
+  seizure 255 255 23 says s i Z x r
+  secretive 255 255 17 says s i k r Xx t X v
+  segue 255 255 19 says s E g w e
+  senate 255 255 24 says s E n X t
+  senile 255 255 25 says s i n Y l
+  sensuous 255 255 26 says s E n S u x s
+  sergeant 255 255 27 says s a r J Xx n t
+  serjeant 255 255 27 says s a r J Xx n t
+  sesame 255 255 28 says s E s x m i
+  setup 255 255 29 says s E t H p
+  seventy 255 255 32 says s E v Xx n F i
+  sew 255 255 33 says s o
+  sewn 255 255 34 says s o n
+  sexual 255 255 30 says s E k S u x l
+  sexuality 255 255 31 says s E k S u A l X t i
+  siesta 255 255 40 says s i E s t x
+  sieve 255 255 41 says s I v
+  silhouette 255 255 42 says s I l u w E t
+  sinew 255 255 43 says s I n y u
+  soever 255 255 48 says s o E v x r
+  soot 255 255 55 says s U t
+  souffle 255 255 57 says s u f l e
+  sough 255 255 59 says s H f
+  soul 255 255 58 says s o l
+  southerly 255 255 60 says s H D x r l i
+  southern 255 255 61 says s H D x r n
+  sociability 255 255 47 says s o S x b I l X t i
+  soccer 255 255 46 says s a@ k x r
+  soften 255 255 49 says s c@ f x n
+  soluble 255 255 52 says s a@ l y x b x l
+  solder 255 255 50 says s a@ d x r
+  soldier 255 255 51 says s o l J x r
+  some 255 255 53 says s H m
+  sonor 255 255 54 says s a@ n x r
+  sorrow 255 255 56 says s a@ r o
+  sovereignty 255 255 62 says s a@ v r Xx n t i
+  sown 255 255 63 says s o n
+  suede 255 255 80 says s w e d
+  suicidal 255 255 87 says s u X s Y d x l
+  suicide 255 255 86 says s u X s Y d
+  suit 255 255 88 says s u t
+  suite 255 255 89 says s w i t
+  suitor 255 255 90 says s u t x r
+  suburban 255 255 79 says s x b R b Xx n
+  subpoena 255 255 76 says s x p i n x
+  subtile 255 255 77 says s H t x l
+  subtle 255 255 77 says s H t x l
+  subtlety 255 255 78 says s H t x l t i
+  sugar 255 255 81 says S U g x r
+  sugary 255 255 82 says S U g x r i
+  suggest 255 255 83 stress 1 says s x J E s t
+  suggestion 255 255 84 says s x J E s C Xx n
+  suggestive 255 255 85 says s x J E s t X v
+  sulfurous 255 255 91 stress 210 says s H l f y x r Xx s
+  sulphurous 255 255 91 stress 210 says s H l f y x r Xx s
+  sure 255 255 92 says S u r
+  survey 255 255 93 says s R v e
+  scissor 255 255 14 says s I z x r
+  scourge 255 255 15 says s k R J
+  scherzo 255 255 11 says s k E r t s o
+  schizophrenia 255 255 12 stress 20100 says s k I t s x f r i n i x
+  schizophrenic 255 255 13 says s k I t s x f r E n X k
+  shepherd 255 255 35 says S E p x r d
+  shiitake 255 255 36 says S X t a k i
+  shitake 255 255 36 says S X t a k i
+  shoe 255 255 37 says S u
+  shown 255 255 38 says S o n
+  shriek 255 255 39 says S r i k
+  slugabed 255 255 44 says s l H g x b E d
+  smooth 255 255 45 says s m u D
+  speciality 255 255 64 says s p E S i A l X t i
+  species 255 255 65 says s p i S i z
+  spermatozoon 255 255 66 says s p R m A t x z o a n
+  spirituality 255 255 67 says s p i r I C u A l I t i
+  spook 255 255 69 says s p u k
+  spooky 255 255 70 says s p u k i
+  splitup 255 255 68 says s p l I t H p
+  statue 255 255 71 says s t A C u
+  stereotypical 255 255 72 says s t E r i o t I p X k x l
+  stood 255 255 73 says s t U d
+  strength 255 255 74 says s t r E G k T
+  strongest 255 255 75 says s t r c G g X s t
+  sword 255 255 94 says s c r d
+  taiwan 255 255 95 says t Y w a n
+  taiwanese 255 255 96 says t Y w a n i z
+  talkative 255 255 97 says t c k x t X v
+  tehran 255 255 98 says t e r a n
+  telepathy 255 255 99 says t x l E p x T i
+  temperature 255 255 100 says t E m p r Xx C x r
+  tertiary 255 255 101 says t R S i A r i
+  tiredness 255 255 108 says t Y r d n x s
+  toreador 255 255 109 stress 1002 says t c r i x d c r
+  theater 255 255 102 says T i x t x r
+  theatrical 255 255 103 says T i A t r X k x l
+  theatricality 255 255 104 says T i A t r X k A l X t i
+  theism 255 255 105 says T i I z x m
+  theory 255 255 106 says T i r i
+  thereabout 255 255 107 says D e r x b W t
+
+dictionary roots5 statement 1 width 0 records sound
+  alas 255 255 91 says x l A s
+  intelligentsia 255 255 93 stress 20100 says X n t E l X J E n t s i x
+  ugh 255 255 26 says H g
+  ukulele 255 255 27 stress 2010 says y u k x l e l e
+  umlaut 255 255 28 says u m l W t
+  uncle 255 255 29 says H G k x l
+  understand 255 255 30 says H n d x r s t A n d
+  understood 255 255 31 stress 201 says H n d x r s t U d
+  undertaker 255 255 32 says H n d x r t e k x r
+  unreal 255 255 33 says H n r i l
+  upholster 255 255 34 says x p o l s t x r
+  upholstery 255 255 35 says x p o l s t r i
+  d'etre 255 255 92 says d E t r x
+  lugubrious 255 255 94 says l x g u b r i x s
+  neurons 255 255 95 says n y U r a@ n s
+  retreat 255 255 96 says r x t r i t
+  septuagenarian 255 255 97 says s E p t y u x J x n E r i x n
+  timbre 255 255 4 says t A m b x r
+  tincan 255 255 5 says t I n k A n
+  to 255 255 25 says t u
+  toefl 255 255 6 says t o f x l
+  touche 255 255 10 says t u S e
+  tough 255 255 11 says t H f
+  toughen 255 255 12 says t H f Xx n
+  together 255 255 7 says t x g E D x r
+  tomorrow 255 255 8 says t x m a@ r o
+  tongue 255 255 9 says t H G
+  tunisian 255 255 23 says t u n i Z x n
+  thorough 255 255 1 says T R o
+  through 255 255 2 says T r u
+  thrown 255 255 3 says T r o n
+  transferable 255 255 13 says t r A n s f R x b x l
+  transference 255 255 14 says t r A n s f R Xx n s
+  transferrence 255 255 14 says t r A n s f R Xx n s
+  trapeze 255 255 98 says t r x p i z
+  traveler 255 255 15 says t r A v l R
+  treasury 255 255 16 says t r E Z x r i
+  treble 255 255 17 says t r E b x l
+  triage 255 255 18 says t r i a Z
+  triumphirate 255 255 99 says t r Y H m v x r x t
+  trinomial 255 255 19 says t r Y n o m i x l
+  trough 255 255 20 says t r c@ f
+  truculent 255 255 21 says t r H k y x l Xx n t
+  truncheon 255 255 22 says t r H n C x n
+  twas 255 255 24 says t w H z
+  two 255 255 25 says t u
+  vacancy 255 255 36 says v e k x n s i
+  vacuum 255 255 37 says v A k y u m
+  valiant 255 255 38 says v A l y Xx n t
+  valise 255 255 39 says v x l i s
+  valuable 255 255 40 says v A l y x b x l
+  veg 255 255 41 says v E J
+  vegetable 255 255 42 says v E J t x b x l
+  vehemence 255 255 43 says v i x m Xx n s
+  vehement 255 255 44 says v i x m Xx n t
+  vehicle 255 255 45 says v i I k x l
+  velours 255 255 46 says v x l u r
+  ventriloquism 255 255 47 says v X n t r I l x k w I z x m
+  viceroy 255 255 48 says v Y s r O
+  victual 255 255 49 says v I t x l
+  vigilante 255 255 50 says v I J x l A n t i
+  vineyard 255 255 51 says v I n y x r d
+  viscount 255 255 52 says v Y k W n t
+  voluble 255 255 54 says v a@ l y U b x l
+  volcano 255 255 53 stress 210 says v a@ l k e n o
+  vow 255 255 55 says v W
+  waistcoat 255 255 56 says w E s k X t
+  wassail 255 255 57 says w a@ s e l
+  weather 255 255 58 says w E D x r
+  weir 255 255 59 says w i r
+  weird 255 255 62 says w i r d
+  webelos 255 255 61 says w i b x l o s
+  werewolve 255 255 100 says w E r w U l v
+  werwolf 255 255 63 says w e r w U l f
+  widespread 255 255 67 stress 11 says w Y d s p r E d
+  woebegone 255 255 68 says w o b X g a n
+  wood 255 255 72 says w U d
+  wooden 255 255 73 says w U d Xx n
+  wool 255 255 74 says w U l
+  woolen 255 255 75 says w U l Xx n
+  woollen 255 255 75 says w U l Xx n
+  woman 255 255 69 says w U m Xx n
+  women 255 255 70 says w I m X n
+  wondrous 255 255 71 says w H n d r x s
+  worth 255 255 77 says w R T
+  worthwhile 255 255 76 says w R T w Y l
+  worthy 255 255 78 says w R D i
+  wow 255 255 79 says w W
+  where 255 255 60 says w e r
+  whodoneit 255 255 64 stress 110 says h u d H n X t
+  whodunit 255 255 64 stress 110 says h u d H n X t
+  whole 255 255 65 says h o l
+  whore 255 255 66 says h c r
+  xray 255 255 80 says E k s r e
+  yacht 255 255 81 says y a@ t
+  yeoman 255 255 82 says y o m Xx n
+  yeomen 255 255 82 says y o m Xx n
+  younger 255 255 83 says y H G g x r
+  youngest 255 255 84 says y H G g X s t
+  youngling 255 255 85 says y H G l I G
+  yugoslav 255 255 86 stress 102 says y u g o s l a v
+  zealot 255 255 87 says z E l x t
+  zoological 255 255 88 says z o x l a@ J X k x l
+  zoologist 255 255 89 says z o a@ l x J X s t
+  zoology 255 255 90 says z o a@ l x J i
+
+dictionary eng_abbr statement 1 width 0 records characters
+  acct 255 255 1 says account
+  apt 255 255 7 says apartment
+  attn 255 255 14 says attention
+  avg 255 255 20 says average
+  etc 255 255 84 says etcetera
+  in 255 255 115 says inch
+  intl 255 255 119 says international
+  int'l 255 255 119 says international
+  oz 255 255 219 says ounce
+  Aug 255 255 17 says august
+  AON 255 255 9 says angolan[ ]new[ ]kwanza
+  AUD 255 255 16 says australian[ ]dollar
+  Ala 255 255 6 says alabama
+  Apr 255 255 8 says april
+  Ariz 255 255 22 says arizona
+  Ark 255 255 12 says arkansas
+  Assoc 255 255 13 says association
+  Assn 255 255 13 says association
+  Attn 255 255 14 says attention
+  Av 255 255 19 says avenue
+  Ave 255 255 18 says avenue
+  ADF 255 255 2 says andorran[ ]frank
+  ADP 255 255 3 says andorran[ ]peseta
+  AK 255 255 4 says alaska
+  AL 255 255 5 says alabama
+  AR 255 255 10 says arkansas
+  ARS 255 255 11 says argentine[ ]peso
+  ASSOC 255 255 13 says association
+  ATS 255 255 15 says austrian[ ]schilling
+  AWG 255 255 21 says aruban[ ]florin
+  AZ 255 255 22 says arizona
+  EUR 255 255 85 says euro
+  Esq 255 255 82 says esquire
+  ESP 255 255 83 says spanish[ ]peseta
+  Ia 255 255 110 says iowa
+  IA 255 255 110 says iowa
+  IEP 255 255 112 says irish[ ]punt
+  Ill 255 255 113 says illinois
+  Inc 255 255 117 says incorporated
+  Ind 255 255 118 says indiana
+  Intl 255 255 119 says international
+  Int'l 255 255 119 says international
+  ID 255 255 111 says idaho
+  IL 255 255 114 says illinois
+  IN 255 255 116 says indiana
+  INC 255 255 117 says incorporated
+  IND 255 255 118 says indiana
+  ITL 255 255 120 says italian[ ]lire
+  Oct 255 255 213 says october
+  Okla 255 255 216 says oklahoma
+  Ore 255 255 218 says oregon
+  OH 255 255 214 says ohio
+  OK 255 255 215 says oklahoma or okay
+  OR 255 255 217 says oregon
+  Utd 255 255 269 says united
+  USD 255 255 266 says united[ ]states[ ]dollar
+  UT 255 255 268 says utah
+  bdrm 255 255 24 says bedroom
+  bldg 255 255 29 says building
+  blks 255 255 30 says blocks
+  blvd 255 255 31 says boulevard
+  bn 255 255 33 says billion
+  bps 255 255 37 says bits
+  ca 255 255 43 says circa
+  cir 255 255 50 says circle
+  corp 255 255 56 says corporation
+  cu 255 255 62 says cubic
+  cd 255 255 48 says candela
+  cm 255 255 51 says centimeter
+  cmdr 255 255 58 says commander
+  ctrl 255 255 61 says control
+  deg 255 255 68 says degree
+  dept 255 255 69 says department
+  doz 255 255 78 says dozen
+  db 255 255 64 says decibel
+  dkg 255 255 72 says dekagram
+  dkl 255 255 74 says dekaliter
+  dkm 255 255 75 says dekameter
+  dl 255 255 76 says deciliter
+  dm 255 255 77 says decimeter
+  dB 255 255 64 says decibel
+  fed 255 255 88 says federal
+  ft 255 255 94 says foot or feet
+  g 255 255 95 says gram
+  govt 255 255 101 says government
+  gm 255 255 99 says gram
+  h 255 255 102 says hour
+  hp 255 255 104 says horsepower
+  hr 255 255 105 says hour
+  hrs 255 255 106 says hours
+  hwy 255 255 108 says highway
+  jct 255 255 122 says junction
+  keV 255 255 132 says kiloelectronvolt
+  kcal 255 255 130 says kilocalorie
+  kg 255 255 133 says kilogram
+  km 255 255 136 says kilometer
+  kHz 255 255 135 says kilohertz
+  kW 255 255 138 says kilowatt
+  kWh 255 255 139 says kilowatt[ ]hour
+  l 255 255 142
+  lb 255 255 144 says pound
+  lbs 255 255 145 says pounds
+  ltd 255 255 148 says limited
+  lx 255 255 150 says lux
+  m 255 255 151 says meter
+  misc 255 255 168 says miscellaneous
+  mol 255 255 176 says mole
+  mA 255 255 152 says milliampere
+  mg 255 255 161 says milligram
+  mgr 255 255 162 says manager
+  mgt 255 255 163 says management
+  ml 255 255 169 says milliliter
+  mm 255 255 170 says millimeter
+  mpg 255 255 171 says mile
+  mph 255 255 172 says mile
+  ms 255 255 173 says millisecond
+  msec 255 255 173 says millisecond
+  mtn 255 255 184 says mountain
+  mts 255 255 185 says mountains
+  mHz 255 255 164 says megahertz
+  natl 255 255 187 says national
+  nat'l 255 255 187 says national
+  neg 255 255 195 says negative
+  no 255 255 204 says number
+  nsec 255 255 206 says nanosecond
+  p 255 255 220 says page
+  pd 255 255 222 says paid
+  pg 255 255 223 says page
+  pkg 255 255 225 says package
+  pp 255 255 227 says pages
+  rad 255 255 230 says radian
+  recd 255 255 232 says received
+  rec'd 255 255 232 says received
+  rd 255 255 231 says road
+  rte 255 255 238 says route
+  s 255 255 240 says second
+  sr 255 255 254 says steradian[ ]angle
+  tbs 255 255 259 says tablespoon
+  tbsp 255 255 259 says tablespoon
+  tsp 255 255 262 says teaspoon
+  tsps 255 255 263 says teaspoons
+  vs 255 255 272 says versus
+  wk 255 255 279 says week
+  wkly 255 255 280 says weekly
+  wks 255 255 281 says weeks
+  yd 255 255 286 says yard
+  yds 255 255 287 says yards
+  yr 255 255 288 says year
+  yrs 255 255 289 says years
+  BEF 255 255 26 says belgian[ ]franc
+  BIF 255 255 28 says burundi[ ]franc
+  BOB 255 255 36 says boliviano
+  Blvd 255 255 31 says boulevard
+  BBD 255 255 23 says barbados[ ]dollar
+  BDT 255 255 25 says bangladesh[ ]taka
+  BHD 255 255 27 says bahraini[ ]dinar
+  BLVD 255 255 31 says boulevard
+  BMD 255 255 32 says bermudian[ ]dollar
+  BND 255 255 34 says brunei[ ]dollar
+  BNT 255 255 35 says bhutan[ ]ngultrum
+  BRL 255 255 38 says brazilian[ ]rayal
+  BSD 255 255 39 says bahamanian[ ]dollar
+  BWP 255 255 40 says botswana[ ]pula
+  BZD 255 255 41 says belize[ ]dollar
+  C 255 255 42 says centigrade
+  Cal 255 255 45 says california
+  Calif 255 255 46 says california
+  Capt 255 255 47 says captain
+  Cir 255 255 50 says circle
+  Co 255 255 52 says company
+  Col 255 255 53 says colonel
+  Colo 255 255 54 says colorado
+  Conn 255 255 59 says connecticut
+  Corp 255 255 56 says corporation
+  CA 255 255 46 says california
+  CAD 255 255 44 says canadian[ ]dollar
+  CAL 255 255 45 says california
+  CALIF 255 255 46 says california
+  CO 255 255 55 says colorado
+  CORP 255 255 56 says corporation
+  Cmdr 255 255 58 says commander
+  Cpl 255 255 57 says corporal
+  Ctrl 255 255 61 says control
+  CHF 255 255 49 says swiss[ ]franc
+  CT 255 255 60 says connecticut
+  CTRL 255 255 61 says control
+  CVE 255 255 63 says cape[ ]verde[ ]escudo
+  Dec 255 255 67 says december
+  Del 255 255 66 says delaware
+  Dept 255 255 69 says department
+  Div 255 255 71 says division
+  DE 255 255 66 says delaware
+  DEM 255 255 70 says german[ ]mark
+  Dr 255 255 79 says doctor or drive
+  Drs 255 255 80 says doctors
+  DC 255 255 65 says dee[ ]cea
+  DKK 255 255 73 says danish[ ]krone
+  DZD 255 255 81 says algerian[ ]dinar
+  D.C 255 255 65 says dee[ ]cea
+  F 255 255 86 says fahrenheit
+  Feb 255 255 87 says february
+  Fed 255 255 88 says federal
+  FIM 255 255 90 says finnish[ ]markka
+  Fla 255 255 91 says florida
+  Fri 255 255 93 says friday
+  FF 255 255 89 says french[ ]franc
+  FL 255 255 91 says florida
+  FLA 255 255 91 says florida
+  FRF 255 255 92 says french[ ]franc
+  Ga 255 255 96 says georgia
+  Gen 255 255 98 says general
+  Gov 255 255 100 says governor
+  GA 255 255 96 says georgia
+  GBP 255 255 97 says british[ ]pound
+  HI 255 255 103 says hawaii
+  Hts 255 255 107 says heights
+  Hz 255 255 109 says hertz
+  Jan 255 255 121 says january
+  Jul 255 255 124 says july
+  Jun 255 255 125 says june
+  Jr 255 255 123 says junior
+  Kan 255 255 126 says kansas
+  Kathe 255 255 127 says kathy
+  Ken 255 255 131 says kentucky
+  Kbps 255 255 137 says kilobits
+  Kbyte 255 255 128 says kilobyte
+  Kbytes 255 255 129 says kilobytes
+  Ky 255 255 140 says kentucky
+  KHz 255 255 135 says kilohertz
+  KHR 255 255 134 says cambodian[ ]riel
+  KS 255 255 126 says kansas
+  KY 255 255 140 says kentucky
+  KYD 255 255 141 says cayman[ ]islands[ ]dollar
+  L 255 255 142
+  LA 255 255 143 says louisiana
+  LUF 255 255 149 says luxemburg[ ]franc
+  Ln 255 255 146 says lane
+  Lt 255 255 147 says lieutenant
+  Ltd 255 255 148 says limited
+  Maj 255 255 154 says major
+  Mar 255 255 155 says march
+  Mass 255 255 153 says massachusetts
+  Mich 255 255 166 says michigan
+  Minn 255 255 167 says minnesota
+  Mo 255 255 175 says missouri
+  Mon 255 255 177 says monday
+  MA 255 255 153 says massachusetts
+  ME 255 255 160 says maine
+  MI 255 255 165 says michigan
+  MO 255 255 175 says missouri
+  Mbps 255 255 156 says megabits
+  Md 255 255 158 says maryland
+  Mr 255 255 178 says mister
+  Mrs 255 255 179 says misses
+  Ms 255 255 181 says miz
+  Mt 255 255 183 says mount or mountain
+  MD 255 255 159 says maryland
+  MHz 255 255 164 says megahertz
+  MN 255 255 167 says minnesota
+  MR 255 255 178 says mister
+  MRS 255 255 179 says misses
+  MS 255 255 180 says mississippi
+  MS 255 255 174 says mississippi
+  MT 255 255 182 says montana
+  M.D 255 255 157 says emm[ ]dee
+  N 255 255 186 says north
+  Natl 255 255 187 says national
+  Nat'l 255 255 187 says national
+  Nebr 255 255 194 says nebraska
+  Nev 255 255 196 says nevada
+  No 255 255 204 says number
+  Nov 255 255 205 says november
+  NE 255 255 192 says nebraska or northeast
+  NO 255 255 204 says number
+  NC 255 255 188 says north[ ]
+  ND 255 255 190 says north[ ]
+  NH 255 255 197 says new[ ]
+  NJ 255 255 199 says new[ ]
+  NLG 255 255 201 says dutch[ ]guilder
+  NM 255 255 202 says new[ ]
+  NV 255 255 207 says nevada
+  NW 255 255 208 says northwest
+  NY 255 255 210 says new[ ]
+  NZ 255 255 212 says new[ ]zealand
+  N.E 255 255 193 says northeast
+  N.C 255 255 189 says north[ ]
+  N.D 255 255 191 says north[ ]
+  N.H 255 255 198 says new[ ]
+  N.J 255 255 200 says new[ ]
+  N.M 255 255 203 says new[ ]
+  N.W 255 255 209 says northwest
+  N.Y 255 255 211 says new[ ]
+  Pa 255 255 221 says pennsylvania
+  PA 255 255 221 says pennsylvania
+  Ph.d 255 255 224 says pee[ ]aitch[ ]dee
+  Ph.D 255 255 224 says pee[ ]aitch[ ]dee
+  Pl 255 255 226 says place
+  Pvt 255 255 229 says private
+  PTE 255 255 228 says portuguese[ ]escudo
+  Rep 255 255 233 says representative
+  Reps 255 255 234 says representatives
+  Rev 255 255 235 says reverend
+  RI 255 255 236 says rhode[ ]island
+  RUB 255 255 239 says russian[ ]rouble
+  Rd 255 255 231 says road
+  R.I 255 255 237 says rhode[ ]island
+  S 255 255 241 says south
+  Sat 255 255 242 says saturday
+  Sen 255 255 249 says senator
+  Sep 255 255 250 says september
+  Sept 255 255 250 says september
+  Sun 255 255 257 says sunday
+  SE 255 255 247 says southeast
+  SEK 255 255 248 says swedish[ ]krona
+  SIT 255 255 251 says slovenian[ ]tolar
+  Sgt 255 255 252 says sergeant
+  Sr 255 255 253 says senior
+  St 255 255 255
+  Ste 255 255 256 says suite
+  SC 255 255 243 says south[ ]
+  SD 255 255 245 says south[ ]
+  ST 255 255 255
+  S.E 255 255 247 says southeast
+  S.C 255 255 244 says south[ ]
+  S.D 255 255 246 says south[ ]
+  S.W 255 255 258 says southwest
+  Tenn 255 255 260 says tennessee
+  Tues 255 255 264 says tuesday
+  TENN 255 255 260 says tennessee
+  Tbs 255 255 259 says tablespoon
+  Tbsp 255 255 259 says tablespoon
+  Thurs 255 255 261 says thursday
+  TN 255 255 260 says tennessee
+  TX 255 255 265 says texas
+  V 255 255 267 says volt
+  Va 255 255 270 says virginia
+  VA 255 255 271 says virginia or vee[ ]aye
+  VT 255 255 273 says vermont
+  W 255 255 274 says watt
+  Wash 255 255 276 says washington
+  Wed 255 255 277 says wednesday
+  Wis 255 255 278 says wisconsin
+  Wisc 255 255 278 says wisconsin
+  WA 255 255 275 says washington
+  WI 255 255 278 says wisconsin
+  Wyo 255 255 284 says wyoming
+  WV 255 255 282 says west[ ]virginia
+  WY 255 255 284 says wyoming
+  W.V 255 255 283 says west[ ]virginia
+  W.Va 255 255 282 says west[ ]virginia
+  XAF 255 255 285 says see[ ]ef[ ]ay[ ]franc
+  XOF 255 255 285 says see[ ]ef[ ]ay[ ]franc
+
+dictionary eng_char_name statement 1 width 0 records characters
+  a 255 255 43 says alpha or ay
+  e 255 255 47 says echo or ee
+  i 255 255 51 says india or igh
+  o 255 255 57 says oscar or oe
+  u 255 255 63 says uniform or yue
+  A 255 255 43 says alpha or ay
+  E 255 255 47 says echo or ee
+  I 255 255 51 says india or igh
+  O 255 255 57 says oscar or oe
+  U 255 255 63 says uniform or yue
+  b 255 255 44 says bravo or bea
+  c 255 255 45 says charlie or cea
+  d 255 255 46 says delta or dee
+  f 255 255 48 says foxtrot or eff
+  g 255 255 49 says golf or jee
+  h 255 255 50 says hotel or aitch
+  j 255 255 52 says juliet or jeigh
+  k 255 255 53 says kilo or keigh
+  l 255 255 54 says leema or ell
+  m 255 255 55 says mike or em
+  n 255 255 56 says november or en
+  p 255 255 58 says papa or pea
+  q 255 255 59 says kaybeck or kew
+  r 255 255 60 says romeo or ar
+  s 255 255 61 says sierra or ess
+  t 255 255 62 says tango or tea
+  v 255 255 64 says victor or vee
+  w 255 255 65 says whiskey or doubleyou
+  x 255 255 66 says xray or eks
+  y 255 255 67 says yankee or wie
+  z 255 255 68 says zulu or zed
+  B 255 255 44 says bravo or bea
+  C 255 255 45 says charlie or cea
+  D 255 255 46 says delta or dee
+  F 255 255 48 says foxtrot or eff
+  G 255 255 49 says golf or jee
+  H 255 255 50 says hotel or aitch
+  J 255 255 52 says juliet or jeigh
+  K 255 255 53 says kilo or keigh
+  L 255 255 54 says leema or ell
+  M 255 255 55 says mike or em
+  N 255 255 56 says november or en
+  P 255 255 58 says papa or pea
+  Q 255 255 59 says kaybeck or kew
+  R 255 255 60 says romeo or ar
+  S 255 255 61 says sierra or ess
+  T 255 255 62 says tango or tea
+  V 255 255 64 says victor or vee
+  W 255 255 65 says whiskey or doubleyou
+  X 255 255 66 says xray or eks
+  Y 255 255 67 says yankee or wie
+  Z 255 255 68 says zulu or zed
+  0 255 255 42 says zero
+  1 255 255 33 says wun
+  2 255 255 34 says two
+  3 255 255 35 says three
+  4 255 255 36 says four
+  5 255 255 37 says five
+  6 255 255 38 says six
+  7 255 255 39 says seven
+  8 255 255 40 says eight
+  9 255 255 41 says nine
+  - 255 255 11 says to or minus or dash
+  , 255 255 27 says comma
+  . 255 255 29 says dot
+  ? 255 255 32 says question[ ]mark
+  : 255 255 24 says colon
+  ; 255 255 23 says semicolon
+  ! 255 255 1 says exclamation[ ]point
+  ( 255 255 9 says left[ ]parenthesis
+  ) 255 255 10 says right[ ]parenthesis
+  ' 255 255 25 says acute[ ]accent or apostrophe
+  # 255 255 3 says number
+  _ 255 255 12 says underscore
+  [#76] 255 255 17 says backquote
+  ~ 255 255 18 says tilda
+  * 255 255 8 says star or asterisk
+  @ 255 255 2 says at or att[ ]sign
+  [#80] 255 255 19 says left[ ]bracket
+  [#81] 255 255 21 says right[ ]bracket
+  { 255 255 20 says left[ ]brace
+  } 255 255 22 says right[ ]brace
+  $ 255 255 4 says dollar
+  + 255 255 14 says plus
+  % 255 255 5 says percent
+  / 255 255 31 says slash
+  = 255 255 13 says equals
+  ^ 255 255 6 says caret
+  & 255 255 7 says annd or and
+  | 255 255 16 says bar
+  \ 255 255 15 says backslash
+  < 255 255 28 says less[ ]than
+  > 255 255 30 says greater[ ]than
+  " 255 255 26 says quote
+  [à] 255 255 69 says ay[ ]grahv
+  [è] 255 255 77 says ee[ ]grahv
+  [ì] 255 255 81 says eye[ ]grahv
+  [ò] 255 255 87 says oh[ ]grahv
+  [ù] 255 255 93 says yue[ ]grahv
+  [À] 255 255 69 says ay[ ]grahv
+  [È] 255 255 77 says ee[ ]grahv
+  [Ì] 255 255 81 says eye[ ]grahv
+  [Ò] 255 255 87 says oh[ ]grahv
+  [Ù] 255 255 93 says yue[ ]grahv
+  [á] 255 255 70 says ay[ ]acute
+  [é] 255 255 78 says ee[ ]acute
+  [í] 255 255 82 says eye[ ]acute
+  [ó] 255 255 88 says oh[ ]acute
+  [ú] 255 255 94 says yue[ ]acute
+  [Á] 255 255 70 says ay[ ]acute
+  [É] 255 255 78 says ee[ ]acute
+  [Í] 255 255 82 says eye[ ]acute
+  [Ó] 255 255 88 says oh[ ]acute
+  [Ú] 255 255 94 says yue[ ]acute
+  [â] 255 255 71 says ay[ ]circumflex
+  [ê] 255 255 79 says ee[ ]circumflex
+  [î] 255 255 83 says eye[ ]circumflex
+  [ô] 255 255 89 says oh[ ]circumflex
+  [û] 255 255 95 says yue[ ]circumflex
+  [Â] 255 255 71 says ay[ ]circumflex
+  [Ê] 255 255 79 says ee[ ]circumflex
+  [Î] 255 255 83 says eye[ ]circumflex
+  [Ô] 255 255 89 says oh[ ]circumflex
+  [Û] 255 255 95 says yue[ ]circumflex
+  [ã] 255 255 72 says ay[ ]tilda
+  [õ] 255 255 90 says oh[ ]tilda
+  [Ã] 255 255 72 says ay[ ]tilda
+  [Õ] 255 255 90 says oh[ ]tilda
+  [ä] 255 255 73 says ay[ ]umlaut
+  [ë] 255 255 80 says ee[ ]umlaut
+  [ï] 255 255 84 says eye[ ]umlaut
+  [ö] 255 255 91 says oh[ ]umlaut
+  [ü] 255 255 96 says yue[ ]umlaut
+  [Ä] 255 255 73 says ay[ ]umlaut
+  [Ë] 255 255 80 says ee[ ]umlaut
+  [Ï] 255 255 84 says eye[ ]umlaut
+  [Ö] 255 255 91 says oh[ ]umlaut
+  [Ü] 255 255 96 says yue[ ]umlaut
+  [å] 255 255 74 says ay
+  [Å] 255 255 74 says ay
+  [æ] 255 255 75 says ay[ ]ee
+  [Æ] 255 255 75 says ay[ ]ee
+  [] 255 255 102 says oh[ ]ee
+  [] 255 255 102 says oh[ ]ee
+  [ø] 255 255 92 says oh
+  [Ø] 255 255 92 says oh
+  [ý] 255 255 97 says wie[ ]acute
+  [Ý] 255 255 97 says wie[ ]acute
+  [ç] 255 255 76 says see[ ]cedilla
+  [Ç] 255 255 76 says see[ ]cedilla
+  [ð] 255 255 85 says edh
+  [Ð] 255 255 85 says edh
+  [ñ] 255 255 86 says enye
+  [Ñ] 255 255 86 says enye
+  [] 255 255 101 says ess
+  [] 255 255 101 says ess
+  [ß] 255 255 98 says ess[ ]tset
+  [þ] 255 255 143 says thorn
+  [Þ] 255 255 143 says thorn
+  [] 255 255 99 says euros
+  [¢] 255 255 112 says cents
+  [£] 255 255 113 says pounds
+  [¥] 255 255 115 says yen
+  [] 255 255 100 says ellipsis
+  [] 255 255 103 says open[ ]quote
+  [] 255 255 104 says close[ ]quote
+  [¡] 255 255 111 says inverted[ ]exclamation[ ]point
+  [¿] 255 255 140 says inverted[ ]question[ ]mark
+  [«] 255 255 121 says left[ ]double[ ]angle[ ]bracket
+  [»] 255 255 136 says right[ ]double[ ]angle[ ]bracket
+  [] 255 255 106 says dash
+  [] 255 255 107 says dash
+  [¼] 255 255 137 says one[ ]fourth
+  [½] 255 255 138 says one[ ]half
+  [¾] 255 255 139 says three[ ]fourths
+  [÷] 255 255 142 says divided[ ]by
+  [×] 255 255 141 says times
+  [±] 255 255 127 says plus[ ]or[ ]minus
+  [°] 255 255 126 says degrees
+  [·] 255 255 132 says dot
+  [¹] 255 255 134 says superscript[ ]one
+  [²] 255 255 128 says superscript[ ]two
+  [³] 255 255 129 says superscript[ ]three
+  [ª] 255 255 120 says superscript[ ]ay
+  [º] 255 255 135 says degrees
+  [] 255 255 108 says tilda
+  [¨] 255 255 118 says dieresis
+  [¸] 255 255 133 says cedilla
+  [] 255 255 105 says bullet
+  [] 255 255 110 says trademark
+  [] 255 255 109
+  [ ] 255 255 109
+  [¤] 255 255 114 says symbol
+  [¦] 255 255 116 says symbol
+  [§] 255 255 117 says sections or section
+  [©] 255 255 119 says copyright
+  [¬] 255 255 122 says optional[ ]hyphen
+  [­] 255 255 123 says dash
+  [®] 255 255 124 says registered
+  [¯] 255 255 125 says macron
+  [µ] 255 255 130 says mu
+  [¶] 255 255 131 says paragraphs or paragraph
+
+dictionary eng_tok_dict statement 1 width 0 records characters
+  am 255 255 2 says ay[ ]emm
+  and/or 255 255 4 says annd[ ]ore
+  AAA 255 255 1 says triple[ ]ay
+  AM 255 255 2 says ay[ ]emm
+  AM/FM 255 255 3 says ay[ ]emm[ ]eff[ ]emm
+  AT&T 255 255 5 says [#76]0[ ]ey[ ][#76]0[ ]tee[ ]and[ ]tee
+  EEPROM 255 255 17 says ee[ ]ee[ ]prom
+  EPROM 255 255 16 says ee[ ]prom
+  II 255 255 70 says two
+  III 255 255 71 says three
+  IBMVTYPE 255 255 24 says IBM[ ]veetype
+  I/O 255 255 25 says igh[ ]oa
+  OutLoud 255 255 39 says [#76]0[ ]out[ ]loud
+  OS/2 255 255 38 says [#76]0[ ]oh[ ][#76]0[ ]ess[ ]two
+  UU-Ranch 255 255 54 says yoo[ ]yoo[ ]ranch
+  USAir 255 255 53 says yoo[ ]ess[ ]air
+  cdrom 255 255 8 says cea[ ]dee[ ]rom
+  cm[²] 255 255 9 says square[ ]centimeter
+  cm[³] 255 255 10 says cubic[ ]centimeter
+  c/o 255 255 11 says care[ ]of
+  ha 255 255 19 says hectar
+  he/she 255 255 20 says he[ ]or[ ]she
+  him/her 255 255 21 says him[ ]or[ ]her
+  his/her 255 255 22 says his[ ]or[ ]her
+  hmm 255 255 23 says [#76][#80]hM[#81]
+  hmmm 255 255 23 says [#76][#80]hM[#81]
+  km[²] 255 255 26 says square[ ]kilometer
+  km[³] 255 255 27 says cubic[ ]kilometer
+  mm[²] 255 255 30 says square[ ]millimeter
+  mm[³] 255 255 31 says cubic[ ]millimeter
+  m[²] 255 255 28 says square[ ]meter
+  m[³] 255 255 29 says cubic[ ]meter
+  se[ñ]or 255 255 47 says senyor
+  se[ñ]ora 255 255 48 says senyora
+  se[ñ]orita 255 255 49 says senyorita
+  s/he 255 255 50 says she[ ]or[ ]he
+  t[ê]te-[à]-t[ê]te 255 255 52 says tett[ ]ah[ ]tett
+  viavoice 255 255 55 says [#76][#80].1vix.2vOs[#81]
+  vis-a-vis 255 255 56 says [#76]0[ ]veez[ ][#76]0[ ]a[ ]vee
+  vis-[à]-vis 255 255 56 says [#76]0[ ]veez[ ][#76]0[ ]a[ ]vee
+  w 255 255 58 says with
+  w/ 255 255 63 says with
+  w/o 255 255 64 says without
+  xmas 255 255 65 says Christmas
+  BOAC 255 255 7 says bowack
+  B&B 255 255 6 says bea[ ]and[ ]bea
+  CDROM 255 255 8 says cea[ ]dee[ ]rom
+  C/O 255 255 11 says care[ ]of
+  DAYOFWEEK 255 255 12 says day[ ]of[ ]week
+  DAYORDINAL 255 255 13 says day[ ]ordinal
+  DLLCALL 255 255 14 says dll[ ]call
+  DLLSTRING 255 255 15 says dll[ ]string
+  GetHierarchyTable 255 255 18 says [#76]1[ ]get[ ]hierarchy[ ][#76]0[ ]table
+  He/she 255 255 20 says he[ ]or[ ]she
+  He/She 255 255 20 says he[ ]or[ ]she
+  His/her 255 255 22 says his[ ]or[ ]her
+  His/Her 255 255 22 says his[ ]or[ ]her
+  Hmm 255 255 23 says [#76][#80]hM[#81]
+  Hmmm 255 255 23 says [#76][#80]hM[#81]
+  MAPI 255 255 32 says mappy
+  MS-DOS 255 255 33 says em[ ]ess[ ]doss
+  NAACP 255 255 34 says en[ ]double[ ]ay[ ]cea[ ]pee
+  Ng 255 255 36 says eng
+  NCAA 255 255 35 says en[ ]cea[ ]double[ ]ay
+  NYSE 255 255 37 says new[ ]york[ ]stock[ ]exchange
+  PowerPC 255 255 40 says power[ ]pee[ ]cea
+  Q-Tip 255 255 41 says kyu[ ][#76]0[ ]tip
+  Q-Tips 255 255 42 says kyu[ ][#76]0[ ]tips
+  ReadHelp 255 255 43 says reed[ ]help
+  Save-as 255 255 45 says save[ ][#76]0[ ]az
+  Save-As 255 255 45 says save[ ][#76]0[ ]az
+  SAPI 255 255 44 says sappy
+  SpeakPad 255 255 51 says speak[ ][#76]0[ ]pad
+  SCSI 255 255 46 says scuzzy
+  S/he 255 255 50 says she[ ]or[ ]he
+  ViaVoice 255 255 55 says [#76][#80].1vix.2vOs[#81]
+  Vis-a-vis 255 255 56 says [#76]0[ ]veez[ ][#76]0[ ]a[ ]vee
+  Vis-[à]-vis 255 255 56 says [#76]0[ ]veez[ ][#76]0[ ]a[ ]vee
+  VoicePad 255 255 57 says voice[ ][#76]0[ ]pad
+  W 255 255 58 says with
+  Win32 255 255 60 says win[ ]thirty[ ]two
+  Win32s 255 255 61 says win[ ]thirty[ ]two[ ]ess
+  Words+ 255 255 62 says words[ ]plus
+  Who-Am-I 255 255 59 says hoo[ ][#76]0[ ]amm[ ]eye
+  W/ 255 255 63 says with
+  W/O 255 255 64 says without
+  Xmas 255 255 65 says Christmas
+  XMAS 255 255 65 says Christmas
+  49er 255 255 66 says forty[ ]niner
+  49ers 255 255 67 says forty[ ]niners
+  76er 255 255 68 says seventy[ ]sixer
+  76ers 255 255 69 says seventy[ ]sixers
+  (s)he 255 255 50 says she[ ]or[ ]he
+  (S)he 255 255 50 says she[ ]or[ ]he
+
+dictionary eng_cur_dict statement 1 width 0 records characters
+  AED 255 255 1 says [§][ ]yu[ ]ey[ ]ee[ ] then [§] then Dirham
+  AOA 255 255 6 says [§][ ] then [§] then Kwanza
+  AUD 255 255 8 says [§][ ]Australian[ ] then [§] then Dollar
+  AFA 255 255 2 says [§][ ] then [§] then Afghani
+  ALL 255 255 3 says [§][ ] then [§] then Leke
+  AMD 255 255 4 says [§][ ] then [§] then Dram
+  ANG 255 255 5 says [§][ ]Netherlands[ ]Antilles[ ] then [§] then Guilder
+  ARS 255 255 7 says [§][ ]Argentine[ ] then [§] then Peso
+  AWG 255 255 9 says [§][ ]Aruban[ ] then [§] then Guilder
+  AZM 255 255 10 says [§][ ]Azerbaijani[ ] then [§] then Manat
+  EEK 255 255 41 says [§][ ] then [§] then krooni
+  EUR 255 255 45 says [§][ ] then [§] then euro
+  EGP 255 255 42 says [§][ ]Egyptian[ ] then [§] then pound
+  ERN 255 255 43 says [§][ ] then [§] then nakfa
+  ETB 255 255 44 says [§][ ] then [§] then birr
+  IDR 255 255 62 says [§][ ] then [§] then rupiah
+  ILS 255 255 63 says [§][ ] then [§] then shekel
+  IMP 255 255 64 says [§][ ]Isle[ ]of[ ]Man[ ] then [§] then pound
+  INR 255 255 65 says [§][ ]Indian[ ] then [§] then rupi
+  IQD 255 255 66 says [§][ ]Iraqi[ ] then [§] then dinar
+  IRR 255 255 67 says [§][ ]Iranian[ ] then [§] then rial
+  ISK 255 255 68 says [§][ ] then [§] then kronur
+  OMR 255 255 111 says [§][ ]Omani[ ] then [§] then rial
+  UAH 255 255 150 says [§][ ] then [§] then hryvnia
+  UGX 255 255 151 says [§][ ]Ugandan[ ] then [§] then shilling
+  USD 255 255 152
+  UYU 255 255 153 says [§][ ]Uruguayan[ ] then [§] then peso
+  UZS 255 255 154 says [§][ ]Uzbekistani[ ] then [§] then sum
+  BAM 255 255 11 says [§][ ] then [§] then Marka
+  BIF 255 255 16 says [§][ ]Burundian[ ] then [§] then franc
+  BOB 255 255 19 says [§][ ] then [§] then boliviano
+  BBD 255 255 12
+  BDT 255 255 13 says [§][ ] then [§] then taka
+  BGL 255 255 14 says [§][ ] then [§] then leva
+  BHD 255 255 15 says [§][ ]Bahraini[ ] then [§] then dinar
+  BMD 255 255 17
+  BND 255 255 18
+  BRL 255 255 20 says [§][ ] then [§] then real
+  BSD 255 255 21
+  BTN 255 255 22 says [§][ ] then [§] then ngultrum
+  BWP 255 255 23 says [§][ ] then [§] then pula
+  BYR 255 255 24 says [§][ ]Belarus[ ] then [§] then ruble
+  BZD 255 255 25
+  CAD 255 255 26
+  COP 255 255 31 says [§][ ]Colombian[ ] then [§] then peso
+  CUP 255 255 33 says [§][ ]Cuban[ ] then [§] then peso
+  CDF 255 255 27 says [§][ ]Congolese[ ] then [§] then franc
+  CHF 255 255 28 says [§][ ]Swiss[ ] then [§] then franc
+  CLP 255 255 29 says [§][ ]Chilian[ ] then [§] then peso
+  CNY 255 255 30 says [§][ ]Chinese[ ] then [§] then yuan
+  CRC 255 255 32 says [§][ ]Costa[ ]Rican[ ] then [§] then colon
+  CVE 255 255 34 says [§][ ]Cape[ ]Verde[ ] then [§] then escudo
+  CYP 255 255 35 says [§][ ]Cyprian[ ] then [§] then pound
+  CZK 255 255 36 says [§][ ]Czech[ ] then [§] then koruny
+  DOP 255 255 39 says [§][ ]Dominican[ ] then [§] then peso
+  DJF 255 255 37 says [§][ ]Djibouti[ ] then [§] then franc
+  DKK 255 255 38 says [§][ ]Danish[ ] then [§] then kroner
+  DZD 255 255 40 says [§][ ]Algerian[ ] then [§] then dinar
+  FJD 255 255 46
+  FKP 255 255 47 says [§][ ]Falkland[ ]Islands[ ] then [§] then pound
+  GEL 255 255 49 says [§][ ] then [§] then lari
+  GIP 255 255 52 says [§][ ]Gibraltar[ ] then [§] then pound
+  GBP 255 255 48 says [§][ ]yu[ ]kay[ ] then [§] then pound
+  GGP 255 255 50 says [§][ ]Guernsey[ ] then [§] then pound
+  GHC 255 255 51 says [§][ ] then [§] then cedi
+  GMD 255 255 53 says [§][ ] then [§] then dalasi
+  GNF 255 255 54 says [§][ ]Guinea[ ] then [§] then franc
+  GTQ 255 255 55 says [§][ ] then [§] then quetzal
+  GYD 255 255 56
+  HUF 255 255 61 says [§][ ] then [§] then forint
+  HKD 255 255 57
+  HNL 255 255 58 says [§][ ] then [§] then lempira
+  HRK 255 255 59 says [§][ ] then [§] then kuna
+  HTG 255 255 60 says [§][ ] then [§] then gourde
+  JEP 255 255 69 says [§][ ]Jersey[ ] then [§] then pound
+  JOD 255 255 71 says [§][ ]Jordanian[ ] then [§] then dinar
+  JMD 255 255 70
+  JPY 255 255 72 says [§][ ] then [§] then yen
+  KES 255 255 73 says [§][ ]Kenyan[ ] then [§] then shilling
+  KGS 255 255 74 says [§][ ] then [§] then som
+  KHR 255 255 75 says [§][ ] then [§] then riel
+  KMF 255 255 76 says [§][ ]Comoros[ ] then [§] then franc
+  KPW 255 255 77 says [§][ ]North[ ]Korean[ ] then [§] then won
+  KRW 255 255 78 says [§][ ]South[ ]Korean[ ] then [§] then won
+  KWD 255 255 79 says [§][ ]Kuwaiti[ ] then [§] then dinar
+  KYD 255 255 80
+  KZT 255 255 81 says [§][ ] then [§] then tenge
+  LAK 255 255 82 says [§][ ] then [§] then kip
+  LBP 255 255 83 says [§][ ]Lebanese[ ] then [§] then pound
+  LKR 255 255 84 says [§][ ]Sri[ ]Lankan[ ] then [§] then rupi
+  LRD 255 255 85
+  LSL 255 255 86 says [§][ ] then [§] then maloti
+  LTL 255 255 87 says [§][ ] then [§] then litai
+  LVL 255 255 88 says [§][ ] then [§] then lati
+  LYD 255 255 89 says [§][ ]Libian[ ] then [§] then dinar
+  MAD 255 255 90 says [§][ ]Moroccan[ ] then [§] then dirham
+  MOP 255 255 96 says [§][ ] then [§] then pataca
+  MUR 255 255 99 says [§][ ]Mauritius[ ] then [§] then rupi
+  MDL 255 255 91 says [§][ ]Moldova[ ] then [§] then lei
+  MGF 255 255 92 says [§][ ]Malagasy[ ] then [§] then franc
+  MKD 255 255 93 says [§][ ] then [§] then denar
+  MMK 255 255 94 says [§][ ] then [§] then kyat
+  MNT 255 255 95 says [§][ ] then [§] then tugrik
+  MRO 255 255 97 says [§][ ] then [§] then ouguiya
+  MTL 255 255 98 says [§][ ] then [§] then liri
+  MVR 255 255 100 says [§][ ] then [§] then rufiya
+  MWK 255 255 101 says [§][ ] then [§] then kwacha
+  MXN 255 255 102 says [§][ ]Mexican[ ] then [§] then peso
+  MYR 255 255 103 says [§][ ] then [§] then ringgit
+  MZM 255 255 104 says [§][ ] then [§] then meticai
+  NAD 255 255 105
+  NIO 255 255 107 says [§][ ] then [§] then cordoba
+  NOK 255 255 108 says [§][ ] then [§] then krone
+  NGN 255 255 106 says [§][ ] then [§] then naira
+  NPR 255 255 109 says [§][ ]Nepalese[ ] then [§] then rupi
+  NZD 255 255 110
+  PAB 255 255 112 says [§][ ] then [§] then balboa
+  PEN 255 255 113 says [§][ ] then [§] then soley
+  PGK 255 255 114 says [§][ ] then [§] then kina
+  PHP 255 255 115 says [§][ ]Philippine[ ] then [§] then peso
+  PKR 255 255 116 says [§][ ]Pakistani[ ] then [§] then rupi
+  PLN 255 255 117 says [§][ ] then [§] then zlotych
+  PYG 255 255 118 says [§][ ] then [§] then guarani
+  QAR 255 255 119 says [§][ ]Qatari[ ] then [§] then rial
+  ROL 255 255 120 says [§][ ]Romanian[ ] then [§] then lei
+  RUR 255 255 121 says [§][ ]Russian[ ] then [§] then ruble
+  RWF 255 255 122 says [§][ ]Rwandan[ ] then [§] then franc
+  SAR 255 255 123 says [§][ ]Saudi[ ]Arabian[ ] then [§] then rials
+  SEK 255 255 127 says [§][ ] then [§] then kronor
+  SIT 255 255 130 says [§][ ]Slovene[ ] then [§] then tolar
+  SOS 255 255 133 says [§][ ]Somalian[ ] then [§] then shilling
+  SBD 255 255 124
+  SCR 255 255 125 says [§][ ]Seychelles[ ] then [§] then rupi
+  SDD 255 255 126 says [§][ ]Sudanese[ ] then [§] then dinar
+  SGD 255 255 128
+  SHP 255 255 129 says [§][ ]Saint[ ]Helena[ ] then [§] then pound
+  SKK 255 255 131 says [§][ ]Slovakian[ ] then [§] then koruny
+  SLL 255 255 132 says [§][ ] then [§] then leon
+  SPL 255 255 134 says [§][ ]Somalian[ ] then [§] then luigini
+  SRG 255 255 135 says [§][ ]Surinam[ ] then [§] then guilder
+  STD 255 255 136 says [§][ ] then [§] then dobra
+  SVC 255 255 137 says [§][ ]El[ ]Salvadorian[ ] then [§] then colon
+  SYP 255 255 138 says [§][ ]Syrian[ ] then [§] then pound
+  SZL 255 255 139 says [§][ ] then [§] then emalangeni
+  TOP 255 255 144 says [§][ ]pa[ ] then [§] then anga
+  THB 255 255 140 says [§][ ] then [§] then baht
+  TJR 255 255 141 says [§][ ]Tajikistani[ ] then [§] then ruble
+  TMM 255 255 142 says [§][ ]Turkmenistani[ ] then [§] then manat
+  TND 255 255 143 says [§][ ]Tunisian[ ] then [§] then dinar
+  TRL 255 255 145 says [§][ ]Turkish[ ] then [§] then lira
+  TTD 255 255 146
+  TVD 255 255 147
+  TWD 255 255 148
+  TZS 255 255 149 says [§][ ]Tanzanian[ ] then [§] then shilling
+  VEB 255 255 155 says [§][ ] then [§] then bolivar
+  VUV 255 255 157 says [§][ ] then [§] then vatu
+  VND 255 255 156 says [§][ ] then [§] then dong
+  WST 255 255 158 says [§][ ] then [§] then tala
+  XAU 255 255 161 says [§][ ]gold[ ] then [§] then ounce
+  XAF 255 255 159 says [§][ ]bi[ ]ee[ ]ey[ ]cea[ ] then [§] then franc
+  XAG 255 255 160 says [§][ ]silver[ ] then [§] then ounce
+  XOF 255 255 164 says [§][ ]bi[ ]cea[ ]ee[ ]ey[ ]oh[ ] then [§] then franc
+  XCD 255 255 162
+  XDR 255 255 163 says [§][ ]eye[ ]em[ ]eff[ ]special[ ]drawing[ ] then [§] then right
+  XPD 255 255 165 says [§][ ]Palladium[ ] then [§] then ounce
+  XPF 255 255 166 says [§][ ]komptwoir[ ]fransais[ ]du[ ]pacifik[ ] then [§] then franc
+  XPT 255 255 167 says [§][ ]Platinum[ ] then [§] then ounce
+  YER 255 255 168 says [§][ ]Yemeni[ ] then [§] then rial
+  YUM 255 255 169 says [§][ ]Yugoslavian[ ]new[ ] then [§] then dinar
+  ZAR 255 255 170 says [§][ ] then [§] then rand
+  ZMK 255 255 171 says [§][ ]Zambian[ ] then [§] then kwacha
+  ZWD 255 255 172
+
+dictionary UKroots1 statement 1 width 0 records sound
+  aurora 255 255 358 says c r c r x
+  auspice 255 255 85 says c s p X s
+  auspicious 255 255 86 says c s p I S x s
+  australia 255 255 87 says @ s t r e l i x
+  australian 255 255 88 says @ s t r e l i x n
+  authoritative 255 255 89 says c T @ r X t x t X v
+  accusatory 255 255 343 says x k y u z x t r i
+  actual 255 255 67 says A k C w x l
+  actually 255 255 68 says A k C w U l i
+  administrative 255 255 69 says x d m I n X s t r x t X v
+  advertisement 255 255 70 says x d v R t X s m x n t
+  alexandria 255 255 71 says A l X k s a n d r i x
+  ali 255 255 72 says A l i
+  alimentary 255 255 302 says A l X m E n t x r i
+  amaryllis 255 255 303 says A m x r I l X s
+  amaryllises 255 255 304 says A m x r I l X s X z
+  amenable 255 255 73 says x m i n X b L
+  amenity 255 255 74 says x m i n X t i
+  apothecary 255 255 35 says x p @ T x k r i
+  apparatus 255 255 75 says A p x r e t X s
+  apparel 255 255 57 says x p A r x l
+  apricot 255 255 76 says e p r X k @ t
+  arab 255 255 58 says A r x b
+  arable 255 255 59 says A r x b L
+  area 255 255 77 says E r i x
+  aristocrat 255 255 79 stress 1002 says A r X s t x k r A t
+  aristocratic 255 255 80 says A r X s t x k r A t X k
+  arithmetically 255 255 81 says A r X T m E t I k l i
+  argentine 255 255 78 says a r J X n t Y n
+  arsenal 255 255 287 says a s n x l
+  aryan 255 255 305 says E r i x n
+  asthma 255 255 82 says A s m x
+  asthmatic 255 255 83 says A s m A t X k
+  ate 255 255 84 says E t
+  avalanche 255 255 90 says A v x l a n C
+  azerbaidzhan 255 255 288 says A z x r b Y J a n
+  azerbaijan 255 255 288 says A z x r b Y J a n
+  ecu 255 255 4 says e k y u
+  edinburgh 255 255 157 says E d X n b x r x
+  elocutionary 255 255 318 says E l x k y u S x n r i
+  emerald 255 255 158 says E m x r x l d
+  emissary 255 255 319 says E m X s x r i
+  encapsulate 255 255 159 says E n k A p s y u l e t
+  enthuse 255 255 5 says X n T y u z
+  enthusiasm 255 255 6 says X n T y u z i A z x m
+  enthusiastic 255 255 7 says X n T y u z i A s t X k
+  epoch 255 255 160 says i p @ k
+  equalisation 255 255 23 says i k w x l Y z e S x n
+  equalization 255 255 23 says i k w x l Y z e S x n
+  erasure 255 255 161 says X r e Z x r
+  err 255 255 162 says R
+  evelyn 255 255 163 says i v l X n
+  evolutionary 255 255 320 says i v x l u S x n r i
+  exorcise 255 255 164 says E k s c s Y z
+  exclamatory 255 255 350 says X k s k l A m x t r i
+  ideograph 255 255 193 says I d i x g r a f
+  illiteracy 255 255 194 says X l I t r x s i
+  illusory 255 255 351 says X l y u z x r i
+  improvisation 255 255 293 says I m p r x v Y z e S x n
+  incendiary 255 255 44 says I n s E n d y x r i
+  industrialisation 255 255 24 says I n d H s t r I x l Y z e S x n
+  industrialization 255 255 24 says I n d H s t r I x l Y z e S x n
+  itinerary 255 255 323 says X t I n x r x r i
+  obituary 255 255 327 says x b I C u x r i
+  obligatory 255 255 48 says o b l I g x t r i
+  ombud 255 255 225 says @ m b U d
+  oral 255 255 365 says c r x l
+  baboon 255 255 91 says b x b u n
+  banal 255 255 92 says b x n a l
+  baroque 255 255 93 says b x r @ k
+  barbados 255 255 97 says b a r b e d @ s
+  barrack 255 255 60 says b A r x k
+  basket 255 255 94 says b a s k X t
+  baton 255 255 306 says b A t x n
+  bathe 255 255 95 says b a T
+  beijing 255 255 98 says b e J I G
+  beneficiary 255 255 36 says b E n x f I S x r i
+  beret 255 255 96 says b E r e
+  beta 255 255 99 says b i t x
+  bicameral 255 255 100 says b Y k A m x r x l
+  bicentenary 255 255 307 says b Y s E n t i n x r i
+  binary 255 255 37 says b Y n x r i
+  boer 255 255 103 says b U r
+  buoy 255 255 107 says b O
+  bucket 255 255 106 says b H k X t
+  budapest 255 255 1 says b y u d x p E s t
+  burgh 255 255 289 says b H r x
+  burmese 255 255 108 says b R m i z
+  blackberry 255 255 101 says b l A k b r i
+  blouse 255 255 102 says b l W z
+  britain 255 255 104 says b r I t x n
+  brochure 255 255 105 says b r o S x r
+  cabinet 255 255 109 says k A b I n x t
+  cadre 255 255 110 says k a d x r
+  canary 255 255 308 says k x n E r i
+  capitalisation 255 255 19 says k A p X t x l Y z e S x n
+  capitalization 255 255 19 says k A p X t x l Y z e S x n
+  capsule 255 255 111 says k A p s y u l
+  captain 255 255 112 says k A p t x n
+  carriage 255 255 61 says k A r X J
+  casket 255 255 113 says k a s k X t
+  cassowary 255 255 309 says k A s x w E r i
+  categorisation 255 255 20 says k A t X g x r Y z e S x n
+  categorization 255 255 20 says k A t X g x r Y z e S x n
+  category 255 255 344 says k A t x g r i
+  caveat 255 255 114 says k e v i A t
+  cecilia 255 255 115 says s X s I l y x
+  celestial 255 255 310 says s I l E s t i x l
+  cemetery 255 255 38 says s E m X t r i
+  circulate 255 255 120 says s R k y U l e t
+  coupe 255 255 133 says k u p e
+  cousin 255 255 134 says k H z x n
+  colonisation 255 255 22 says k @ l x n Y z e S x n
+  colonization 255 255 22 says k @ l x n Y z e S x n
+  collate 255 255 123 says k x l e t
+  communist 255 255 124 says k @ m y U n X s t
+  comparable 255 255 125 says k @ m p x r x b x l
+  compensatory 255 255 39 says k @ m p E n s e t x r i
+  compost 255 255 126 says k @ m p @ s t
+  confidant 255 255 127 says k @ n f X d A n t
+  configuration 255 255 129 says k x n f I g x r e S x n
+  configure 255 255 128 says k x n f I g x r
+  conjure 255 255 130 says k H n J x r
+  conservatory 255 255 345 says k x n s R v x t r i
+  consolatory 255 255 346 says k x n s @ l x t r i
+  constabulary 255 255 312 says k x n s t A b y x l x r i
+  coriolanus 255 255 360 says k @ r i x l e n x s
+  corollary 255 255 131 says k x r @ l x r i
+  cosignatory 255 255 347 says k o s I g n x t r i
+  cosmos 255 255 132 says k @ z m @ s
+  covent 255 255 135 says k @ v x n t
+  culinary 255 255 313 says k H l X n x r i
+  cumin 255 255 138 says k H m X n
+  chablis 255 255 290 says S A b l i
+  chagrin 255 255 116 says S A g r x n
+  characterisation 255 255 21 says k A r X k t e r Y z e S x n
+  characterization 255 255 21 says k A r X k t e r Y z e S x n
+  charade 255 255 117 says S x r a d
+  chariot 255 255 118 says C A r i x t
+  charybdis 255 255 311 says k x r I b d X s
+  chianti 255 255 119 says k i A n t i
+  choreograph 255 255 359 says k @ r i x g r a f
+  clerk 255 255 121 says k l a r k
+  clientele 255 255 122 says k l i x n t E l
+  cremate 255 255 136 says k r X m e t
+  crematorium 255 255 137 says k r E m x t c r i x m
+  deirdre 255 255 140 says d i x d r I
+  debris 255 255 139 says d e b r i
+  decor 255 255 142 says d E k c r
+  declamatory 255 255 348 says d x k l A m x t r i
+  denary 255 255 314 says d i n x r i
+  depilatory 255 255 349 says d x p I l x t r i
+  deplore 255 255 361 says d X p l c r
+  derby 255 255 141 says d a r b i
+  devolution 255 255 143 says d i v x l u S x n
+  diagnose 255 255 144 says d Y x g n o z
+  diesel 255 255 146 says d i z L
+  didactic 255 255 145 says d Y d A k t X k
+  dimension 255 255 147 says d Y m E n S x n
+  disciplinary 255 255 315 says d X s X p l I n x r i
+  discretionary 255 255 40 says d I s k r E S x n r i
+  dispensary 255 255 316 says d X s p E n s x r i
+  divergent 255 255 148 says d Y v R J X n t
+  docile 255 255 149 says d o s Y l
+  doctrinal 255 255 150 says d @ k t r Y n L
+  doherty 255 255 151 says d @ x r t i
+  doldrum 255 255 152 says d @ l d r x m
+  du 255 255 2 says d y u
+  dubious 255 255 154 says d y u b y x s
+  dutifully 255 255 3 says d y u t X f x l i
+  duvet 255 255 155 says d u v e
+  dramatist 255 255 153 says d r A m x t X s t
+  dromedary 255 255 317 says d r @ m x d x r i
+  dynasty 255 255 156 says d I n x s t i
+  dysentery 255 255 41 says d I s x n t r i
+  fahrenheit 255 255 62 says f A r x n h Y t
+  falmouth 255 255 165 says f A l m x T
+  fatima 255 255 166 says f A t i m x
+  favourite 255 255 167 says f e v x r X t
+  favorite 255 255 167 says f e v x r X t
+  february 255 255 168 says f E b r U x r i
+  federal 255 255 169 says f E d x r x l
+  fiduciary 255 255 42 says f I d y u S x r i
+  figurative 255 255 171 says f I g x r x t X v
+  figure 255 255 170 says f I g x r
+  finale 255 255 172 says f X n a l i
+  forehead 255 255 174 says f @ r X d
+  formulate 255 255 175 says f c m y U l e t
+  florentine 255 255 173 says f l @ r x n t Y n
+  fracas 255 255 176 says f r A k a
+  gaol 255 255 178 says J e l
+  gandhi 255 255 177 says g A n d i
+  garage 255 255 179 says g A r a Z
+  gary 255 255 321 says g A r i
+  generalisation 255 255 180 says J E n r x l Y z e S x n
+  gooseberry 255 255 181 says g u s b x r i
+  gourmet 255 255 182 says g U x m e
+  gogh 255 255 292 says g a@ f
+  guarantee 255 255 63 says g A r x n t i
+  graeme 255 255 183 says g r e x m
+  graham 255 255 183 says g r e x m
+  grahame 255 255 183 says g r e x m
+  granule 255 255 186 says g r A n y U l
+  grandma 255 255 184 says g r A n m a
+  grandpa 255 255 185 says g r A n p a
+  hacienda 255 255 187 says h A s i E n d x
+  hampstead 255 255 188 says h A m s t X d
+  harass 255 255 189 says h A r X s
+  headquarter 255 255 190 says h E d k w c t x r
+  hereditary 255 255 43 says h X r E d X t r i
+  hiroshima 255 255 191 says h I r @ S X m x
+  honorary 255 255 322 says @ n x r x r i
+  hurricane 255 255 192 says h H r X k x n
+  jacque 255 255 294 says Z A k
+  jacques 255 255 294 says Z A k
+  jaguar 255 255 195 stress 120 says J A g y U x r
+  january 255 255 196 says J A n y U r i
+  jesuit 255 255 8 says J E z y u X t
+  judiciary 255 255 45 says J u d I S x r i
+  juror 255 255 197 says J U r x r
+  justiciary 255 255 324 says J H s t I S x r i
+  koran 255 255 362 says k @ r a n
+  khaki 255 255 198 says k a k i
+  laura 255 255 363 says l c r x
+  laboratory 255 255 199 says l x b @ r x t r i
+  leisure 255 255 200 says l E Z x r
+  legalisation 255 255 25 says l i g x l Y z e S x n
+  legalization 255 255 25 says l i g x l Y z e S x n
+  lenin 255 255 201 says l E n x n
+  lever 255 255 202 says l i v x r
+  lieutenancy 255 255 205 says l E f t E n x s i
+  lieutenant 255 255 204 says l E f t E n x n t
+  liberal 255 255 203 says l I b x r x l
+  lingerie 255 255 295 says l a@ n Z x r i
+  literacy 255 255 207 says l I t r x s i
+  literary 255 255 325 says l I t x r x r i
+  lithuania 255 255 206 says l I T y u e n i x
+  lorry 255 255 364 says l @ r i
+  mafia 255 255 208 says m A f i x
+  margaret 255 255 210 says m a g r x t
+  margarine 255 255 209 says m a r J x r i n
+  market 255 255 211 says m a k X t
+  marriage 255 255 64 says m A r X J
+  massage 255 255 212 says m A s a Z
+  masseuse 255 255 213 says m A s R z
+  masseuses 255 255 213 says m A s R z
+  mayor 255 255 296 says m E x r
+  mazda 255 255 214 says m A z d x
+  metalurgy 255 255 215 says m E t A l x J i
+  methane 255 255 216 says m i T e n
+  migraine 255 255 217 says m i g r e n
+  mineral 255 255 218 says m I n x r x l
+  moustache 255 255 219 says m x s t a S
+  mobilisation 255 255 26 says m o b I l Y z e S x n
+  mobilization 255 255 26 says m o b I l Y z e S x n
+  momentary 255 255 326 says m o m x n t r i
+  monastery 255 255 46 says m @ n x s t r i
+  murray 255 255 297 says m H r i
+  mustache 255 255 219 says m x s t a S
+  nationalisation 255 255 27 says n A S n x l Y z e S x n
+  nationalization 255 255 27 says n A S n x l Y z e S x n
+  natural 255 255 220 says n A C r x l
+  necessary 255 255 47 says n E s x s x r i
+  ninety 255 255 221 says n Y n t i
+  nonchalance 255 255 223 says n @ n S x l x n s
+  nonchalant 255 255 222 says n @ n S x l x n t
+  norwich 255 255 224 says n @ r X J
+  nu 255 255 9 says n y u
+  nuclear 255 255 10 says n y u k l I x r
+  nutritionally 255 255 11 says n y u t r I S n x l i
+  panorama 255 255 226 says p A n x r a m x
+  parasol 255 255 65 says p A r x s @ l
+  parliamentary 255 255 328 says p a l X m E n t r i
+  parmesan 255 255 227 says p a r m x s A n
+  participatory 255 255 352 says p a t I s X p x t r i
+  particular 255 255 228 says p x t I k y U l x
+  particularly 255 255 329 says p x t I k y x l x l i
+  partisan 255 255 229 says p a t X z A n
+  patriot 255 255 230 says p A t r i x t
+  patriotic 255 255 231 says p A t r i @ t X k
+  pecuniary 255 255 330 says p X k y u n i x r i
+  pembroke 255 255 232 says p E m b r U k
+  peninsula 255 255 12 says p x n I n s y U l x
+  pittsburgh 255 255 298 says p I t s b R g
+  policy 255 255 233 says p @ l x s i
+  politburo 255 255 234 says p @ l X t b y U r o
+  pursuant 255 255 14 says p x r s y u X n t
+  pursuit 255 255 15 says p R s y u t
+  plenary 255 255 331 says p l i n x r i
+  plenipotentiary 255 255 332 says p l E n X p x t E n S x r i
+  predecessor 255 255 235 says p r i d X s E s x r
+  premature 255 255 236 says p r E m x t y U r
+  prematurely 255 255 237 says p r E m x t y U r l i
+  preparatory 255 255 353 says p r X p A r x t r i
+  primarily 255 255 333 says p r Y m E r X l i
+  primary 255 255 334 says p r Y m x r i
+  prisoner 255 255 238 says p r I z n x r
+  privacy 255 255 239 says p r I v X s i
+  privatisation 255 255 28 says p r Y v x t Y s e S x n
+  privatization 255 255 28 says p r Y v x t Y s e S x n
+  process 255 255 240 says p r o s E s
+  produce 255 255 13 says p r o d y u s
+  progress 255 255 241 says p r o g r E s
+  progression 255 255 242 says p r o g r E S x n
+  promenade 255 255 243 says p r @ m x n a d
+  promissory 255 255 49 says p r @ m X s x r i
+  promontory 255 255 50 says p r @ m x n t r i
+  provost 255 255 244 says p r @ v x s t
+  quandary 255 255 335 says k w @ n d r i
+  quatercentenary 255 255 336 says k w A t x s E n t i n x r i
+  quincentenary 255 255 337 says k w X n s E n t i n x r i
+  raspberry 255 255 245 says r a z b r i
+  rationalisation 255 255 29 says r A S x n x l Y z e S x n
+  rationalist 255 255 246 says r A S n x l X s t
+  rationalization 255 255 29 says r A S x n x l Y z e S x n
+  reactionary 255 255 51 says r i A k S X n r i
+  realisation 255 255 31 says r i x l Y z e S x n
+  realization 255 255 31 says r i x l Y z e S x n
+  refectory 255 255 354 says r X f E k t r i
+  relevant 255 255 247 says r E l x v x n t
+  renege 255 255 248 says r x n e g
+  research 255 255 249 says r X s R C
+  resource 255 255 250 says r X s c s
+  respiratory 255 255 355 says r X s p I r x t r i
+  retaliatory 255 255 52 says r X t A l i x t r i
+  reversionary 255 255 53 says r X v R S x n r i
+  revitalisation 255 255 30 says r i v Y t x l Y z e S x n
+  revitalization 255 255 30 says r i v Y t x l Y z e S x n
+  roquefort 255 255 299 says r a@ k f c
+  rory 255 255 366 says r @ r i
+  rosemary 255 255 251 says r o z m x r i
+  rwanda 255 255 252 says r U A n d x
+  rwandan 255 255 253 says r U A n d x n
+  saucepan 255 255 258 says s c s p x n
+  saute 255 255 259 says s o t e
+  salisbury 255 255 254 says s c l z b r i
+  salivary 255 255 338 says s x l Y v x r i
+  salon 255 255 255 says s A l @ n
+  santiago 255 255 256 says s A n t i a g o
+  satirist 255 255 257 says s A t x r X s t
+  saxophonist 255 255 260 says s A k s @ f x n X s t
+  secretary 255 255 54 says s E k r x t r i
+  semi 255 255 263 says s E m i
+  seminary 255 255 339 says s E m X n x r i
+  serialisation 255 255 32 says s I r i x l Y z e S x n
+  serialization 255 255 32 says s I r i x l Y z e S x n
+  serpentine 255 255 264 says s R p x n t Y n
+  seventy 255 255 265 says s E v X n t i
+  sobriquet 255 255 267 says s o b r X k e
+  solstice 255 255 268 says s @ l s t X s
+  somewhat 255 255 269 says s H m w @ t
+  sonorous 255 255 368 says s x n c r x s
+  sue 255 255 18 says s u
+  subaru 255 255 271 says s u b x r u
+  substitutionary 255 255 340 says s H b s t X t y u S x n r i
+  supervisory 255 255 356 says s u p x v Y z x r i
+  supremacy 255 255 272 says s u p r E m x s i
+  supreme 255 255 273 says s u p r i m
+  sure 255 255 274 says S c r
+  scone 255 255 261 says s k @ n
+  score 255 255 367 says s k c r
+  schedule 255 255 262 says S E J y u l
+  slovak 255 255 300 says s l o v A k
+  slovakia 255 255 291 says s l x v A k i x
+  snooker 255 255 266 says s n u k x r
+  specialisation 255 255 33 says s p E S x l Y z e S x n
+  specialization 255 255 33 says s p E S x l Y z e S x n
+  stabilisation 255 255 34 says s t e b X l Y z e S x n
+  stabilization 255 255 34 says s t e b X l Y z e S x n
+  store 255 255 369 says s t c r
+  studio 255 255 16 says s t y u d i o
+  studious 255 255 17 says s t y u d i x s
+  strawberry 255 255 270 says s t r c b x r i
+  syllabary 255 255 341 says s I l x b x r i
+  teresa 255 255 275 says t x r i z x
+  tertiary 255 255 55 says t R S x r i
+  tipperary 255 255 342 says t I p x r E r i
+  tirade 255 255 276 says t Y r e d
+  together 255 255 277 says t x g E D x r
+  tunisia 255 255 278 says t y u n I z i x
+  tunisian 255 255 279 says t y u n I z i x n
+  theresa 255 255 275 says t x r i z x
+  variation 255 255 66 says v A r i e S x n
+  vase 255 255 280 says v a z
+  vibratory 255 255 357 says v Y b r e t x r i
+  vocabulary 255 255 56 says v o k A b y U l x r i
+  voyeur 255 255 281 says v w Y R
+  warrior 255 255 370 says w @ r i x r
+  worcestershire 255 255 301 says w U s t x S I x
+  worry 255 255 282 says w H r i
+  wrath 255 255 283 says r @ T
+  xavier 255 255 284 says z A v i x r
+  yamaha 255 255 285 says y A m x h a
+  yogurt 255 255 286 says y @ g x t
+  yoghurt 255 255 286 says y @ g x t
+
+dictionary UKroots2 statement 1 width 0 records sound
+  aesthete 255 255 5 says i s T i t
+  augur 255 255 27 says c g y x
+  automobile 255 255 28 stress 1002 says c t x m x b i l
+  acumen 255 255 3 says A k y u m x n
+  accomplish 255 255 1 says x k H m p l X S
+  accomplished 255 255 2 says x k H m p l X S t
+  adult 255 255 4 says A d H l t
+  agricultural 255 255 6 says A g r X k H l C x r x l
+  alcohol 255 255 7 says A l k x h @ l
+  alcott 255 255 8 says c l k @ t
+  algae 255 255 9 says A l g i
+  allied 255 255 10 says A l Y d
+  alternat 255 255 11 says @ l t x n e t
+  alternative 255 255 12 says @ l t R n x t X v
+  amen 255 255 13 says a m E n
+  amsterdam 255 255 14 says A m s t x d A m
+  anaesthetist 255 255 15 says x n i s T x t X s t
+  andante 255 255 16 says A n d A n t e
+  anthony 255 255 17 says A n t x n i
+  apartheid 255 255 18 says x p a t Y t
+  aperitif 255 255 19 says x p E r x t i f
+  appetit 255 255 20 says A p x t i
+  appetite 255 255 21 says A p x t Y t
+  aquatic 255 255 22 says x k w A t X k
+  asap 255 255 23 stress 2221 says e E s e p i
+  asean 255 255 25 says A s i A n
+  asbestos 255 255 24 says A s b E s t @ s
+  attache 255 255 26 says x t A S e
+  avon 255 255 29 says e v @ n
+  ayatollah 255 255 30 says Y x t @ l x
+  azure 255 255 31 says A z y U x r
+  either 255 255 122 says Y D x
+  ecu 255 255 118 says e k y u
+  educable 255 255 119 says E J x k x b L
+  educate 255 255 120 says E J x k e t
+  education 255 255 121 says E J x k e S x n
+  elan 255 255 123 says X l A n
+  elongate 255 255 124 says i l @ G g e t
+  emu 255 255 126 says i m y u
+  emphysema 255 255 125 says E m f X s i m x
+  enclave 255 255 127 says E G k l e v
+  enquiry 255 255 175 says X n k w Y r i
+  ensemble 255 255 128 says @ n s @ m b x l
+  entendre 255 255 129 says @ n t @ n d r x
+  epee 255 255 130 says E p e
+  equalization 255 255 131 stress 20210 says i k w x l Y z e S x n
+  esoteric 255 255 132 says i s x t E r X k
+  eta 255 255 133 says i t x
+  etiquette 255 255 134 says E t X k E t
+  explanatory 255 255 135 says X k s p l A n x t r i
+  extraordinary 255 255 136 says X k s t r c d n r i
+  impoverish 255 255 172 says I m p @ v x r i S
+  indubitable 255 255 173 says X n d y u b X t x b x l
+  indubitably 255 255 174 says X n d y u b X t x b l i
+  inquiry 255 255 175 says X n k w Y r i
+  insurance 255 255 177 says X n S u r x n s
+  institutional 255 255 176 says I n s t X t y u S x n L
+  interest 255 255 178 says I n t r E s t
+  investigative 255 255 179 says X n v E s t X g x t X v
+  iran 255 255 180 says X r A n
+  iranian 255 255 181 says X r e n i x n
+  islam 255 255 182 says I z l A m
+  islamic 255 255 183 says X z l A m X k
+  israel 255 255 184 says I z r e L
+  obedience 255 255 237 says x b i d i x n s
+  obedient 255 255 238 says x b i d i x n t
+  obey 255 255 239 says x b e
+  obit 255 255 240 says @ b X t
+  octagonal 255 255 241 says @ k t A g x n L
+  omega 255 255 242 says o m X g x
+  onomatopoeia 255 255 243 says @ n x m A t x p i x
+  onomatopoeic 255 255 244 says @ n x m A t x p i X k
+  operability 255 255 245 says @ p r x b I l X t i
+  operable 255 255 246 says @ p r x b x l
+  ordinary 255 255 247 says c d X n r i
+  umlaut 255 255 311 says U m l W t
+  unprecedented 255 255 312 stress 21020 says H n p r E s X d E n t X d
+  uruguay 255 255 313 says y c r x g w Y
+  uruguayan 255 255 314 says y c r x g w Y x n
+  banquette 255 255 32 says b @ G k E t
+  barrage 255 255 33 says b A r a Z
+  bayonet 255 255 34 says b e x n X t
+  berkshire 255 255 35 says b a k S x
+  beverage 255 255 36 says b E v r X J
+  bidet 255 255 37 says b i d e
+  bifocal 255 255 38 says b Y f o k x l
+  billionaire 255 255 39 says b X l i x n E r
+  boulevard 255 255 43 says b u l x v a d
+  bourgeois 255 255 44 says b c Z w a
+  bourgeoisie 255 255 45 says b c Z w a z i
+  bologna 255 255 40 says b x l @ n y x
+  borough 255 255 41 says b H r x
+  boston 255 255 42 says b @ s t x n
+  buenos 255 255 50 says b w e n @ s
+  buddh 255 255 48 says b U d
+  buddha 255 255 49 says b U d x
+  bullion 255 255 51 says b U l i x n
+  bureaucratic 255 255 52 says b y U r x k r A t X k
+  brassiere 255 255 46 says b r A z i E r
+  breadth 255 255 47 says b r E t T
+  caffeine 255 255 53 says k A f i n
+  camaraderie 255 255 54 says k A m x r a d x r i
+  candidate 255 255 55 says k A n d X d x t
+  carburetor 255 255 56 says k a b x r E t x r
+  carburettor 255 255 56 says k a b x r E t x r
+  casualty 255 255 58 says k A Z y U x l t i
+  caste 255 255 57 says k a s t
+  century 255 255 59 says s E n C x r i
+  cerebral 255 255 60 says s E r x b r x l
+  ceremonies 255 255 61 says s E r X m x n i z
+  ceremony 255 255 62 says s E r X m x n i
+  certain 255 255 63 says s R t x n
+  coagulate 255 255 70 says k o A g y U l e t
+  coagulation 255 255 71 says k o A g y U l e S x n
+  courage 255 255 80 says k H r X J
+  couture 255 255 81 says k u t y U x r
+  colonization 255 255 73 says k @ l x n Y z e S x n
+  collage 255 255 72 says k @ l a Z
+  combatant 255 255 74 says k @ m b x t x n t
+  commensurate 255 255 75 says k x m E n S y U r x t
+  commerce 255 255 76 says k @ m R s
+  conducive 255 255 77 says k x n d y u s X v
+  congress 255 255 78 says k @ G g r E s
+  coquette 255 255 79 says k @ k E t
+  covert 255 255 82 says k o v R t
+  cuckoo 255 255 83 says k U k u
+  chauffeur 255 255 67 says S o f x r
+  chauvinist 255 255 66 says S o v x n X s t
+  chalet 255 255 64 says S A l e
+  chateau 255 255 65 says S A t o
+  chicken 255 255 68 says C I k X n
+  claustrophobic 255 255 69 says k l @ s t r x f o b X k
+  debonair 255 255 84 says d E b x n E x r
+  decipher 255 255 85 says d i s Y f x r
+  defrost 255 255 86 says d i f r @ s t
+  deliberately 255 255 87 says d X l I b x r x t l i
+  denouement 255 255 88 says d e n u m @ G
+  departmental 255 255 89 says d i p a t m E n t x l
+  depot 255 255 90 says d E p o
+  detail 255 255 91 says d i t e l
+  deterrence 255 255 92 says d X t E r x n s
+  deterrent 255 255 93 says d X t E r x n t
+  diaeresis 255 255 96 says d Y E r x s X s
+  diabetes 255 255 94 says d Y x b i t i z
+  dieresis 255 255 96 says d Y E r x s X s
+  dichotomy 255 255 95 says d Y k @ t x m i
+  difficulty 255 255 97 says d I f X k x l t i
+  digraph 255 255 98 says d Y g r a f
+  dilemma 255 255 99 says d Y l E m x
+  dilute 255 255 100 says d Y l y u t
+  direct 255 255 101 says d Y r E k t
+  direction 255 255 102 says d Y r E k S x n
+  directive 255 255 103 says d Y r E k t X v
+  directory 255 255 104 says d Y r E k t r i
+  disaster 255 255 105 says d X z a s t x r
+  disastrous 255 255 106 says d X z a s t r x s
+  discourage 255 255 107 says d X s k H r X J
+  distributed 255 255 108 says d X s t r I b y x t X d
+  distributive 255 255 109 says d X s t r I b y x t X v
+  diverse 255 255 110 says d Y v R s
+  diversification 255 255 111 says d Y v R s x f x k e S x n
+  diversify 255 255 112 stress 2102 says d Y v R s x f Y
+  diversity 255 255 113 says d Y v R s x t i
+  divert 255 255 114 says d Y v R t
+  duration 255 255 116 says d y U r e S x n
+  dutifully 255 255 117 says d y u t X f l i
+  draught 255 255 115 says d r a f t
+  fakir 255 255 137 says f e k X x r
+  farthest 255 255 138 says f a D X s t
+  fatality 255 255 139 says f x t A l X t i
+  fiance 255 255 140 says f i @ n s e
+  fiancee 255 255 140 says f i @ n s e
+  filet 255 255 141 says f I l X t
+  finance 255 255 142 says f Y n A n s
+  finances 255 255 143 says f Y n A n s X z
+  financier 255 255 144 says f Y n A n s i x r
+  fortunate 255 255 149 says f c C x n x t
+  fortune 255 255 150 says f c C u n
+  furore 255 255 151 says f y U r c r i
+  furthermore 255 255 152 says f R D x m c r
+  flourish 255 255 145 says f l H r X S
+  fluoride 255 255 146 says f l c r Y d
+  fluorine 255 255 147 says f l c r i n
+  fluorite 255 255 148 says f l c r Y t
+  garcia 255 255 153 says g a s i x
+  generalization 255 255 154 says J E n r x l Y z e S x n
+  guillotine 255 255 156 says g I l x t i n
+  glacier 255 255 155 says g l A s i x r
+  gymnast 255 255 157 says J I m n A s t
+  haiku 255 255 158 says h Y k y u
+  harelip 255 255 159 says h E x l I p
+  hath 255 255 160 says h A T
+  hedon 255 255 161 says h E d x n
+  helices 255 255 162 says h i l X s i z
+  heptagonal 255 255 163 says h E p t A g x n L
+  hereof 255 255 164 says h i r @ v
+  hereon 255 255 165 says h i r @ n
+  hexagonal 255 255 166 says h E k s A g x n L
+  holmes 255 255 167 says h o m z
+  honduran 255 255 168 says h @ n d y U r x n
+  honduras 255 255 169 says h @ n d y U r x s
+  hostess 255 255 170 says h o s t E s
+  hygienic 255 255 171 says h Y J i n X k
+  kamikaze 255 255 185 says k A m X k a z i
+  kerosene 255 255 186 says k E r x s i n
+  lanka 255 255 187 says l A G k x
+  legionary 255 255 188 says l i J x n r i
+  legislative 255 255 189 says l E J X s l x t I v
+  legislature 255 255 190 says l E J X s l x C x r
+  leprechaun 255 255 191 says l E p r x k c n
+  library 255 255 192 says l Y b r x r i
+  lingerie 255 255 193 says l A n Z x r i
+  literature 255 255 194 says l I t r x C x
+  locale 255 255 195 says l o k a l
+  loquacity 255 255 196 says l @ k w A s X t i
+  malleability 255 255 197 says m A l i x b X l X t i
+  malleable 255 255 198 says m A l i x b L
+  mama 255 255 199 says m x m a
+  mano 255 255 201 says m A n o
+  mandate 255 255 200 says m A n d e t
+  marijuana 255 255 202 says m A r x w a n x
+  maritime 255 255 203 says m A r X t Y m
+  masterfully 255 255 204 says m a s t x f l i
+  meanwhile 255 255 205 says m i n w Y l
+  mediaeval 255 255 207 says m E d i i v x l
+  medieval 255 255 207 says m E d i i v x l
+  medicine 255 255 206 says m E d X s x n
+  menagerie 255 255 208 says m x n A J x r i
+  mercedes 255 255 209 says m R s e d i z
+  milieu 255 255 210 says m i l y R
+  millionaire 255 255 211 says m X l i x n E r
+  mirage 255 255 212 says m I r a Z
+  miz 255 255 222 says m x z
+  mobilization 255 255 213 says m o b X l Y z e S x n
+  modem 255 255 214 says m o d E m
+  molasses 255 255 215 says m x l A s X z
+  monarch 255 255 216 says m @ n x k
+  monarchy 255 255 217 says m @ n x k i
+  monotheist 255 255 219 says m @ n o T i X s t
+  monday 255 255 218 says m H n d i
+  monseigneur 255 255 220 says m @ n s x n y R
+  mosquito 255 255 221 says m @ s k i t o
+  mustache 255 255 223 says m x s t a S
+  nationalize 255 255 224 says n A S n x l Y z
+  neanderthal 255 255 225 says n i A n d x t a l
+  neither 255 255 226 says n Y D x
+  nicaragua 255 255 227 says n I k x r A g y U x
+  nicaraguan 255 255 228 says n I k x r A g y U x n
+  nikkei 255 255 229 says n I k e
+  nissan 255 255 230 says n I s A n
+  nourish 255 255 234 says n H r X S
+  nomenclature 255 255 231 says n x m E n k l x C x
+  notorious 255 255 232 says n o t c r i x s
+  notre 255 255 233 says n @ t r x
+  nuclei 255 255 235 says n y u k l X y Y
+  nucleus 255 255 236 says n y u k l X y x s
+  papa 255 255 248 says p x p a
+  papiermache 255 255 249 stress 20012 says p A p i x m A S e
+  parent 255 255 250 says p E r x n t
+  parquet 255 255 251 says p a k e
+  peugeot 255 255 254 says p R Z o
+  pentagon 255 255 252 says p E n t x g x n
+  pentagonal 255 255 253 says p E n t A g x n L
+  pistachio 255 255 257 says p X s t a S i o
+  poem 255 255 258 says p o X m
+  pollard 255 255 259 says p @ l a d
+  physiognomy 255 255 255 says f X z i @ n x m i
+  physiological 255 255 256 says f X z i x l @ J X k L
+  prelude 255 255 260 says p r E l y u d
+  premier 255 255 261 says p r E m y x r
+  premiere 255 255 261 says p r E m y x r
+  premonition 255 255 262 says p r E m o n I S x n
+  pretence 255 255 263 says p r X t E n s
+  pretense 255 255 263 says p r X t E n s
+  privatization 255 255 264 says p r Y v x t Y z e S x n
+  product 255 255 265 says p r @ d H k t
+  protocol 255 255 266 says p r o t x k @ l
+  quantitative 255 255 267 says k w @ n t X t x t X v
+  rapprochement 255 255 268 says r A p r @ S m @ n
+  rapprochements 255 255 269 says r A p r @ S m @ n z
+  rationalization 255 255 270 says r A S n x l Y z e S x n
+  rebound 255 255 271 says r i b W n d
+  recitative 255 255 272 says r E s X t x t i v
+  recluse 255 255 273 says r X k l u s
+  reformat 255 255 274 says r i f c m A t
+  relay 255 255 275 says r i l e
+  renaissance 255 255 276 says r x n e s @ n s
+  renault 255 255 277 says r E n o
+  rendezvous 255 255 278 says r @ n d e v u
+  saute 255 255 279 says s o t e
+  seance 255 255 280 says s e @ n s
+  senate 255 255 281 says s E n x t
+  senegal 255 255 282 says s E n X g c l
+  september 255 255 283 says s E p t E m b x r
+  series 255 255 284 says s I r i z
+  simile 255 255 285 says s I m X l i
+  simultaneous 255 255 286 says s X m x l t e n i x s
+  singapore 255 255 287 says s X G x p c
+  souffle 255 255 289 says s u f l e
+  society 255 255 288 says s x s Y x t i
+  suburb 255 255 295 says s H b R b
+  sulfurous 255 255 296 says s H l f x r x s
+  sulphurous 255 255 296 says s H l f x r x s
+  superior 255 255 298 says s u p I r i x r
+  superiority 255 255 299 says s u p I x r i @ r x t i
+  superfluous 255 255 297 says s u p R f l u x s
+  superlative 255 255 300 says s u p R l x t X v
+  supernal 255 255 301 says s u p R n x l
+  specialization 255 255 290 says s p E S x l Y z e S x n
+  specific 255 255 291 says s p x s I f X k
+  stabilization 255 255 292 says s t e b x l Y z e S x n
+  stronger 255 255 293 says s t r @ G g x r
+  strongest 255 255 294 says s t r @ G g X s t
+  taco 255 255 302 says t A k o
+  testimony 255 255 303 says t E s t X m x n i
+  tincan 255 255 307 says t X n k A n
+  tis 255 255 308 says t I z
+  thailand 255 255 304 says t Y l A n d
+  thither 255 255 305 says D I D x r
+  thorough 255 255 306 says T H r x
+  trachea 255 255 309 says t r x k i x
+  twas 255 255 310 says t w @ z
+  vaudeville 255 255 316 says v c d x v I l
+  vauxhall 255 255 317 says v @ k s c l
+  valiant 255 255 315 says v A l i x n t
+  vegetative 255 255 318 says v E J X t x t I v
+  ventriloquist 255 255 319 says v E n t r I l x k w X s t
+  verbatim 255 255 320 says v R b e t X m
+  vietnam 255 255 323 says v i E t n A m
+  victim 255 255 321 says v I k t X m
+  victual 255 255 322 says v I k C u x l
+  vineyard 255 255 324 says v I n y a d
+  volatility 255 255 325 says v @ l x t I l x t i
+  volkswagen 255 255 326 says v @ l k s v a g x n
+  waylay 255 255 327 says w e l e
+  worthwhile 255 255 328 says w R T w Y l
+  yasser 255 255 329 says y A s x r
+  zenith 255 255 330 says z E n X T
+  zoological 255 255 331 says z u x l @ J X k L
+  zoologist 255 255 332 says z u @ l x J X s t
+  zoology 255 255 333 says z u @ l x J i
+
+dictionary UK_except_stress statement 1 width 0 records sound
+  australia 255 255 4
+  australian 255 255 4
+  advertisement 255 255 3
+  ali 255 255 2
+  ancillary 255 255 4
+  ecu 255 255 1
+  edinburgh 255 255 2
+  evolutionary 255 255 5
+  extraordinary 255 255 3
+  ion 255 255 2
+  incendiary 255 255 4
+  inflammatory 255 255 3
+  obituary 255 255 2
+  observatory 255 255 3
+  ballet 255 255 1
+  bangkok 255 255 4
+  belgrade 255 255 4
+  beneficiary 255 255 5
+  beret 255 255 1
+  binary 255 255 2
+  blackcurrant 255 255 4
+  brochure 255 255 2
+  cabaret 255 255 6
+  cafe 255 255 1
+  calais 255 255 1
+  capsule 255 255 1
+  caveat 255 255 6
+  cemetery 255 255 2
+  combatant 255 255 2
+  combative 255 255 2
+  concord 255 255 1
+  contrary 255 255 2
+  corridor 255 255 6
+  cheerio 255 255 5
+  cliche 255 255 1
+  croquet 255 255 1
+  debris 255 255 1
+  decor 255 255 1
+  defamatory 255 255 3
+  demonstrably 255 255 2
+  diagnose 255 255 2
+  diamond 255 255 2
+  dictate 255 255 4
+  disciplinary 255 255 2
+  discretionary 255 255 3
+  doctoral 255 255 2
+  dysentery 255 255 2
+  february 255 255 2
+  finance 255 255 4
+  forlorn 255 255 3
+  frustrate 255 255 4
+  garage 255 255 1
+  garcia 255 255 2
+  january 255 255 2
+  judiciary 255 255 4
+  laboratory 255 255 3
+  leon 255 255 2
+  lebanon 255 255 2
+  limousine 255 255 6
+  lingerie 255 255 2
+  locate 255 255 4
+  margarine 255 255 5
+  massage 255 255 1
+  matinee 255 255 2
+  moustache 255 255 3
+  momentary 255 255 2
+  monastery 255 255 2
+  montrose 255 255 4
+  necessary 255 255 2
+  nonchalance 255 255 2
+  nonchalant 255 255 2
+  partisan 255 255 5
+  puree 255 255 1
+  plateau 255 255 4
+  preparatory 255 255 3
+  progression 255 255 4
+  progressive 255 255 4
+  provost 255 255 2
+  raspberry 255 255 2
+  reactionary 255 255 4
+  reactionary 255 255 3
+  repeat 255 255 3
+  research 255 255 3
+  resource 255 255 3
+  retaliatory 255 255 3
+  rosemary 255 255 2
+  saucepan 255 255 2
+  salon 255 255 1
+  semi 255 255 2
+  series 255 255 6
+  strawberry 255 255 2
+  translate 255 255 4
+  trespass 255 255 2
+  tyrone 255 255 3
+  valet 255 255 1
+  vocabulary 255 255 4
+  volatile 255 255 6
+  weekend 255 255 4
+
+dictionary eng_words statement 1 width 0 records sound
+  au 255 255 17 says o
+  above 255 255 1 says x b H v
+  acura 255 255 2 says A k y u r x
+  again 255 255 3 says x g E n
+  against 255 255 4 says x g E n s t
+  alongside 255 255 6 says x l c G s Y d
+  almost 255 255 5 says c l m o s t
+  alright 255 255 7 says c l r Y t
+  also 255 255 8 says c l s o
+  altogether 255 255 10 says c l t x g E D x r
+  although 255 255 9 says c l D o
+  amidst 255 255 11 says x m I t s t
+  amok 255 255 12 says x m H k
+  among 255 255 13 says x m H G
+  amongst 255 255 14 says x m H G s t
+  another 255 255 15 says x n H D x r
+  anymore 255 255 16 says E n i m c r
+  ave 255 255 18 says a v e
+  awol 255 255 19 says e w c l
+  aye 255 255 20 says Y
+  inasmuch 255 255 39 says I n X z m H C
+  indeed 255 255 40 says I n d i d
+  instead 255 255 41 says I n s t E d
+  outta 255 255 62 says W t x
+  once 255 255 61 says w H n s
+  o'clock 255 255 60 says x k l a k
+  unless 255 255 90 says x n l E s
+  upon 255 255 91 says x p a@ n
+  before 255 255 21 says b x f c r
+  both 255 255 22 says b o T
+  chilies 255 255 23 says C I l i z
+  deco 255 255 24 says d E k o
+  forasmuch 255 255 25 says f c r Xx z m H C
+  furthest 255 255 29 says f R D X s t
+  freer 255 255 26 says f r i x r
+  freest 255 255 27 says f r i X s t
+  friedman 255 255 28 says f r i d m Xx n
+  good 255 255 30 says g U d
+  gras 255 255 31 says g r a
+  hereby 255 255 32 stress 11 says h i r b Y
+  heretofore 255 255 33 says h i r t u f c r
+  hifi 255 255 34 says h Y f Y
+  hippopotami 255 255 35 stress 20102 says h I p x p a t x m Y
+  hors 255 255 36 says c r
+  however 255 255 37 says h W E v x r
+  howsoever 255 255 38 says h W s o E v x r
+  kiwanis 255 255 42 says k X w a n X s
+  liable 255 255 44 says l Y b x l
+  libra 255 255 43 says l i b r H
+  mach 255 255 46 says m a k
+  mano 255 255 47 says m a n o
+  many 255 255 48 says m E n i
+  ma'am 255 255 45 says m A m
+  merci 255 255 49 says m e r s i
+  mir 255 255 50 says m i r
+  moreover 255 255 51 says m c r o v x r
+  naturally 255 255 52 says n A C r x l i
+  nevertheless 255 255 53 stress 2001 says n E v x r D x l E s
+  nez 255 255 54 says n e
+  noone 255 255 57 says n o w H n
+  nonesuch 255 255 55 says n H n s H C
+  nonetheless 255 255 56 stress 101 says n H n D x l E s
+  notwithstanding 255 255 58 says n a@ t w I T s t A n d I G
+  nowadays 255 255 59 says n W x d e z
+  pre 255 255 63 says p r i
+  rapprochement 255 255 64 says r a p r o S m c
+  res 255 255 65 says r E z
+  severer 255 255 67 says s x v i r x r
+  severest 255 255 68 says s x v i r X s t
+  singed 255 255 69 says s I n J d
+  somehow 255 255 70 says s H m h W
+  scifi 255 255 66 says s Y f Y
+  thence 255 255 71 says D E n s
+  thereafter 255 255 72 says D e r Aa f t x r
+  thereagainst 255 255 73 says D e r x g E n s t
+  thereat 255 255 74 says D e r A t
+  therein 255 255 77 says D e r I n
+  thereinafter 255 255 78 says D e r X n Aa f t x r
+  thereinto 255 255 79 says D e r I n t u
+  thereof 255 255 80 says D e r H@ v
+  thereon 255 255 81 says D e r a@ n
+  thereunder 255 255 83 says D e r H n d x r
+  thereupon 255 255 84 says D e r x p a@ n
+  therefore 255 255 75 says D e r f c r
+  therefrom 255 255 76 says D e r f r H@ m
+  thereto 255 255 82 says D e r t u
+  thither 255 255 85 says T I D x r
+  though 255 255 86 says D o
+  thus 255 255 89 says D H s
+  through 255 255 87 says T r u
+  throughout 255 255 88 says T r u W t
+  whenever 255 255 92 says w E n E v x r
+  whereabout 255 255 93 says w e r x b W t
+  whereafter 255 255 94 says w e r A f t x r
+  whereagainst 255 255 95 says w e r x g E n s t
+  whereat 255 255 96 says w e r A t
+  wherein 255 255 98 says w e r I n
+  whereinafter 255 255 99 says w e r X n A f t x r
+  whereinto 255 255 100 says w e r I n t u
+  whereof 255 255 101 says w e r H@ v
+  whereon 255 255 102 says w e r a@ n
+  whereunder 255 255 105 says w e r H n d x r
+  whereupon 255 255 106 says w e r x p a@ n
+  wherefore 255 255 97 says w e r f c r
+  wheresoever 255 255 103 says w e r s o E v x r
+  whereto 255 255 104 says w e r t u
+  wherever 255 255 107 says w e r E v x r
+  whoa 255 255 108 says w o
+  wholly 255 255 109 says h o l i
+  whomsoever 255 255 110 says h u m s o E v x r
+  whosoever 255 255 111 says h u s o E v x r
+  whyever 255 255 112 says w Y E v x r
+  yeah 255 255 114 says y E x
+  y'all 255 255 113 says y c l
+  y'know 255 255 115 says y X n o
+  Libra 255 255 43 says l i b r H

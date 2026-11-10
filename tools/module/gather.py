@@ -45,8 +45,12 @@ NAMES = {
     # those is refused outright when the romanizer is not there. Seventeen is
     # clear of all of it.
     "plpl": "Polish",
-    # And family eighteen, the last of the eighteen: Russian, which is Polish's
-    # module under its own number, spoken through src/eci/synth/eci_russian.c.
+    # Lifted whole out of ETI Eloquence 6.1 by tools/module/lift61.py: family
+    # nine, which is Finnish in IBM's numbering and has no romanizer.
+    "fifi": "Finnish",
+    # The same, family seven, Brazilian Portuguese in IBM's numbering.
+    "ptbr": "Brazilian Portuguese",
+    # Family eighteen: Russian.
     "ruru": "Russian",
 }
 
@@ -88,6 +92,8 @@ extern const delta_store %(tag)s_delta_authored_store[];
 
 extern const delta_codepoint %(tag)s_delta_codepoints[];
 extern const int32_t %(tag)s_delta_codepoints_n;
+
+extern const delta_builtin_dict %(tag)s_builtin_dict;
 
 /* The two slots the runtime fills in for this language: the symbol table,
    once delta_syms_bind has copied the stores into the arena, and the index
@@ -158,6 +164,8 @@ delta_language delta_lang_%(tag)s = {
 
 %(procnames)s
     0, 0,                /* the settings blob and its size */
+    %(on_change)d,                   /* settings sent only when changed */
+    &%(tag)s_builtin_dict,  /* the dictionary it carries */
 };
 
 void delta_lang_bind_%(tag)s(void)
@@ -230,6 +238,13 @@ const delta_store %(tag)s_delta_authored_store[] = {
 '''
 
 
+def lifted_from_61(settings):
+    if not os.path.exists(settings):
+        return False
+    with open(settings, encoding="utf-8") as f:
+        return any(line.strip() == "Version=6.1" for line in f)
+
+
 def main(argv):
     if not argv:
         print(__doc__.strip(), file=sys.stderr)
@@ -246,6 +261,10 @@ def main(argv):
                              for n in PROCS),
         "procs": "".join(PROC % {"tag": tag, "name": n} for n in PROCS),
         "procnames": "".join("    proc_%s,\n" % n for n in PROCS),
+        # A language lifted from 6.1 says so in its settings, and is driven
+        # the way 6.1's interface drives it.
+        "on_change": int(lifted_from_61(os.path.join(ROOT, "lang", tag,
+                                                     tag + ".settings"))),
     }
 
     with open(os.path.join(out, "delta_lang_%s.c" % tag), "w", encoding="utf-8") as f:

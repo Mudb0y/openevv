@@ -41,6 +41,7 @@
 #define ROM_SAMPLE_RATE   0x3eb
 
 /* Which parameter a change is being reported back under. */
+#define ECI_PARAM_TEXTMODE 0
 #define ECI_PARAM_PHONEMES 4
 #define ECI_PARAM_VOICE    0x10
 #define ECI_PARAM_ROM      0x0e
@@ -75,6 +76,7 @@ extern THIS void stw_processRemaining(SynthThread *t)
     MANGLED("?processRemaining@SynthThread@@QAEXXZ");
 extern THIS void stw_shutDown(SynthThread *t)
     MANGLED("?shutDown@SynthThread@@AAEXXZ");
+extern void stb_flushTail(SynthThread *t);
 extern THIS void stw_stopSynthesis(SynthThread *t, int32_t seq)
     MANGLED("?stopSynthesis@SynthThread@@AAEXJ@Z");
 extern THIS void stb_postRomanizerError(SynthThread *t, int32_t which)
@@ -271,6 +273,17 @@ void setPausesRun(SynthThread *t, int32_t mode, int32_t seq)
     finished(t);
 }
 
+/* The same flush first, and then the engine in use is told; one the thread
+   takes up later is told when it is taken up -- see stw_tellBuiltin. */
+void setBuiltinRun(SynthThread *t, int32_t on, int32_t seq)
+{
+    (void)seq;
+    stw_processRemaining(t);
+    ST_BUILTIN(t) = on != 0;
+    stw_tellBuiltin(t);
+    finished(t);
+}
+
 /* A voice change is the widest of them: the sample format may have moved
    under it, the concatenative side may or may not have this voice, and if
    that answer has changed since last time the caller is told so. */
@@ -331,6 +344,8 @@ THIS void changeRomParamRun(SynthThread *t, int32_t param, int32_t value,
         stb_postRomanizerError(t, 0);
         return;
     }
+    if (param == ECI_PARAM_TEXTMODE)
+        ST_TEXTMODE(t) = value;
     finished(t);
 }
 
@@ -462,8 +477,10 @@ THIS void synthesizeRun(SynthThread *t, int32_t seq)
     was_last = ST_PENDING(t) == 0;
     sy_mutexRelease(lock);
 
-    if (was_last)
+    if (was_last) {
         stw_processRemaining(t);
+        stb_flushTail(t);
+    }
     stw_shutDown(t);
     stw_stopSynthesis(t, seq);
 }

@@ -22,8 +22,9 @@ plain 4 8001a766555db7e7 e2dc8c70bb9f1481 Test 1 2 3, ABC XYZ, Bindestrich-Woert
 plain 5 11e7b2bf7d27a3d7 38afeeeff09b997c Ein Wort. Und noch eins; dazu "zitierter Text" mittendrin.
 plain 6 0868c08ddbf8f5c1 c9e541dda574dd73 Rechtschreibpruefung, Donaudampfschifffahrt, 42% von 3,14159, und Herr Mueller-Lued Jr.
 plain 7 863731c1c620414e e342a95adce7cdd4 Er sagte: nicht doch! Dann (nebenbei) 1/2 + 3/4 = 5/4; siehe S. 12.
+plain 8 cf3037479ffcabc8 e1687ef072035f67 Als der Regen am Morgen leise gegen die Fenster klopfte, sass Daniel an seinem Schreibtisch und verglich die Ergebnisse von zwei Sprachsynthesizern, wobei er genau darauf achtete, wie jeder von ihnen mit ungewoehnlichen Namen, technischen Ausdruecken, langen zusammengesetzten Woertern und feinen Unterschieden in der Zeichensetzung umging, als eine Nachricht von seiner Kollegin eintraf, die wissen wollte, ob das letzte Update den Rhythmus langer Saetze, die Klarheit von Abkuerzungen und die Aussprache von Woertern verbessert hatte, die sowohl Nomen als auch Verben sein koennen, worauf er sein Testdokument noch einmal oeffnete und jedem Detail sorgfaeltig zuhoerte.
 utf8 1 5132604b497b64d2 e0c22b19018cc8db Strasse, Gruesse, Mueller, Koeln, Weiss.
-utf8 2 5134c1147acf358c 91287eb8e86d05d7 Straße, Grüße, Müller, Köln, Weiß.
+utf8 2 405d1b97e8993880 f8ac53715a56b113 Straße, Grüße, Müller, Köln, Weiß.
 utf8 3 868a2a54d07420ff 9976900b6ac287dc Über den Fluss und durch den Wald zur Großmutter.
 utf8 4 061e771e13b0550c 83b10e55a872c3b7 Ärzte, Öfen, Übungen, Äpfel, Öl und Übermut.
 utf8 5 fd9290d188402007 f6765b721d05540c Der Weißkopfseeadler fliegt über die schöne Landschaft.
@@ -55,7 +56,7 @@ anno3 4 eee935f6dc72d624 f39b42d0f6a2b1c8 Stimme `v2 zwei, `v5 fuenf, und `v1 zu
 anno3 5 02a9a98f269bd1da e4bd9c4555255a89 Eine Pause `0 kurz und `4 lang zwischen Woertern.
 anno3 6 503d601568bb45b6 f254d5f78456687d Rauheit `vr40 und Behauchtheit `vf60 geaendert.
 anno3 7 c15afd9281ab39d3 75f8f3c350a89f2b Ein woertlicher \`Backtick soll als Text gesprochen werden.
-anno3 8 76634398af8dcf02 fe948db4421ad258 Tempo mit Namen `vsfast und dann wieder `vsslow.
+anno3 8 2151d404d2620dd5 9dfeb2bf175fa9b5 Tempo mit Namen `vsfast und dann wieder `vsslow.
 anno3 9 1ac3f9cbe062d850 4a2224a3d8a32da6 Kopfgroesse `vh30 dann `vh70 in derselben Zeile.
 anno3 10 6b0b49f8967de94b 91311eb689e8aacd Geschlecht `vg1 und `vg0 im Wechsel.
 anno3 11 86e4f982ff81feaa 5f35f18b2529fb5f Vor `ui"Marke eins" und nach der Indexmarke.
@@ -75,7 +76,7 @@ realworld 4 eee935f6dc72d624 e0edb5df856002ff Stimme `v2 zwei, `v5 fuenf, und `v
 realworld 5 02a9a98f269bd1da 506016e6c0fa4dc2 Eine Pause `0 kurz und `4 lang zwischen Woertern.
 realworld 6 503d601568bb45b6 9e991383c241ab8c Rauheit `vr40 und Behauchtheit `vf60 geaendert.
 realworld 7 c15afd9281ab39d3 c0119384a315e37f Ein woertlicher \`Backtick soll als Text gesprochen werden.
-realworld 8 76634398af8dcf02 638584098f8f27d3 Tempo mit Namen `vsfast und dann wieder `vsslow.
+realworld 8 2151d404d2620dd5 624c3396bee251f3 Tempo mit Namen `vsfast und dann wieder `vsslow.
 realworld 9 1ac3f9cbe062d850 f1bd444351377eb9 Kopfgroesse `vh30 dann `vh70 in derselben Zeile.
 realworld 10 6b0b49f8967de94b fb5d8fc81bc02d06 Geschlecht `vg1 und `vg0 im Wechsel.
 realworld 11 86e4f982ff81feaa 2879941669b13a44 Vor `ui"Marke eins" und nach der Indexmarke.
@@ -95,6 +96,7 @@ dict 4 8001a766555db7e7 670cc00dd979acf1 Test 1 2 3, ABC XYZ, Bindestrich-Woerte
 dict 5 11e7b2bf7d27a3d7 8879aa81ce9ff843 Ein Wort. Und noch eins; dazu "zitierter Text" mittendrin.
 dict 6 0868c08ddbf8f5c1 77ef3871c8bd557a Rechtschreibpruefung, Donaudampfschifffahrt, 42% von 3,14159, und Herr Mueller-Lued Jr.
 dict 7 863731c1c620414e 51c91044763f6a78 Er sagte: nicht doch! Dann (nebenbei) 1/2 + 3/4 = 5/4; siehe S. 12.
+dict 8 cf3037479ffcabc8 f39bcd984f018f72 Als der Regen am Morgen leise gegen die Fenster klopfte, sass Daniel an seinem Schreibtisch und verglich die Ergebnisse von zwei Sprachsynthesizern, wobei er genau darauf achtete, wie jeder von ihnen mit ungewoehnlichen Namen, technischen Ausdruecken, langen zusammengesetzten Woertern und feinen Unterschieden in der Zeichensetzung umging, als eine Nachricht von seiner Kollegin eintraf, die wissen wollte, ob das letzte Update den Rhythmus langer Saetze, die Klarheit von Abkuerzungen und die Aussprache von Woertern verbessert hatte, die sowohl Nomen als auch Verben sein koennen, worauf er sein Testdokument noch einmal oeffnete und jedem Detail sorgfaeltig zuhoerte.
 second 1 4a873c4ab9720da3 580473d66fb06ad9 Hallo. Hier spricht der Eloquence Sprachsynthesizer.
 second 2 24a4f2ac67681a75 c987c1ad339d40dc Dr. Schmidt zahlte 1.234,56 Euro am 3. Mai 2026 um 19:45 Uhr.
 second 3 0787bf2b13044049 054a5731ea791ca1 Der schnelle braune Fuchs springt ueber den faulen Hund; z.B. www.beispiel.de/pfad?q=1
@@ -102,6 +104,7 @@ second 4 3d327de03e68d241 50649413de067c21 Test 1 2 3, ABC XYZ, Bindestrich-Woer
 second 5 e3bcf367dbab9886 a1946f7f62fe18ba Ein Wort. Und noch eins; dazu "zitierter Text" mittendrin.
 second 6 03904986e0c9fe4d 37bc57cf1b911d7f Rechtschreibpruefung, Donaudampfschifffahrt, 42% von 3,14159, und Herr Mueller-Lued Jr.
 second 7 49f39717dfe3776c cd1f24262c4466fe Er sagte: nicht doch! Dann (nebenbei) 1/2 + 3/4 = 5/4; siehe S. 12.
+second 8 ef51a2e4e3bf3275 b6c54f266ff308a0 Als der Regen am Morgen leise gegen die Fenster klopfte, sass Daniel an seinem Schreibtisch und verglich die Ergebnisse von zwei Sprachsynthesizern, wobei er genau darauf achtete, wie jeder von ihnen mit ungewoehnlichen Namen, technischen Ausdruecken, langen zusammengesetzten Woertern und feinen Unterschieden in der Zeichensetzung umging, als eine Nachricht von seiner Kollegin eintraf, die wissen wollte, ob das letzte Update den Rhythmus langer Saetze, die Klarheit von Abkuerzungen und die Aussprache von Woertern verbessert hatte, die sowohl Nomen als auch Verben sein koennen, worauf er sein Testdokument noch einmal oeffnete und jedem Detail sorgfaeltig zuhoerte.
 ssml 1 c5c5395dad437d78 7c064d64b3fe9e7c <speak version="1.0" xml:lang="de-DE">Guten Tag.</speak>
 ssml 2 c0e91a0416640ee2 5ef3913ff22f9576 <speak version="1.0" xml:lang="de-DE"><prosody rate="slow">Jetzt langsamer.</prosody> Wieder normal.</speak>
 ssml 3 4f716caca45f22b4 bb572f6ae3be7c65 <speak version="1.0" xml:lang="de-DE"><prosody pitch="high" range="x-high" volume="loud">Alle vier zugleich.</prosody></speak>
@@ -112,10 +115,11 @@ ssml 7 4e0a0c33d5484f1d 0b375235055ea2d3 <speak version="1.0" xml:lang="de-DE">B
 ssml 8 c5427dda15be3560 c22812a4a13a983a <speak version="1.0" xml:lang="de-DE">Warte<break time="500ms"/>darauf.<mark name="hier"/> Da.</speak>
 ssml 9 6543385594988b60 ff0d22bdfc93b95e <speak version="1.0" xml:lang="de-DE"><sub alias="Weltweites Netz">WWW</sub> und <phoneme ph="h.E.l.oU">hallo</phoneme>.</speak>
 ssml 10 ce0ee0304a8ce40e b0dd322d5043db63 <speak version="1.0" xml:lang="de-DE">Die Straße heißt schön, mit a &amp; b &lt; c.</speak>
-wide 1 6aa6b7364c89418f 87406496eaade1d6 Hallo. Hier spricht der Eloquence Sprachsynthesizer.
-wide 2 82de733682556f77 dd15b3f77c440ddc Dr. Schmidt zahlte 1.234,56 Euro am 3. Mai 2026 um 19:45 Uhr.
-wide 3 cb077a9185576903 331f37e1c4cb586a Der schnelle braune Fuchs springt ueber den faulen Hund; z.B. www.beispiel.de/pfad?q=1
-wide 4 3cfc271c9f150314 884b22def82910a1 Test 1 2 3, ABC XYZ, Bindestrich-Woerter und GROSSBUCHSTABEN.
-wide 5 6d33c0f9232493d9 6d3cbe5d3f014c08 Ein Wort. Und noch eins; dazu "zitierter Text" mittendrin.
-wide 6 0aaacb76fa677bb5 570d5850cb6b4d58 Rechtschreibpruefung, Donaudampfschifffahrt, 42% von 3,14159, und Herr Mueller-Lued Jr.
-wide 7 ca474ea31b43bc3c 83277b15592ecdb4 Er sagte: nicht doch! Dann (nebenbei) 1/2 + 3/4 = 5/4; siehe S. 12.
+wide 1 076effa1016fc6de 05a227931d1eb8f3 Hallo. Hier spricht der Eloquence Sprachsynthesizer.
+wide 2 375a9d72621238fc 420530365fede05a Dr. Schmidt zahlte 1.234,56 Euro am 3. Mai 2026 um 19:45 Uhr.
+wide 3 c31184413d51033c 8285e3d020a5b765 Der schnelle braune Fuchs springt ueber den faulen Hund; z.B. www.beispiel.de/pfad?q=1
+wide 4 df4758178b6c925e d72e4531d1b3ccc8 Test 1 2 3, ABC XYZ, Bindestrich-Woerter und GROSSBUCHSTABEN.
+wide 5 2e43169364173196 6ea6debb40f455b1 Ein Wort. Und noch eins; dazu "zitierter Text" mittendrin.
+wide 6 222fd24658e79138 fbf25ab5661902ca Rechtschreibpruefung, Donaudampfschifffahrt, 42% von 3,14159, und Herr Mueller-Lued Jr.
+wide 7 d5d23fe53ede5cfe 7e7e6fdcb9679209 Er sagte: nicht doch! Dann (nebenbei) 1/2 + 3/4 = 5/4; siehe S. 12.
+wide 8 b1a2db335e7ff5f4 2ef66911d708904e Als der Regen am Morgen leise gegen die Fenster klopfte, sass Daniel an seinem Schreibtisch und verglich die Ergebnisse von zwei Sprachsynthesizern, wobei er genau darauf achtete, wie jeder von ihnen mit ungewoehnlichen Namen, technischen Ausdruecken, langen zusammengesetzten Woertern und feinen Unterschieden in der Zeichensetzung umging, als eine Nachricht von seiner Kollegin eintraf, die wissen wollte, ob das letzte Update den Rhythmus langer Saetze, die Klarheit von Abkuerzungen und die Aussprache von Woertern verbessert hatte, die sowohl Nomen als auch Verben sein koennen, worauf er sein Testdokument noch einmal oeffnete und jedem Detail sorgfaeltig zuhoerte.

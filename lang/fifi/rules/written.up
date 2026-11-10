@@ -1,0 +1,23 @@
+# Written here rather than lifted, because the lifter cannot read it: 6.1
+# chooses between two compound variables by arithmetic on where they are,
+# a comparison's answer shifted left five and added to the address of the
+# first, and they are not thirty-two bytes apart in this machine. It does
+# what 6.1's set_phrase_defaults does: copies the one or the other into a
+# third, according to whether the field it is handed is a variable's value.
+
+rule set_phrase_defaults takes 2
+  instead
+  local parm bytes 8
+  variable target word 2016
+  variable unequal word 2030
+  variable equal word 2044
+  call get_parm addr parm arg 1 -4
+  call fence 0 sym eti_null
+  set global half 2410 to global half 2128
+  if global half 1478 is cell parm field
+    call copyvar addr target addr equal
+    match
+  end
+  call copyvar addr target addr unequal
+  match
+end

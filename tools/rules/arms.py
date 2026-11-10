@@ -992,7 +992,7 @@ class Arms:
                 out.setdefault(r.length, r)
         return out
 
-    def add_arm(self, data):
+    def add_arm(self, data, stress=None):
         """A new action, laying down a record of its own.
 
         Written as the lower form rather than as bytecode. The rule text in
@@ -1016,9 +1016,22 @@ class Arms:
         try:
             return newarm.add(TREE, self.name,
                               self.rules.rules[self.index][1],
-                              r.blob, off, len(data), SYMBOLS)
+                              r.blob, off, len(data), SYMBOLS, stress)
         except newarm.CannotWrite as e:
             raise ValueError('%s: %s' % (self.name, e))
+
+    def set_stress(self, act, stress):
+        """Where one action's word is stressed, or with None, leave it to the
+        rules. tools/rules/newarm.py says how the pattern is written."""
+        try:
+            newarm.set_stress(TREE, self.name, act, stress)
+        except newarm.CannotWrite as e:
+            raise ValueError('%s: %s' % (self.name, e))
+
+    def stresses(self):
+        """The stress pattern each action's own arm stores, where it stores
+        one."""
+        return newarm.stresses(TREE, self.name)
 
     def rewrite_parts(self, act, datas):
         """Change what an action laid down in pieces. Each piece is its own

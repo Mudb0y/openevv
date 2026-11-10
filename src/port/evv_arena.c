@@ -23,6 +23,16 @@
  * either side of it. Which block a request is given is still the first free one
  * that is big enough, exactly as when the whole arena was walked, so nothing is
  * placed anywhere it was not.
+ *
+ * Giving a dictionary back was the same thing the other way round. A block
+ * given back found its place by walking the free blocks below it, and a
+ * dictionary's entries are given back in the order of its hash table rather
+ * than of their addresses, so every one walked a list that the ones before it
+ * had made longer: 69,000 entries took 23 seconds to delete, during which a
+ * screen reader that rereads its dictionaries when a file changes was silent.
+ * So where every free block starts is also kept in a bitmap beside the arena,
+ * and a block given back finds the free block in front of it there. The list
+ * and everything placed from it are as they were.
  */
 
 #include "evv_arena.h"
@@ -85,6 +95,15 @@ size_t         evv_arena_size;
 #define ALIGN       16
 #define ROUND(n)    (((n) + (ALIGN - 1)) & ~(size_t)(ALIGN - 1))
 
+/* How much to take when nobody said. The pages are not touched until they are
+   used, so asking for a lot costs nothing but address space, and the whole
+   point of the region is that it has to sit at an address a 32-bit value can
+   name, which is not somewhere to be short of room. It is also the most there
+   ever is, which the map of free blocks below is sized by. */
+#ifndef ARENA_DEFAULT
+#define ARENA_DEFAULT (256u * 1024u * 1024u)
+#endif
+
 /* One block: how big it is and whether it is in use. The size is of the whole
    block, header included, so walking is a matter of adding it.
 
@@ -120,6 +139,86 @@ static head *free_next(const head *b)
 static uint32_t free_ref(const head *b)
 {
     return b != 0 ? (uint32_t)((const unsigned char *)b - evv_arena_base) : 0;
+}
+
+/* Where the free blocks start, a bit for every place a block can, and above
+   it a bit for every word of it that has one set and a bit for every word of
+   that: so the free block in front of a place is at most three words away,
+   or a walk down sixty-four, however many free blocks there are. Beside the
+   arena rather than in it, so that nothing in the arena moves; and static,
+   so that it costs what is touched and cannot fail to be had. */
+#define MAP_BITS   ((size_t)ARENA_DEFAULT / ALIGN)
+#define MAP_WORDS0 ((MAP_BITS + 63) / 64)
+#define MAP_WORDS1 ((MAP_WORDS0 + 63) / 64)
+#define MAP_WORDS2 ((MAP_WORDS1 + 63) / 64)
+#define MAP_NONE   ((size_t)-1)
+
+static uint64_t map0[MAP_WORDS0], map1[MAP_WORDS1], map2[MAP_WORDS2];
+
+static unsigned top_bit(uint64_t x)
+{
+#if defined(__GNUC__)
+    return 63u - (unsigned)__builtin_clzll(x);
+#else
+    unsigned n = 0;
+
+    while (x >>= 1)
+        n++;
+    return n;
+#endif
+}
+
+static size_t map_place(const head *b)
+{
+    return (size_t)((const unsigned char *)b - evv_arena_base) / ALIGN;
+}
+
+static void map_set(const head *b)
+{
+    size_t i = map_place(b);
+
+    map0[i >> 6] |= (uint64_t)1 << (i & 63);
+    map1[i >> 12] |= (uint64_t)1 << ((i >> 6) & 63);
+    map2[i >> 18] |= (uint64_t)1 << ((i >> 12) & 63);
+}
+
+static void map_clear(const head *b)
+{
+    size_t i = map_place(b);
+
+    map0[i >> 6] &= ~((uint64_t)1 << (i & 63));
+    if (map0[i >> 6] != 0)
+        return;
+    map1[i >> 12] &= ~((uint64_t)1 << ((i >> 6) & 63));
+    if (map1[i >> 12] != 0)
+        return;
+    map2[i >> 18] &= ~((uint64_t)1 << ((i >> 12) & 63));
+}
+
+/* The free block that starts last before b, or nought. */
+static head *free_before(const head *b)
+{
+    size_t i = map_place(b);
+    size_t w0 = i >> 6, w1 = i >> 12, w2 = i >> 18;
+    uint64_t m;
+
+    m = map0[w0] & (((uint64_t)1 << (i & 63)) - 1);
+    if (m == 0) {
+        m = map1[w1] & (((uint64_t)1 << (w0 & 63)) - 1);
+        if (m == 0) {
+            m = map2[w2] & (((uint64_t)1 << (w1 & 63)) - 1);
+            while (m == 0) {
+                if (w2 == 0)
+                    return 0;
+                m = map2[--w2];
+            }
+            w1 = (w2 << 6) + top_bit(m);
+            m = map1[w1];
+        }
+        w0 = (w1 << 6) + top_bit(m);
+        m = map0[w0];
+    }
+    return (head *)(evv_arena_base + ((w0 << 6) + top_bit(m)) * ALIGN);
 }
 
 static void bad_block(const head *b, const char *what)
@@ -214,7 +313,10 @@ int evv_arena_open(size_t bytes)
        low region above, and needs sixty-four kilobytes rather than two
        hundred and fifty-six megabytes.
 
-       Less room is still worse than plenty and better than nothing. */
+       Less room is still worse than plenty and better than nothing. More than
+       the default is more than the map of free blocks covers. */
+    if (bytes > ARENA_DEFAULT)
+        bytes = ARENA_DEFAULT;
     for (want = ROUND(bytes); want >= (32u * 1024u * 1024u); want /= 2) {
         void *got = arena_map(0, want);
 
@@ -248,6 +350,7 @@ int evv_arena_open(size_t bytes)
     first->used = 0;
     first->whence = 0;
     free_list = first;
+    map_set(first);
     return 1;
 }
 
@@ -263,6 +366,9 @@ void evv_arena_close(void)
     evv_arena_size = 0;
     first = 0;
     free_list = 0;
+    memset(map0, 0, sizeof map0);
+    memset(map1, 0, sizeof map1);
+    memset(map2, 0, sizeof map2);
 }
 
 /* Whether something came out of here at all. */
@@ -319,14 +425,6 @@ int evv_arena_whence_of(const void *p, uint32_t *whence)
 {
     return evv_arena_whence_of2(p, whence, 0);
 }
-
-/* How much to take when nobody said. The pages are not touched until they are
-   used, so asking for a lot costs nothing but address space, and the whole
-   point of the region is that it has to sit at an address a 32-bit value can
-   name, which is not somewhere to be short of room. */
-#ifndef ARENA_DEFAULT
-#define ARENA_DEFAULT (256u * 1024u * 1024u)
-#endif
 
 /* Who asked, as a number, for a block that is overrun to be able to name the
    allocation in front of it.
@@ -508,6 +606,7 @@ static void *arena_alloc(size_t n, uint32_t whence)
 
         /* What is left of it stays on the list where it was. */
         next = free_next(b);
+        map_clear(b);
         if (b->size >= want + ALIGN * 2) {
             head *rest = (head *)((unsigned char *)b + want);
 
@@ -517,6 +616,7 @@ static void *arena_alloc(size_t n, uint32_t whence)
             rest->whence = free_ref(next);
             b->size = (uint32_t)want;
             next = rest;
+            map_set(rest);
         }
         if (prev != 0)
             prev->whence = free_ref(next);
@@ -555,9 +655,10 @@ static void arena_free(void *p)
        joined to the one in front if they touch and to the one behind if they
        touch, so that the big pieces the heap gives back can be handed out
        again and no two free blocks are ever side by side. */
-    for (prev = 0, next = free_list; next != 0 && next < b;
-         prev = next, next = free_next(next))
-        ;
+    prev = free_before(b);
+    if (prev != 0)
+        check(prev);
+    next = prev != 0 ? free_next(prev) : free_list;
     if (prev != 0 && (unsigned char *)prev + prev->size == (unsigned char *)b) {
         prev->size += b->size;
         b = prev;
@@ -567,10 +668,12 @@ static void arena_free(void *p)
             prev->whence = free_ref(b);
         else
             free_list = b;
+        map_set(b);
     }
     if (next != 0 && (unsigned char *)b + b->size == (unsigned char *)next) {
         b->size += next->size;
         b->whence = next->whence;
+        map_clear(next);
     }
 }
 

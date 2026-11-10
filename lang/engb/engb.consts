@@ -4,7 +4,7 @@
 # order the C holds them. What a rule gets is an offset into one of these, and
 # lang/engb/rules/symbols is what says which store and how far in.
 #
-# Written by tools/delta-consts.py out of the C in the tree, not out of IBM's
+# Written by tools/rules/consts.py out of the C in the tree, not out of IBM's
 # objects: a pronunciation edited through engb.dict is appended to one of
 # these stores, and the objects do not have it.
 

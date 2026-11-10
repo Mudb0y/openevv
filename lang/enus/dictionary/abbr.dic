@@ -1,0 +1,93 @@
+# US English's abbreviation volume, read only while the abbreviation
+# dictionary is on, which by default it is not. A word here is matched as
+# written and what is said in its place is the expansion. One a line, the
+# word, a tab, and what is said; a line starting # is a remark.
+#
+# The entries straight after this are the body, kept sorted by
+# tools/measure/dictgate.py, which takes in the community's later changes.
+# Blocks decided by hand come after it, each under a remark saying why.
+
+AFAIC	as far as I'm concerned
+AFAICT	as far as I can tell
+AFAIK	as far as I know
+Avg	average
+bps	bits per second
+CA	se ay
+Co	Coh
+ESC	escape
+esc	escape
+FWIW	for what it's worth
+Fwiw	for what it's worth
+fwiw	for what it's worth
+Gbps	gigabits per second
+Govt	Government
+IA	eye ay
+IDK	I don't know
+IIRC	if I recall correctly
+INCL	including
+Incl	including
+incl	including
+Inorg	inorganic
+inorg	inorganic
+IV	four
+IV's	four's
+IX	nine
+IX's	nine's
+Jan	January
+Kbps	kilobits per second
+kmph	kilometers per hour
+kph	kilometers per hour
+Mar	March
+Mbps	megabits per second
+NV	En Vee
+OCEANOG	oceanography
+Oceanog	oceanography
+oceanog	oceanography
+QTY	quantity
+Qty	quantity
+Rep	representative
+SD	Es Dee
+Sen	senator
+Sens	senators
+Tbps	terabits per second
+Univ	university
+VI	six
+VI's	six's
+VII	seven
+VII's	seven's
+VIII	eight
+VIII's	eight's
+WWI	World War One
+WWI's	World War Ones
+WWII	world war two
+WWII's	world war twos
+WWIII	world war three
+WWIII's	world war threes
+XI	eleven
+XI's	eleven's
+XII	twelve
+XII's	twelve's
+XIII	thirteen
+XIII's	thirteen's
+XIV	fourteen
+XIV's	fourteen's
+XIX	nineteen
+XIX's	nineteen's
+XV	fifteen
+XV's	fifteen's
+XVI	sixteen
+XVI's	sixteen's
+XVII	seventeen
+XVII's	seventeen's
+XVIII	eighteen
+XVIII's	eighteen's
+XXI	twenty one
+XXI's	twenty one's
+XXII	twenty two
+XXII's	twenty two's
+XXIII	twenty three
+XXIII's	twenty three's
+XXIIII	twenty four
+XXIIII's	twenty four's
+XXIV	twenty four
+XXIV's	twenty four's

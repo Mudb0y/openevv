@@ -26,7 +26,7 @@ module and exercise each one:
     make -j"$(nproc)" RULES=bytecode speechd-test-all
 
 The all-language executable is
-`build/sd_openevv-enus-engb-dede-eses-esus-frfr-frca-itit-plpl-jajp`. Omit
+`build/sd_openevv-enus-engb-dede-eses-esus-frfr-frca-itit-plpl-jajp-fifi-ptbr`. Omit
 `RULES=bytecode` for the faster-speaking compiled-rule build; generating it
 takes substantially longer, and the suite passes in both forms.
 
@@ -53,7 +53,7 @@ language that quietly stopped being offered fails the check.
 For a user-local compiled-rule installation with every language, use absolute
 paths appropriate to the account:
 
-    make -j"$(nproc)" RULES=c LANGS="lang/enus lang/engb lang/dede lang/eses lang/esus lang/frfr lang/frca lang/itit lang/plpl lang/jajp" PREFIX=/home/Username/.local SPEECHD_CONFDIR=/home/Username/.config/speech-dispatcher/modules speechd-install
+    make -j"$(nproc)" RULES=c LANGS="lang/enus lang/engb lang/dede lang/eses lang/esus lang/frfr lang/frca lang/itit lang/plpl lang/jajp lang/fifi lang/ptbr" PREFIX=/home/Username/.local SPEECHD_CONFDIR=/home/Username/.config/speech-dispatcher/modules speechd-install
 
 This installs `sd_openevv` below the chosen module directory and `openevv.conf` below the chosen configuration directory. Distribution packagers can set `DESTDIR`, `SPEECHD_MODULEDIR`, and `SPEECHD_CONFDIR` directly. Nothing further is needed to make the module visible: Speech Dispatcher walks its user and system module directories itself and loads what it finds there, so an installed module is offered the next time the daemon starts.
 
@@ -144,24 +144,17 @@ module reads its configuration when it starts, so a change takes effect the
 next time Speech Dispatcher starts it. `test/speechd.py` holds what comes back
 to what `evv -W -R 22050` makes for the same text, byte for byte.
 
+## The dictionary US English carries
+
+US English carries a dictionary of its own in the library, begun from the community's IBMTTSDictionaries and corrected since, and reads a word it holds the way the entry says rather than the way the rules would. Both Englishes also read a word with a capital inside it that no dictionary holds as the words it is made of, NixOS as Nix OS. Both are part of the voice and have no setting. Until 30 October 2026 a line in `openevv.conf` turned them off:
+
+    BuiltInDictionary 0
+
+That line is now read and ignored, with a line in the module's log saying so, rather than refused: the module stops at a line it does not know, and a configuration that still had this one would have left the module with no voice. `test/speechd.py` checks that a configuration with it starts and says a word the dictionary has as `evv` says it.
+
 ## Supported behavior and limits
 
-The module advertises eight voice presets per built language. It supports
-Speech Dispatcher rate, pitch, pitch range, volume, voice type, exact voice,
-language, spelling, character, key, sound-icon fallback, stop, pause at Speech
-Dispatcher's next internal index mark, and index-mark events. Punctuation and
-symbol names use Speech Dispatcher's language-aware server-side symbol
-preprocessing. When the server inserts a symbol name and changes the module's
-punctuation mode to `none`, the module suppresses the retained non-prosodic
-symbol so names such as `dash-` and `left paren(` are not spoken twice. It
-preserves sentence punctuation for pauses and apostrophes inside words.
-UTF-8 input is converted to the Windows Western set, which is what IBM's eight
-Western languages read: Latin-1 with twenty-seven more characters between 0x80
-and 0x9f, the dashes, the ellipsis, the euro sign and the curly quotes among
-them, which the engine reads as Windows means them. Taken as Latin-1 those had
-no byte and were each read out as "question mark". Left and right curly
-apostrophes are normalized to ASCII apostrophes; anything else the set has not
-got becomes `?`.
+The module advertises eight voice presets per built language. It supports Speech Dispatcher rate, pitch, pitch range, volume, voice type, exact voice, language, spelling, character, key, sound-icon fallback, stop, pause at Speech Dispatcher's next internal index mark, and index-mark events. Punctuation and symbol names use Speech Dispatcher's language-aware server-side symbol preprocessing, which asks the module for punctuation mode `none` and leaves in the text what its symbol table keeps for the synthesiser. The module passes on what the engine uses: sentence punctuation; an apostrophe inside a word; the hyphen and the two dashes, which pause as a comma does between words, as in "artist - album", and read as a range or a minus between numbers; a currency sign, which Speech Dispatcher leaves for the synthesiser to read below punctuation level `all`, so that $5.50 is money and the $ of a shell prompt is read as dollar; and a bracket around an aside, as in "(unread)", "[optional]" or "<one>", which the engine pauses at as at a comma. Every other symbol becomes a space, and so does a bracket that is not an aside's: one with a space on the side towards what it encloses, which German, Spanish, Italian and Polish name; one joined to a word on its other side, as in the `left paren(` Speech Dispatcher writes where punctuation is spoken, which German, Polish and Spanish would spell a letter at a time; a lone angle bracket, which is a comparison; and the guillemets, which German names whatever they touch. Until 1 November 2026 the module turned brackets, dashes and currency signs into spaces too, so "(unread)" and "artist - album" ran on unpaused, 3-5 was three five and $5.50 had no dollars; until 2 November it still did so to a currency sign with no number beside it, which left a shell prompt's $ unspoken. Square and curly brackets reach the module only where Speech Dispatcher's table keeps them, and its English table, like NVDA's, takes them out below the punctuation level `most` where it keeps round ones; marking them `always` in a symbols file of your own, as `(` and `)` are marked, is what lets them pause. `test/speechd.py` holds the module to every one of these. UTF-8 input is converted to the Windows Western set, which is what IBM's eight Western languages read: Latin-1 with twenty-seven more characters between 0x80 and 0x9f, the dashes, the ellipsis, the euro sign and the curly quotes among them, which the engine reads as Windows means them. Taken as Latin-1 those had no byte and were each read out as "question mark". Left and right curly apostrophes are normalized to ASCII apostrophes; anything else the set has not got becomes `?`.
 
 Polish is the exception and gets no conversion here at all. It declares code
 points of its own, so the engine converts its text from UTF-8 itself, and

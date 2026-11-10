@@ -1,0 +1,37 @@
+# The rules of Finnish, lifted by tools/rules/lift64.py out of ETI
+# Eloquence 6.1 as Apple ships it, by tools/module/lift61.py. Each says
+# `instead' because it is written afresh rather than re-expressed from one of
+# IBM's: nothing of IBM's is under it.
+
+rule fin_symbolic_rules takes 3
+  instead
+  local c100 bytes 8
+  local c110 bytes 8
+  place pc71d3
+  place pc7216
+  place pc7249
+  call get_parm addr c110 arg 1 -6
+  call get_parm addr c100 arg 2 -6
+  call fence 0 sym eti_null
+  call init_fin_word_vars
+  call break_into_morphs addr c110 addr c100
+  call generate_diaphones addr c110 addr c100
+  call adjust_phones addr c110 addr c100
+  call create_syllables addr c110 addr c100
+  call assign_stress addr c110 addr c100
+  call break_into_phones addr c110 addr c100
+  match
+end
+
+rule init_fin_word_vars takes 1
+  instead
+  place pc7316
+  place pc7349
+  place pc7378
+  call fence 0 sym eti_null
+  and 0 into global half 2562
+  set global half 2582 to 1
+  set global half 2618 to global half 1310
+  set global half 2622 to global half 1310
+  match
+end

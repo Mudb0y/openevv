@@ -530,6 +530,20 @@ def dictionary_checks():
     d.dictionarySet = "none"
     check("none is no set", folders(d), (personal, own))
 
+    # US English carries IBMTTSDictionaries corrected, and a reader's
+    # dictionary wins, so a set made from it would undo the corrections.
+    theirs = "org.example.ibmtts"
+    ADDONS[:] = [provider("manager", [(theirs, described(
+        theirs, source_url="https://github.com/eigencrow/IBMTTSDictionaries.git/"))])]
+    d.dictionarySet = theirs
+    chosen = os.path.join(CONFIG, "addons", "manager", "dictionaries", "sets",
+                          theirs)
+    check("a set made from IBMTTSDictionaries comes with US English as the"
+          " language it is not read for", folders(d),
+          ((chosen, (0x10000,)), personal, own))
+    del ADDONS[:]
+    d.dictionarySet = "none"
+
 
 def main():
     d = driver()

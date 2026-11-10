@@ -1,7 +1,7 @@
 # The rules of et_numbr.obj, written by tools/rules/notation.py.
 # One operation to a line. See docs/rules.md.
 
-rule add_eng_currency_units from et_numbr.obj
+rule add_eng_currency_units_43 from et_numbr.obj
 shape frame 208 argbase 8 params 3
 label L0 was _add_eng_currency_units
   alu andl imm 0 slot -16
@@ -233,7 +233,7 @@ label L21 was at_0x293
   return reg r0
 end
 
-rule add_eng_subunits from et_numbr.obj
+rule add_eng_subunits_43 from et_numbr.obj
 shape frame 208 argbase 8 params 3
 label L0 was _add_eng_subunits
   alu andl imm 0 slot -8
@@ -4381,7 +4381,7 @@ label L39 was at_0x477
 label L40 was $L105313
 end
 
-rule add_eng_point_digits from et_numbr.obj
+rule add_eng_point_digits_43 from et_numbr.obj
 shape frame 304 argbase 116 params 3
 label L0 was _add_eng_point_digits
   load movl imm 0 into r7
@@ -5867,6 +5867,14 @@ label L0 was _convert_eng_alg_expr
   store movw imm 1 slot -56
   call ZZpush_ptr_init4 arity 5 depth 16
   popn 16
+  push imm 2
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  push state 0
+  call hyphen_chain arity 3 depth 3
+  popn 3
+  cmp testl reg r0 reg r0
+  branch je to L105
   load movl slotaddr -76 into r0
   push slotaddr -76
   load movl slotaddr -84 into r0
@@ -11924,7 +11932,7 @@ label L22 was at_0x2f2
 label L23 was $L106039
 end
 
-rule convert_eng_monetary_exp from et_numbr.obj
+rule convert_eng_monetary_exp_43 from et_numbr.obj
 shape frame 300 argbase 108 params 5
 label L0 was _convert_eng_monetary_exp
   load movl imm 0 into r3
@@ -12841,7 +12849,7 @@ label L78 was $X75$100205
   load movl slotaddr 84 into r0
   push slotaddr 84
   push reg r6
-  call add_eng_currency_units arity 3 depth 4
+  call add_eng_currency_units_43 arity 3 depth 4
   popn 4
   jump to L82
 label L79 was $X76$100215
@@ -12874,7 +12882,7 @@ label L80 was $X77$100221
   load movl slotaddr 92 into r0
   push slotaddr 92
   push reg r6
-  call add_eng_currency_units arity 3 depth 4
+  call add_eng_currency_units_43 arity 3 depth 4
   popn 4
 label L81 was $X78$100224
   load movl ind reg r6 2200 into r0
@@ -13021,7 +13029,7 @@ label L90 was $X38$100058
   load movl slotaddr 84 into r0
   push slotaddr 84
   push reg r6
-  call add_eng_point_digits arity 3 depth 4
+  call add_eng_point_digits_43 arity 3 depth 4
   popn 4
 label L91 was $X39$100064
   push reg r6
@@ -13110,7 +13118,7 @@ label L94 was $X41$100076
   load movl slotaddr 48 into r0
   push slotaddr 48
   push reg r6
-  call add_eng_currency_units arity 3 depth 4
+  call add_eng_currency_units_43 arity 3 depth 4
   popn 4
 label L95 was $X43$100094
   load movl slot 52 into r0
@@ -13134,7 +13142,7 @@ label L97 was $X84$100239
   load movl slotaddr 92 into r0
   push slotaddr 92
   push reg r6
-  call add_eng_subunits arity 3 depth 4
+  call add_eng_subunits_43 arity 3 depth 4
   popn 4
 label L98 was $X86$100256
   push reg r6
@@ -14197,7 +14205,7 @@ label L21 was at_0x280
 label L22 was $L106257
 end
 
-rule eng_monetary_exp from et_numbr.obj
+rule eng_monetary_exp_43 from et_numbr.obj
 shape frame 232 argbase 116 params 3
 label L0 was _eng_monetary_exp
   load movl imm 0 into r3
@@ -14366,7 +14374,7 @@ label L8 was at_0x19a
   load movl slotaddr 96 into r0
   push slotaddr 96
   push reg r6
-  call convert_eng_monetary_exp arity 5 depth 10
+  call convert_eng_monetary_exp_43 arity 5 depth 10
   popn 10
   cmp testl reg r0 reg r0
   branch jne to L2

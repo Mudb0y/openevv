@@ -1,0 +1,67 @@
+# Finnish as ETI Eloquence 6.1 reads it, which test/harness/eti.sh holds
+# ours against: Finnish is lifted whole from 6.1, so every case here is one
+# 6.1 had just agreed with when it was written. In ISO 8859-1, which is
+# what both engines take unless told otherwise.
+#
+# Phrase prediction is off here and on in 6.1 (docs/quirks.md), and a
+# sentence whose phrasing it decides is not here: "Hän tuli 1. sijalle ja minä
+# 2. sijalle." reads as 6.1 reads it once `pp1 is in its text.
+0x90000	-1	Hyvää päivää.
+0x90000	-1	Minä olen kotona.
+0x90000	-1	Kissa istuu ikkunalla.
+0x90000	-1	Tämä on hyvä kirja.
+0x90000	-1	Helsinki on Suomen pääkaupunki.
+0x90000	-1	Kello on kolme.
+0x90000	-1	Hän osti 25 omenaa.
+0x90000	-1	Mitä sinulle kuuluu?
+0x90000	-1	Kiitos, hyvää kuuluu.
+0x90000	-1	Missä on lähin rautatieasema?
+0x90000	-1	Talvella on kylmä ja pimeää.
+0x90000	-1	Järvellä uiskentelee kaksi joutsenta.
+0x90000	-1	Lapset leikkivät pihalla koko päivän.
+0x90000	-1	Tuleeko huomenna sadetta vai poutaa?
+0x90000	-1	Ostin kaupasta maitoa, leipää ja juustoa.
+0x90000	-1	Suomen kieli kuuluu suomalais-ugrilaisiin kieliin.
+0x90000	-1	Hän syntyi vuonna 1985 Tampereella.
+0x90000	-1	Juna lähtee laiturilta neljä kello 14.35.
+0x90000	-1	Puhelinnumeroni on 040 123 4567.
+0x90000	-1	Tämä maksaa 12,50 euroa.
+0x90000	-1	Lämpötila on miinus kaksikymmentä astetta.
+0x90000	-1	Sanoin hänelle: älä mene sinne!
+0x90000	-1	Oletko koskaan käynyt Lapissa?
+0x90000	-1	Kuusi kuusta kuusessa.
+0x90000	-1	Kokko, kokoo kokoon koko kokko.
+0x90000	-1	Yöllä näkyi revontulia taivaalla.
+0x90000	-1	Tuuli puhaltaa mereltä.
+0x90000	-1	Pekka ja Liisa menivät naimisiin kesällä.
+0x90000	-1	Ei, en tiedä mitään siitä.
+0x90000	-1	Ensimmäinen, toinen ja kolmas.
+0x90000	-1	Hyvä on, tehdään niin.
+0x90000	-1	Sauna lämpiää rannalla.
+0x90000	-1	Metsässä kasvaa mäntyjä ja koivuja.
+0x90000	-1	Kirjasto aukeaa yhdeksältä.
+0x90000	-1	Tervetuloa Suomeen!
+0x90000	-1	Onnea syntymäpäivänäsi.
+0x90000	-1	Opiskelen tietojenkäsittelytiedettä yliopistossa.
+0x90000	-1	Hän sanoi, että tulee myöhemmin.
+0x90000	-1	Vaikka satoi, menimme ulos.
+0x90000	-1	Lentokone laskeutui ajallaan.
+0x90000	-1	Se maksaa 80 euroa.
+0x90000	-1	Malli A4 on hyvä merkki.
+0x90000	-1	Kello on 12.30.
+0x90000	-1	Puhelin 040 123 4567.
+0x90000	-1	Se on 3,5 metriä.
+0x90000	-1	Kaarle XII ja Kustaa II Aadolf olivat kuninkaita.
+0x90000	-1	Luku XIV alkaa sivulta 214.
+0x90000	-1	Esim. tämä ja mm. tuo ovat lyhenteitä, ks. s. 5.
+0x90000	-1	Päivämäärä on 24.12.2026.
+0x90000	-1	Lämpötila nousi 15 %.
+0x90000	-1	Matka kesti 2 h 15 min.
+0x90000	-1	Tervetuloa, tri Virtanen ja prof. Laine!
+0x90000	-1	Mitä? Eikö se ollutkaan totta?
+0x90000	-1	Talo nro 7 on myynnissä hintaan 250 000 euroa.
+0x90000	-1	Hän asuu Helsingissä, Espoossa ja Vantaalla.
+0x90000	-1	NATO ja EU ovat lyhenteitä.
+0x90000	-1	Kirjoita sähköpostia osoitteeseen matti@example.fi.
+0x90000	-1	Vuosina 1939-1945 käytiin sota.
+0x90000	-1	Tämä on ensimmäinen, toinen ja kolmas kerta.

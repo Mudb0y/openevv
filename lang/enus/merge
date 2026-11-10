@@ -1,0 +1,241 @@
+# US English as a merge of IBM's 4.3 and ETI's 6.1: one decision a line,
+# what was done, where, to what, and why. Everything not named here is 4.3 as
+# it was, or 6.1 already, taken earlier through the punctuation and the text
+# normaliser (docs/quirks.md has those).
+#
+# The evidence is tools/measure/referee.py, which holds both engines' sounds
+# against the CMU Pronouncing Dictionary. Where only one engine's sounds are
+# CMU's, that one is taken. Where both are, or neither, a word one engine's
+# dictionary holds and the other's does not keeps the dictionary's reading --
+# a pronunciation someone wrote down beats one a rule guessed -- and anything
+# else goes to 6.1, which is what most ears know as Eloquence.
+#
+# Where the referee could not settle it -- a foreign name read natively by
+# IBM and anglicised by CMU and 6.1, or a word whose stress alone differs --
+# both readings were listened to and one chosen, and the line says so.
+#
+#   drop     the entry is taken out of that dictionary
+#   add      the word is put into it, saying what 6.1 says
+#   set      what it says is changed to what 6.1 says, or a lookup set's
+#            words to 6.1's
+#   read-as  the word is read as the text given, which 6.1 does
+#   letter   an arm added to that letter in lang/enus/letters
+#   rule     a rule of 6.1's lifted in place of IBM's
+#
+# test/cases/words-enus.txt holds every word here, so test/words.sh says if
+# any of them moves.
+
+drop     pnames       address          IBM's name shadowed everyday words; CMU favours the rules in 3 of the 5 words it moved, IBM in 0
+drop     pnames       bon              IBM's name shadowed everyday words; CMU favours the rules in 4 of the 11 words it moved, IBM in 0
+drop     pnames       bossier          IBM's name shadowed everyday words; CMU favours the rules in 1 of the 1 words it moved, IBM in 0
+drop     pnames       brilliant        IBM's name shadowed everyday words; CMU favours the rules in 2 of the 2 words it moved, IBM in 0
+drop     pnames       chas             IBM's name shadowed everyday words; CMU favours the rules in 5 of the 5 words it moved, IBM in 0
+drop     pnames       compact          IBM's name shadowed everyday words; CMU favours the rules in 5 of the 5 words it moved, IBM in 0
+drop     pnames       compos           IBM's name shadowed everyday words; CMU favours the rules in 4 of the 4 words it moved, IBM in 0
+drop     pnames       culinary         IBM's name shadowed everyday words; CMU favours the rules in 1 of the 1 words it moved, IBM in 0
+drop     pnames       cum              IBM's name shadowed everyday words; CMU favours the rules in 4 of the 5 words it moved, IBM in 1
+drop     pnames       eminence         IBM's name shadowed everyday words; CMU favours the rules in 2 of the 2 words it moved, IBM in 0
+drop     pnames       ergo             IBM's name shadowed everyday words; CMU favours the rules in 1 of the 1 words it moved, IBM in 0
+drop     pnames       export           IBM's name shadowed everyday words; CMU favours the rules in 5 of the 7 words it moved, IBM in 2
+drop     pnames       gorges           IBM's name shadowed everyday words; CMU favours the rules in 1 of the 1 words it moved, IBM in 0
+drop     pnames       laden            IBM's name shadowed everyday words; CMU favours the rules in 2 of the 2 words it moved, IBM in 0
+drop     pnames       mea              IBM's name shadowed everyday words; CMU favours the rules in 3 of the 3 words it moved, IBM in 0
+drop     pnames       mutual           IBM's name shadowed everyday words; CMU favours the rules in 1 of the 3 words it moved, IBM in 0
+drop     pnames       pas              IBM's name shadowed everyday words; CMU favours the rules in 2 of the 4 words it moved, IBM in 0
+drop     pnames       pate             IBM's name shadowed everyday words; CMU favours the rules in 3 of the 3 words it moved, IBM in 0
+drop     pnames       persona          IBM's name shadowed everyday words; CMU favours the rules in 1 of the 1 words it moved, IBM in 0
+drop     pnames       piet             IBM's name shadowed everyday words; CMU favours the rules in 3 of the 4 words it moved, IBM in 0
+drop     pnames       poor             IBM's name shadowed everyday words; CMU favours the rules in 6 of the 7 words it moved, IBM in 0
+drop     pnames       travers          IBM's name shadowed everyday words; CMU favours the rules in 2 of the 3 words it moved, IBM in 1
+drop     pnames       vie              IBM's name shadowed everyday words; CMU favours the rules in 2 of the 3 words it moved, IBM in 0
+drop     pnames       visual           IBM's name shadowed everyday words; CMU favours the rules in 5 of the 7 words it moved, IBM in 1
+drop     pnames       leroy            the second of two entries; which one the search found hung on how many words stood around them, so the one it found before stays
+drop     pnames       rigueur          the second of two entries, for the same reason
+drop     pnames       roquefort        the second of two entries, for the same reason; the merge had moved the search onto it
+drop     roots2       medieval         its record is shared code; the pnames3 entry, which is 6.1's reading, decides instead
+read-as  eng_tok_dict arent            aren't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict Arent            Aren't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict ARENT            AREN'T, as the word in small letters is read; 6.1 spells most of these out a letter at a time
+add      roots5       bonjour          6.1 holds the word and IBM does not; CMU has 6.1's sounds and not IBM's
+add      pnames1      coto             6.1 holds the word and IBM does not; CMU has 6.1's sounds and not IBM's
+read-as  eng_tok_dict couldnt          couldn't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict Couldnt          Couldn't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict COULDNT          COULDN'T, as the word in small letters is read; 6.1 spells most of these out a letter at a time
+add      roots5       couscous         6.1 holds the word and IBM does not; CMU does not have it; the tie goes to 6.1
+add      GAroots      diaper           6.1 holds the word and IBM does not; CMU has 6.1's sounds and not IBM's
+read-as  eng_tok_dict didnt            didn't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict Didnt            Didn't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict DIDNT            DIDN'T, as the word in small letters is read; 6.1 spells most of these out a letter at a time
+read-as  eng_tok_dict doesnt           doesn't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict Doesnt           Doesn't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict DOESNT           DOESN'T, as the word in small letters is read; 6.1 spells most of these out a letter at a time
+read-as  eng_tok_dict dont             don't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict Dont             Don't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict DONT             DON'T, as the word in small letters is read; 6.1 spells most of these out a letter at a time
+add      GAroots      dressage         6.1 holds the word and IBM does not; CMU has 6.1's sounds and not IBM's
+add      roots1b      ebay             6.1 holds the word and IBM does not; CMU has 6.1's sounds and not IBM's
+add      roots1b      ebook            6.1 holds the word and IBM does not; CMU does not have it; the tie goes to 6.1
+add      roots1b      ebusiness        6.1 holds the word and IBM does not; CMU does not have it; the tie goes to 6.1
+read-as  eng_tok_dict hadnt            hadn't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict Hadnt            Hadn't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict HADNT            HADN'T, as the word in small letters is read; 6.1 spells most of these out a letter at a time
+read-as  eng_tok_dict hasnt            hasn't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict Hasnt            Hasn't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict HASNT            HASN'T, as the word in small letters is read; 6.1 spells most of these out a letter at a time
+read-as  eng_tok_dict havent           haven't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict Havent           Haven't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict HAVENT           HAVEN'T, as the word in small letters is read; 6.1 spells most of these out a letter at a time
+add      roots5       imac             6.1 holds the word and IBM does not; CMU does not have it; the tie goes to 6.1
+add      roots5       incoherence      6.1 holds the word and IBM does not; CMU has 6.1's sounds and not IBM's
+add      roots5       indeterminacy    6.1 holds the word and IBM does not; CMU does not have it; the tie goes to 6.1
+add      roots5       islet            6.1 holds the word and IBM does not; CMU has 6.1's sounds and not IBM's
+read-as  eng_tok_dict isnt             isn't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict Isnt             Isn't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict ISNT             ISN'T, as the word in small letters is read; 6.1 spells most of these out a letter at a time
+add      roots5       lait             6.1 holds the word and IBM does not; CMU has 6.1's sounds and not IBM's
+read-as  eng_tok_dict mightnt          mightn't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict Mightnt          Mightn't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict MIGHTNT          MIGHTN'T, as the word in small letters is read; 6.1 spells most of these out a letter at a time
+read-as  eng_tok_dict mustnt           mustn't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict Mustnt           Mustn't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict MUSTNT           MUSTN'T, as the word in small letters is read; 6.1 spells most of these out a letter at a time
+read-as  eng_tok_dict oughtnt          oughtn't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict Oughtnt          Oughtn't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict OUGHTNT          OUGHTN'T, as the word in small letters is read; 6.1 spells most of these out a letter at a time
+add      roots5       pingpong         6.1 holds the word and IBM does not; CMU has 6.1's sounds and not IBM's
+add      roots5       rugrat           6.1 holds the word and IBM does not; CMU does not have it; the tie goes to 6.1
+read-as  eng_tok_dict shouldnt         shouldn't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict Shouldnt         Shouldn't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict SHOULDNT         SHOULDN'T, as the word in small letters is read; 6.1 spells most of these out a letter at a time
+add      pnames4      silvester        6.1 holds the word and IBM does not; CMU has 6.1's sounds and not IBM's
+add      roots5       thermostat       6.1 holds the word and IBM does not; only the stress differs; the tie goes to 6.1
+add      roots5       touchtone        6.1 holds the word and IBM does not; CMU does not have it; the tie goes to 6.1
+add      roots5       triumvirate      6.1 holds the word and IBM does not; CMU has 6.1's sounds and not IBM's
+add      roots5       turnaround       6.1 holds the word and IBM does not; CMU has 6.1's sounds and not IBM's
+add      roots5       ubid             6.1 holds the word and IBM does not; CMU does not have it; the tie goes to 6.1
+add      roots5       veggie           6.1 holds the word and IBM does not; CMU has 6.1's sounds and not IBM's
+read-as  eng_tok_dict wasnt            wasn't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict Wasnt            Wasn't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict WASNT            WASN'T, as the word in small letters is read; 6.1 spells most of these out a letter at a time
+read-as  eng_tok_dict werent           weren't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict Werent           Weren't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict WERENT           WEREN'T, as the word in small letters is read; 6.1 spells most of these out a letter at a time
+add      roots5       whaddya          6.1 holds the word and IBM does not; CMU does not have it; the tie goes to 6.1
+read-as  eng_tok_dict wouldnt          wouldn't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict Wouldnt          Wouldn't, as 6.1 reads it; 6.1 holds the word in its grammar dictionary
+read-as  eng_tok_dict WOULDNT          WOULDN'T, as the word in small letters is read; 6.1 spells most of these out a letter at a time
+add      pnames5      yves             6.1 holds the word and IBM does not; CMU has 6.1's sounds and not IBM's
+add      pnames5      zoe              6.1 holds the word and IBM does not; CMU has 6.1's sounds and not IBM's
+add      roots5       zshop            6.1 holds the word and IBM does not; CMU does not have it; the tie goes to 6.1
+set      pnames1      amis             both hold it and differ; CMU has neither; the tie goes to 6.1
+set      pnames1      appalachian      both hold it and differ; CMU has 6.1's sounds and not IBM's
+set      pnames1      avery            both hold it and differ; CMU has 6.1's sounds and not IBM's
+set      roots1a      bidet            both hold it and differ; CMU does not have it; the tie goes to 6.1
+set      pnames1      caribbean        both hold it and differ; only the stress differs; the tie goes to 6.1
+set      pnames2      croat            both hold it and differ; CMU has neither; the tie goes to 6.1
+set      pnames2      england          both hold it and differ; CMU has 6.1's sounds and not IBM's
+set      pnames2      fiat             both hold it and differ; CMU has neither; the tie goes to 6.1
+set      pnames2      honduran         both hold it and differ; CMU has neither; the tie goes to 6.1
+set      pnames3      iraq             both hold it and differ; CMU has 6.1's sounds and not IBM's
+set      pnames3      jolla            both hold it and differ; CMU has neither; the tie goes to 6.1
+set      pnames3      jose             both hold it and differ; CMU has 6.1's sounds and not IBM's
+set      pnames3      kauai            both hold it and differ; CMU has neither; the tie goes to 6.1
+set      pnames3      lufthansa        both hold it and differ; CMU has neither; the tie goes to 6.1
+set      pnames3      mahon            both hold it and differ; CMU has neither; the tie goes to 6.1
+set      pnames3      mitterand        both hold it and differ; CMU has neither; the tie goes to 6.1
+set      pnames4      mohammed         both hold it and differ; CMU has neither; the tie goes to 6.1
+set      pnames4      mono             both hold it and differ; CMU has 6.1's sounds and not IBM's
+set      pnames4      monongahela      both hold it and differ; CMU has neither; the tie goes to 6.1
+set      eng_words    pisces           both hold it and differ; CMU has 6.1's sounds and not IBM's
+set      pnames4      pyrenees         both hold it and differ; CMU has neither; the tie goes to 6.1
+set      pnames5      siobhan          both hold it and differ; only the stress differs; the tie goes to 6.1
+set      roots4       sulfurous        both hold it and differ; CMU does not have it; the tie goes to 6.1
+set      roots4       sulphurous       both hold it and differ; CMU does not have it; the tie goes to 6.1
+set      pnames5      tijuana          both hold it and differ; CMU has 6.1's sounds and not IBM's
+letter   d            dt at end        Ahrendt, Schmidt: 6.1 says the t alone, as CMU does
+letter   n            ng before th     length, strength: 6.1 has no g, CMU has none or k
+letter   q            qu before ette   Arquette, Bequette: 6.1 and CMU say k
+letter   n            ngh before am    Bingham, gingham: 6.1 and CMU drop the g and the h; Mangham, which CMU says with the h, is the one word it costs
+drop     roots3       produce          IBM's root; it said the British dyoo and, standing above the homograph, made the noun pruh-DOOS; 6.1 has none, and homog_roots then says PRO-duce and pruh-DOOS by sense
+drop     pnames       produce          an ordinary word filed as a name, which a name's single stress kept from being a homograph
+drop     pnames       transport        the same: the verb was TRANS-port; now trans-PORT, as 6.1 and CMU say it
+drop     roots5       wound            IBM's root, which made she wound the clock woond; 6.1 has none, and homog_roots says wownd by sense
+add      nonlex_prefixes neuro            6.1's prefix, which its strip_scientific_prefixes needs: without it every neuro- word loops
+read-as  eng_tok_dict aint             ain't, as 6.1 reads it
+read-as  eng_tok_dict Aint             Ain't, as the word in small letters is read
+read-as  eng_tok_dict AINT             AIN'T, as the word in small letters is read
+rule     et_prfx      strip_scientific_prefixes 6.1's, lifted: it knows neuro, so neuroscience is NOOR-o-SY-ence rather than nuh-RAH-shunts
+set      sets         no_scientific_prefix_strip 6.1's: the six neuro words its prefix must not be stripped from, neurology and neurotic among them
+drop     pnames       amer             chosen by ear: IBM's said American, and Amery, Amerson and Amerman were built on it
+drop     pnames       annan            chosen by ear: AN-un, as Kofi Annan said it, where IBM's was ah-NAHN; Annandale follows
+drop     pnames       barnard          chosen by ear: BAR-nerd, as Barnard College; IBM's was ber-NARD
+drop     pnames       barrymore        chosen by ear: BAIR-ee-more
+drop     pnames       biogen           chosen by ear, though neither is right: the company says BY-oh-jen
+drop     pnames       chai             chosen by ear: CHY, the tea, where IBM's was KY
+drop     pnames       chavis           chosen by ear, though neither is right: CHAY-vis
+drop     pnames       chilean          chosen by ear: both readings are heard, and the tie goes to 6.1
+drop     pnames       chileans         the same
+drop     pnames       chou             chosen by ear, though neither is right: Zhou Enlai's name is JOH
+drop     pnames       colosio          chosen by ear: kuh-LOH-see-oh
+drop     pnames       councilwoman     chosen by ear: a word and not a name, COUN-sul-woman
+drop     pnames       culpa            chosen by ear: KUL-puh; mea culpa as a whole is still wrong in both
+drop     pnames       devi             IBM's name shadowed an everyday word: deviance was DEV-ee-unce
+drop     pnames       duracell         chosen by ear: DUR-uh-sell
+drop     pnames       durham           chosen by ear: DUR-um, the American way
+drop     pnames       eurotunnel       chosen by ear: YOOR-oh
+drop     pnames       fontes           chosen by ear: FOHN-tiss
+drop     pnames       gillooly         chosen by ear, though neither is right: gih-LOO-lee
+drop     pnames       grata            chosen by ear: GRAH-tuh, as in persona non grata
+drop     pnames       gustafson        chosen by ear: GUS-tuf-sun
+drop     pnames       helena           chosen by ear: HEL-uh-nuh, the capital of Montana and the usual American name
+drop     pnames       herr             chosen by ear: HAIR, the German for Mister; Herrman follows
+drop     pnames       hsu              chosen by ear: SHOO
+drop     pnames       inge             chosen by ear: INJ, as William Inge
+drop     pnames       janzen           chosen by ear: JAN-zen
+drop     pnames       judea            chosen by ear, though neither is right: joo-DEE-uh
+drop     pnames       keynes           chosen by ear: KAYNZ, as the economist
+drop     pnames       macdowell        chosen by ear: muk-DOW-ul
+drop     pnames       masse            chosen by ear: MASS, as in en masse
+drop     pnames       maughan          chosen by ear, though neither is right: MAWN
+drop     pnames       minot            chosen by ear, though neither is right: MY-nut
+drop     pnames       mohan            chosen by ear: MOH-hun, with the h
+drop     pnames       mosser           chosen by ear: MAW-ser
+drop     pnames       northbrook       chosen by ear, though neither is right: NORTH-brook
+drop     pnames       pompey           chosen by ear: POM-pee, where IBM's pahm-PAY is Pompeii
+drop     pnames       prima            chosen by ear: PREE-muh, as in prima donna
+drop     pnames       quindlen         chosen by ear: KWIND-lin
+drop     pnames       sakhalin         chosen by ear, though neither is right: SAK-uh-leen
+drop     pnames       sentelle         chosen by ear: sen-TEL
+drop     pnames       soss             chosen by ear: SAWS
+drop     pnames       wiesenthal       chosen by ear: WEE-sin-thawl, as Simon Wiesenthal
+drop     pnames       buffet           a name's single stress stood above the homograph, so buffets was BUFF-its; homog_roots says buh-FAY now, as 6.1 does
+add      pnames1      celtics          chosen by ear: SEL-tiks, the Boston team, where celtic stays KEL-tik
+add      roots5       retailers        chosen by ear: 6.1's REE-tail-erz, where ours stressed the plural alone on TAIL
+add      roots5       chlorine         chosen by ear: 6.1's KLOR-een
+add      roots5       abstracted       chosen by ear: 6.1's ab-STRAK-tid; abstracts stays AB-stracts, the noun
+add      roots5       recognizable     chosen by ear: 6.1's rek-ug-NY-zuh-bul; recognizably and unrecognizable follow
+add      roots5       digests          chosen by ear: 6.1's dy-JESTS, the verb; digest stays DY-jest, the noun
+add      roots5       digested         the same
+add      roots5       digesting        the same
+add      roots5       converses        chosen by ear: 6.1's kun-VER-siz, where IBM's name Converse made the verb KON-ver-siz
+add      roots5       conversed        the same verb
+add      roots5       conversing       the same verb
+read-as  eng_tok_dict :)               smiley face, as 6.1 reads it; chosen by ear, where IBM's read nothing but a pause
+read-as  eng_tok_dict :-)              the same
+read-as  eng_tok_dict ;)               the same
+read-as  eng_tok_dict ;-)              the same
+read-as  eng_tok_dict :(               sad face, as 6.1 reads it; chosen by ear
+read-as  eng_tok_dict :-(              the same
+read-as  eng_tok_dict vis-a-vis        6.1's phonetic spelling, vee-zuh-VEE, one word; IBM's was three, viz ay vee; chosen by ear
+read-as  eng_tok_dict Vis-a-vis        the same, and with the accented a in both
+rule     et_numbr     convert_eng_phone_number 6.1's, lifted: it hands a North American number to the rule below; chosen by ear
+rule     et_numbr     convert_NA_phone_number 6.1's, lifted: a nought in a phone number is oh, and the mark after the number is kept, so a sentence ending in one ends; ours said zero and lost the full stop
+rule     et_numbr     convert_eng_day_of_month 6.1's, lifted, with the three it calls that 4.3 had not got: the day after a month name is an ordinal, September thirtieth, where ours waited for an "on" or a year; a day before the month is turned round; chosen by ear
+rule     et_numbr     eng_months       ours, doing what 6.1's month dictionary does, which this module has not got: a month written out is put in small letters, a short one replaced by the whole name
+rule     et_numbr     hyphen_chain     ours: three or more numbers joined by hyphens and nothing else are read with every hyphen as dash, so 2026-10-11 is twenty twenty-six dash ten dash eleven and 1-2-3 is no longer a sum; convert_eng_alg_expr stands aside for one; chosen by ear
+rule     et_norm      eng_hyphen_between_nums IBM's, asking hyphen_in_chain first: a hyphen in such a chain is dash, where IBM's made the last one in a date a range; two numbers alone are still a range, ages three to five, where 6.1 says dash
+rule     et_numbr     eng_monetary_exp 6.1's, lifted, with convert_eng_monetary_exp and the ten rules under them, seven of which 4.3 had not got: US$5.50 is five U S dollars and fifty cents, A$5 and AUD$5 five Australian dollars and C$, NZ$, HK$ and S$ the same way, and EUR 20.50 twenty euros and fifty cents; ours read the letters before the number, AUD$5 as odd five dollars, and the euros as a decimal
+rule     et_numbr     eng_monetary_exp_43 IBM's eng_monetary_exp and the four rules it calls, kept under names ending _43 for the currencies 6.1 no longer knows by name: monetary_exp asks it when 6.1's declines, so DM 5 is still five marks and FF 5 five francs, where 6.1 spells the letters
+rule     et_numbr     money_range      ours: a hyphen straight after a sum of money and before another sum or a number is a range, five dollars to ten dollars, as two numbers are; 4.3 and 6.1 both read nothing for it, and 6.1 says dash where a currency sign follows
+rule     u_integ      monetary_exp     IBM's, asking eng_monetary_exp_43 when 6.1's eng_monetary_exp declines, and money_range after either reads a sum
+rule     u_integ      convert_monetary_exp IBM's, asking money_range after the sum is read

@@ -45,6 +45,12 @@ enum { FRAME = 1024 };
 /* eciMainDict, and what the older interface answers for success. */
 enum { VOLUME_MAIN = 0, DICT_OK = 0 };
 
+/* eciBuiltInDict. US English carries a dictionary of its own that already
+   says nvda much as the entry here does, so the run without the entry would
+   say it the same way and nothing could be learned; the question is whether
+   a file gets in, so the carried one is turned off. */
+enum { PARAM_BUILTIN_DICT = 34 };
+
 typedef struct OldInst OldInst;
 
 enum ECIMessage { eciWaveformBuffer, eciPhonemeBuffer, eciIndexReply };
@@ -55,6 +61,7 @@ int      STDCALL es_delete(OldInst *h);
 int      STDCALL et_addText(OldInst *h, const char *text);
 int      STDCALL et_synthesize(OldInst *h);
 int      STDCALL ev_setOutputBuffer(OldInst *h, int32_t n, void *buf);
+int32_t  STDCALL ev_setParam(OldInst *h, int32_t which, int32_t value);
 void     STDCALL eo_registerCallback(OldInst *h, void *cb, void *data);
 void     STDCALL eo_synchronizeSynth(OldInst *h);
 int      STDCALL eo_speaking(OldInst *h);
@@ -124,7 +131,8 @@ static long say_through(uint32_t language, const char *path, int *loaded)
         return -1;
 
     eo_registerCallback(h, (void *)on_message, 0);
-    if (!ev_setOutputBuffer(h, FRAME, frame)) {
+    if (!ev_setOutputBuffer(h, FRAME, frame)
+        || ev_setParam(h, PARAM_BUILTIN_DICT, 0) < 0) {
         es_delete(h);
         return -1;
     }

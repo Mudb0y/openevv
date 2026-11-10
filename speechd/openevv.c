@@ -80,6 +80,8 @@ static const LanguageInfo knownLanguages[] = {
     { 0x00030001, "frca", "fr-CA", "Canadian French",      0 },
     { 0x00040000, "dede", "de-DE", "German",               0 },
     { 0x00050000, "itit", "it-IT", "Italian",              0 },
+    { 0x00090000, "fifi", "fi-FI", "Finnish",              0 },
+    { 0x00070000, "ptbr", "pt-BR", "Brazilian Portuguese", 0 },
     { 0x00110000, "plpl", "pl-PL", "Polish",               1 },
 };
 
@@ -574,9 +576,90 @@ static int byte_is_a_character(unsigned char value, int utf8)
     return !utf8 || value < 0x80;
 }
 
+/* What Speech Dispatcher's symbol tables keep in the text for the
+ * synthesiser: the hyphen and the two dashes, which the engine pauses at as
+ * at a comma between words and reads as a range or a minus between numbers;
+ * and a currency sign, which the tables leave for the synthesiser to read
+ * below the level where they would name it themselves, and which the engine
+ * reads as money beside a number and by its name anywhere else, so that the
+ * $ of a shell prompt is heard. The guillemets are kept by the tables too and
+ * are not here: they are kept for the pause alone, and German names them
+ * whatever they touch. */
+static int dash(unsigned char value)
+{
+    return value == '-' || value == 0x96 || value == 0x97;
+}
+
+static int currency(unsigned char value)
+{
+    return value == '$' || value == 0x80 || value == 0x83 || value == 0xa2
+        || value == 0xa3 || value == 0xa4 || value == 0xa5;
+}
+
+static int opening_bracket(unsigned char value)
+{
+    return value == '(' || value == '[' || value == '{' || value == '<';
+}
+
+static int closing_bracket(unsigned char value)
+{
+    return value == ')' || value == ']' || value == '}' || value == '>';
+}
+
+/* Whether a bracket goes to the engine, which pauses at one as at a comma.
+ * Only one that encloses something as an aside does. Not one with a space
+ * on the side towards what it encloses: German, Spanish, Italian and Polish
+ * name a bracket standing on its own. Not one with a letter or a digit on
+ * the side away from it: Speech Dispatcher writes a symbol's name with the
+ * symbol after it where the listener asked for punctuation, as in left
+ * paren(, and German, Polish and Spanish spell the name a letter at a time
+ * when the bracket joins it to the next word. And an angle bracket only as
+ * one of a pair, since a lone > is greater than in every language, and the
+ * engine reads a pair as round brackets. */
+static int glued(unsigned char value, int utf8)
+{
+    return value >= 0x80 ? utf8 || western_word_character(value)
+                         : western_word_character(value);
+}
+
+static int bracket_kept(const unsigned char *text, const unsigned char *at,
+                        int utf8)
+{
+    unsigned char value = *at;
+    const unsigned char *scan;
+    int depth = 0;
+
+    if (opening_bracket(value)) {
+        if (at[1] == 0 || at[1] == ' '
+            || (at > text && glued(at[-1], utf8)))
+            return 0;
+        if (value != '<')
+            return 1;
+        for (scan = at + 1; *scan; scan++) {
+            if (*scan == '<')
+                depth++;
+            else if (*scan == '>' && depth-- == 0)
+                return scan[-1] != ' ';
+        }
+        return 0;
+    }
+    if (at == text || at[-1] == ' ' || glued(at[1], utf8))
+        return 0;
+    if (value != '>')
+        return 1;
+    for (scan = at; scan > text; scan--) {
+        if (scan[-1] == '>')
+            depth++;
+        else if (scan[-1] == '<' && depth-- == 0)
+            return scan[0] != ' ';
+    }
+    return 0;
+}
+
 static void suppress_spoken_punctuation(char *text, int utf8)
 {
     unsigned char *at = (unsigned char *)text;
+    int changed;
 
     while (*at) {
         unsigned char value = *at;
@@ -591,11 +674,30 @@ static void suppress_spoken_punctuation(char *text, int utf8)
             at++;
             continue;
         }
+        if (dash(value) || currency(value) || opening_bracket(value)
+            || closing_bracket(value)) {
+            at++;
+            continue;
+        }
         if (value != ',' && value != '.' && value != ';' && value != ':'
             && value != '?' && value != '!' && western_symbol(value))
             *at = ' ';
         at++;
     }
+
+    /* The brackets last, against the text the rest has left, and until
+       nothing more goes: taking one away can leave the one beside it
+       standing on its own. */
+    do {
+        changed = 0;
+        for (at = (unsigned char *)text; *at; at++) {
+            if ((opening_bracket(*at) || closing_bracket(*at))
+                && !bracket_kept((unsigned char *)text, at, utf8)) {
+                *at = ' ';
+                changed = 1;
+            }
+        }
+    } while (changed);
 }
 
 /* Whether the engine converts this language's text itself, in which case the
@@ -984,6 +1086,13 @@ int module_config(const char *configFile)
             }
             widebandEnabled = enabled;
             outputRate = enabled ? 22050 : 11025;
+        } else if (!strcasecmp(at, "BuiltInDictionary")) {
+            /* It once turned the dictionary US English carries off, which a
+               reader can no longer do. Refusing the line would leave the
+               module with no voice over a setting that is gone, so it is
+               read and ignored, whatever it says. */
+            fprintf(stderr, "OpenEVV: BuiltInDictionary is no longer a "
+                    "setting; the line is ignored\n");
         } else {
             fclose(file);
             return -1;

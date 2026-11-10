@@ -1,0 +1,150 @@
+# The rules of Finnish, lifted by tools/rules/lift64.py out of ETI
+# Eloquence 6.1 as Apple ships it, by tools/module/lift61.py. Each says
+# `instead' because it is written afresh rather than re-expressed from one of
+# IBM's: nothing of IBM's is under it.
+
+rule print_F_trans takes 2
+  instead
+  local ce0 bytes 8
+  place p18f2f
+  place p18f67
+  place p18f96
+  call get_parm addr ce0 arg 1 -4
+  call fence 0 sym eti_null
+  match
+end
+
+rule callInternalSynthesizer takes 7
+  instead
+  local cf0 bytes 8
+  local cf4 bytes 8
+  local cf8 bytes 8
+  local c100 bytes 8
+  local c104 bytes 8
+  local c108 bytes 8
+  local c10c bytes 8
+  local c1b8 bytes 8
+  local c1c8 bytes 8
+  local c1d8 bytes 8
+  local c1e8 bytes 8
+  local c1f8 bytes 8
+  local vfc word
+  local v118 word
+  local v120 word
+  local v128 word
+  local v130 word
+  local v138 word
+  local v140 word
+  local v148 word
+  local v150 word
+  local v158 word
+  local v160 word
+  local v168 word
+  local v170 word
+  local v178 word
+  local v180 word
+  local v188 word
+  local v190 word
+  local v198 word
+  local v1a0 word
+  local v1a8 word
+  local h_r14
+  variable g1008 word 2756
+  variable g1018 word 2764
+  variable g1028 word 2772
+  variable g1038 word 2780
+  variable g1048 word 2788
+  variable g1058 word 2796
+  variable g1068 word 2804
+  variable ged8 word 2556
+  variable gfb0 word 2700
+  variable gfcc word 2720
+  variable gfd0 word 2724
+  variable gfd8 word 2732
+  variable gfe8 word 2740
+  variable gff8 word 2748
+  place p18fe7
+  set v138 to arg 5
+  set h_r14 to arg 2
+  place p1903a
+  set v118 to arg 1
+  set v120 to arg 2
+  set v128 to arg 3
+  set v130 to arg 4
+  place p1908e
+  call get_parm addr c10c arg 1 -4
+  set h_r14 to -6
+  call get_parm addr c1f8 arg 2 -6
+  call get_parm addr c1e8 arg 3 -6
+  set h_r14 to addr c1d8
+  call get_parm addr c1d8 arg 4 -5
+  call get_parm addr c1c8 arg 5 -5
+  call get_parm addr c1b8 arg 6 -5
+  set cf8 to 65532
+  set cf4 to 65532
+  set cf0 to 65532
+  set c108 to 65532
+  set c104 to 65532
+  set c100 to 65532
+  call fence 0 sym eti_null
+  if cell c1c8 value is not cell c1d8 value
+    go to p19177
+  end
+  place p19171
+  match
+  place p19177
+  set v1a8 to addr gfb0
+  set v1a0 to addr gfcc
+  set v198 to addr ged8
+  set v190 to addr gfd0
+  set v188 to addr g1028
+  set v180 to addr g1048
+  set v178 to addr g1038
+  set v170 to addr g1058
+  set v168 to addr g1068
+  set v160 to addr gfd8
+  set v158 to addr gfe8
+  set v150 to addr gff8
+  set v148 to addr g1008
+  set v140 to addr g1018
+  set h_r14 to 0
+  go to p19241
+  place t19241_1 on 1
+  set h_r14 to unwind
+  place p19241
+  set vfc to h_r14
+  call starttest 2
+  call bspush_ca_boa 3
+  call move_i addr cf8 12
+  call move_i addr cf4 35
+  call move_i addr cf0 47
+  set h_r14 to addr c108
+  call move_i addr c108 48
+  call move_i addr c104 49
+  call move_i addr c100 0
+  call callSynthesizeArray addr c10c addr c1d8 addr c1c8 addr c1b8 addr gfb0 addr gfcc addr ged8 addr gfd0 addr g1028 addr g1048 addr g1038 addr g1058 addr g1068 addr cf8 addr gfd8 addr cf4 addr gfe8 addr cf0 addr gff8 addr c108 addr g1008 addr c104 addr g1018 addr c100
+  if answer is 0
+    set unwind to 1
+    backtrack
+  end
+  place p19382
+  set unwind to vfc
+  backtrack
+  go to p193bc
+  place t193bc_3 on 3
+  set h_r14 to unwind
+  place p193bc
+  call bspop_boa
+  give up
+  place tm_2 on 2
+  match
+end
+
+rule print_streamarrays_from_delta takes 1
+  instead
+  place p193fe
+  place p19431
+  place p19460
+  call fence 0 sym eti_null
+  match
+end

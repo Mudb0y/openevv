@@ -1,0 +1,851 @@
+# The rules of Brazilian Portuguese, lifted by tools/rules/lift64.py out of ETI
+# Eloquence 6.1 as Apple ships it, by tools/module/lift61.py. Each says
+# `instead' because it is written afresh rather than re-expressed from one of
+# IBM's: nothing of IBM's is under it.
+
+rule word_level_rules takes 3
+  instead
+  local c100 bytes 8
+  local c110 bytes 8
+  local c120 bytes 8
+  local c130 bytes 8
+  variable g528 word 756
+  variable g538 word 764
+  variable gf00 word 2592
+  place p43bc0
+  place p43bff
+  place p43c62
+  call get_parm addr c120 arg 1 -6
+  call get_parm addr c100 arg 2 -6
+  call push_ptr_init addr c130
+  call push_ptr_init addr c110
+  call fence 0 sym eti_null
+  call startloop 1
+  call lpta_loadpn addr c120
+  call lpta_mover 2
+  call lpta_storep addr g528
+  call lpta_loadpn addr c100
+  call lpta_mover 2
+  call lpta_storep addr c130
+  call forall_to_test addr g528 addr c130
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p43d37
+  go to p43d3e
+  place p43d3e
+  place t43d3e_8 on 8
+  call bspush_ca 3
+  call lpta_loadp addr g528
+  call setscan_r 2
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p43d5f
+  call advance_tok
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p43d6f
+  place t43d6f_4 on 4
+  call savescptr 4 addr g538
+  place p43d81
+  place t43d81_2 on 2
+  call is_spr addr g528 addr c110
+  if answer is not 0
+    go to p43da0
+  end
+  place p43d97
+  set global half 2594 to 1
+  place p43da0
+  place t43da0_5 on 5
+  call starttest 6
+  if global half 3562 is not global half 3530
+    go to p43dd8
+  end
+  place p43dbb
+  call starttest_e 7
+  call por_symbolic_rules addr g528 addr g538
+  place p43dd8
+  place t43dd8_6 on 6
+  place t43dd8_7 on 7
+  call move_i addr gf00 0
+  place p43de9
+  place t43de9_3 on 3
+  call forto_adv_upto_r 1 2 8 2 addr g528 addr c130
+  if answer is 0
+    go to p43e3c
+  end
+  set unwind to 0
+  backtrack
+  place p43e3c
+  place t43e3c_1 on 1
+  set cell c120 value to cell c100 value
+  put cell c100 value into arg 1 at 4
+  match
+end
+
+rule phrase_level_rules takes 3
+  instead
+  local c100 bytes 8
+  local c110 bytes 8
+  place p43e80
+  place p43ec3
+  place p43ef2
+  call get_parm addr c100 arg 1 -6
+  call get_parm addr c110 arg 2 -6
+  call fence 0 sym eti_null
+  call lang_phrase_level_rules addr c100 addr c110
+  call copy_stress_to_phones addr c100 addr c110
+  set cell c100 value to cell c110 value
+  put cell c110 value into arg 1 at 4
+  match
+end
+
+rule copy_stress_to_phones takes 3
+  instead
+  local cf0 bytes 8
+  local c100 bytes 8
+  local c110 bytes 8
+  local c128 bytes 8
+  local c138 bytes 8
+  local c148 bytes 8
+  local c158 bytes 8
+  place p43fa0
+  place p43fdb
+  place p4403f
+  call get_parm addr c158 arg 1 -6
+  call get_parm addr c138 arg 2 -6
+  and 0 into cell c128 half 0
+  set c128 to -65529
+  set cell cf0 kind to 65532
+  call push_ptr_init addr c100
+  call push_ptr_init addr c110
+  call push_ptr_init addr c148
+  call fence 0 sym eti_null
+  and 0 into cell cf0 field
+  call startloop 1
+  call lpta_loadpn addr c158
+  call lpta_mover 7
+  call lpta_storep addr c100
+  call lpta_loadpn addr c138
+  call lpta_mover 7
+  call lpta_storep addr c148
+  call forall_to_test addr c100 addr c148
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p44142
+  go to p44149
+  place p44149
+  place t44149_5 on 5
+  call bspush_ca 3
+  call lpta_loadp addr c100
+  call setscan_r 7
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4416e
+  call advance_tok
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4417e
+  call savetok addr c128
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p44195
+  place t44195_4 on 4
+  call savescptr 4 addr c110
+  place p441a7
+  place t441a7_2 on 2
+  and 0 into cell c128 field
+  call copyvar addr cf0 addr c128
+  call lpta_rpta_loadp addr c100 addr c110
+  call mark_v 4 8 addr cf0 0
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p441f3
+  place t441f3_3 on 3
+  call forto_adv_upto_r 1 2 5 7 addr c100 addr c148
+  if answer is 0
+    match
+  end
+  set unwind to 0
+  backtrack
+  place tm_1 on 1
+  match
+end
+
+rule build_words takes 3
+  instead
+  local c100 bytes 8
+  local c110 bytes 8
+  local c120 bytes 8
+  local c130 bytes 8
+  local c140 bytes 8
+  place p4426c
+  place p442a7
+  place p44307
+  call get_parm addr c140 arg 1 -6
+  call get_parm addr c120 arg 2 -6
+  call push_ptr_init addr c100
+  call push_ptr_init addr c110
+  call push_ptr_init addr c130
+  call fence 0 sym eti_null
+  if global half 2594 is not 1
+    go to p4440c
+  end
+  place p44381
+  set cell c100 value to cell c140 value
+  call starttest_l 2
+  call lpta_loadp addr c100
+  call setscan_r 4
+  if answer is not 0
+    go to p443e9
+  end
+  place p443b0
+  place t443b0_4 on 4
+  go to p443c1
+  place p443b6
+  call bspush_ca_scan 3
+  place p443c1
+  call advance_tok
+  if answer is 0
+    go to p443b6
+  end
+  place p443cd
+  go to p444f7
+  place p443d7
+  place t443d7_3 on 3
+  call savescptr 3 addr c110
+  place p443e9
+  place t443e9_2 on 2
+  call insert_word addr c100 addr c110
+  place p443ff
+  place t443ff_5 on 5
+  and 0 into global half 2594
+  go to p44589
+  place p4440c
+  place t4440c_1 on 1
+  call fence 1 sym eti_s_ef1bc
+  call lpta_loadp addr c120
+  call addfence 2
+  if global half 3554 is global half 3530
+    go to p44564
+  end
+  place p44457
+  call startloop 7
+  call lpta_loadpn addr c140
+  call lpta_mover 1
+  call lpta_storep addr c100
+  call lpta_loadpn addr c120
+  call lpta_mover 1
+  call lpta_storep addr c130
+  place p444b8
+  place t444b8_13 on 13
+  call forall_to_test addr c100 addr c130
+  if answer is not 0
+    go to p444f7
+  end
+  place p444d2
+  place t444d2_14 on 14
+  call bspush_ca 9
+  call lpta_loadp addr c100
+  call setscan_r 1
+  if answer is 0
+    go to p445a7
+  end
+  place p444f7
+  set unwind to 0
+  backtrack
+  place p4453c
+  place t4453c_9 on 9
+  call forto_adv_upto_r 7 8 14 1 addr c100 addr c130
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p44564
+  place t44564_7 on 7
+  call lpta_loadp addr c120
+  call remfence 2
+  place p44589
+  place t44589_6 on 6
+  call reset_word_vals addr c120
+  match
+  place p445a7
+  place t445a7_11 on 11
+  place p445b3
+  call testFldeq 1 3 1
+  if answer is not 0
+    go to p444f7
+  end
+  place p445cc
+  call advance_tok
+  if answer is not 0
+    go to p444f7
+  end
+  place p445dc
+  call bspush_ca_scan 10
+  go to p445b3
+  place p445e9
+  place t445e9_10 on 10
+  call savescptr 10 addr c110
+  place p445fb
+  place t445fb_8 on 8
+  call insert_word addr c100 addr c110
+  place p44611
+  place t44611_12 on 12
+  call forall_cont_from 7 8 0 addr c100 addr c110
+  go to p444b8
+  place tm_15 on 15
+  match
+end
+
+rule insert_word takes 3
+  instead
+  local c100 bytes 8
+  local c110 bytes 8
+  local c120 bytes 8
+  local h_r14
+  local s447de
+  variable ge10 word 2436
+  variable ge30 word 2456
+  place p44670
+  set h_r14 to arg 2
+  place p446ab
+  place p4470b
+  call get_parm addr c100 arg 1 -6
+  call get_parm addr c110 arg 2 -6
+  call push_ptr_init addr c120
+  set h_r14 to 0
+  call fence 0 sym eti_null
+  call lpta_rpta_loadp addr c100 addr c110
+  call insert_2ptv 2 addr ge10 0
+  if answer is not 0
+    set unwind to h_r14
+    backtrack
+  end
+  place p4478a
+  call lpta_rpta_loadp addr c100 addr c110
+  set h_r14 to 0
+  call insert_2ptv 6 addr ge30 0
+  if answer is not 0
+    set unwind to h_r14
+    backtrack
+  end
+  place p447bc
+  call starttest 1
+  call bspush_ca_boa 2
+  call lpta_loadp addr c100
+  call setscan_l 0
+  set s447de to answer
+  set h_r14 to 0
+  set h_r14 to 0
+  if s447de is 0
+    set h_r14 to 1
+  end
+  set unwind to h_r14
+  backtrack
+  place p44824
+  place t44824_2 on 2
+  call bspop_boa
+  call rpta_loadp addr c100
+  call lpta_loadpn addr c100
+  set h_r14 to 0
+  call lpta_ctxtl 0
+  call lpta_storep addr c120
+  call lpta_loadp addr c120
+  call proj_r 0
+  place p4489a
+  place t4489a_1 on 1
+  call lpta_loadp addr c100
+  set h_r14 to 6
+  call proj_def_mult 6 sym eti_s_ef1bd addr c100
+  call lpta_loadp addr c110
+  call proj_def_mult 6 sym eti_s_ef1c3 addr c110
+  call init_word
+  match
+  place tm_3 on 3
+  match
+end
+
+rule reset_word_vals takes 2
+  instead
+  local cf0 bytes 8
+  local h_rax
+  local n449f4_0
+  local n44a4d_0
+  variable ge10 word 2436
+  variable ge70 word 2508
+  place p4491d
+  place p44953
+  place p449b1
+  call get_parm addr cf0 arg 1 -6
+  set h_rax to answer
+  call fence 0 sym eti_null
+  set h_rax to answer
+  call starttest 1
+  set h_rax to answer
+  call bspush_ca 2
+  set h_rax to answer
+  set h_rax to global half 3546
+  place p449f4
+  set n449f4_0 to h_rax
+  and 65535 into n449f4_0
+  if n449f4_0 is not global half 3530
+    set unwind to 0
+    backtrack
+  end
+  place p449fd
+  place t449fd_3 on 3
+  set global half 2510 to 10
+  call npush_v addr ge70
+  set h_rax to answer
+  set global half 2438 to 10
+  call npop addr ge10
+  set h_rax to answer
+  place p44a30
+  place t44a30_1 on 1
+  call starttest 6
+  set h_rax to answer
+  call bspush_ca 7
+  set h_rax to answer
+  set h_rax to global half 3534
+  place p44a4d
+  set n44a4d_0 to h_rax
+  and 65535 into n44a4d_0
+  if n44a4d_0 is global half 3530
+    go to p44ad1
+  end
+  set unwind to 0
+  backtrack
+  place p44a8b
+  place t44a8b_2 on 2
+  call bspush_ca 4
+  set h_rax to answer
+  set h_rax to global half 3550
+  go to p449f4
+  place p44aa2
+  place t44aa2_4 on 4
+  call bspush_ca 5
+  set h_rax to answer
+  set h_rax to global half 3562
+  go to p449f4
+  place p44ab9
+  place t44ab9_5 on 5
+  set h_rax to global half 3538
+  go to p449f4
+  place p44ac5
+  place t44ac5_7 on 7
+  set h_rax to global half 3562
+  go to p44a4d
+  place p44ad1
+  place t44ad1_8 on 8
+  set global half 2510 to 1
+  call npush_v addr ge70
+  set h_rax to answer
+  set global half 2438 to 1
+  call npop addr ge10
+  set h_rax to answer
+  set global half 2510 to 3
+  call npush_v addr ge70
+  set h_rax to answer
+  set global half 2438 to 3
+  call npop addr ge10
+  set h_rax to answer
+  match
+  place tm_6 on 6
+  match
+end
+
+rule init_word takes 1
+  instead
+  local c118 bytes 20
+  local vf8 word
+  local h_rax
+  local n44ca5_0
+  local n44d4d_0
+  variable ge10 word 2436
+  variable ge70 word 2508
+  place p44b6c
+  place p44ba1
+  place p44c01
+  set cell c118 word 0 to 0
+  set cell c118 word 4 to 0
+  set cell c118 word 8 to 0
+  set cell c118 word 12 to 0
+  set c118 to -65534
+  call fence 0 sym eti_null
+  set h_rax to answer
+  set vf8 to addr ge10
+  call copyvar addr c118 addr ge10
+  set h_rax to answer
+  set h_rax to global half 3542
+  if h_rax is global half 3530
+    go to p44c67
+  end
+  place p44c51
+  call copyvar addr ge10 addr ge70
+  set h_rax to answer
+  place p44c67
+  place p44c79
+  place t44c79_1 on 1
+  set h_rax to cell c118 word 0
+  increment h_rax
+  set global half 2440 to h_rax
+  call starttest 2
+  set h_rax to answer
+  call bspush_ca 3
+  set h_rax to answer
+  set h_rax to global half 3546
+  place p44ca5
+  set n44ca5_0 to h_rax
+  and 65535 into n44ca5_0
+  if n44ca5_0 is not global half 3530
+    set unwind to 0
+    backtrack
+  end
+  place p44cb2
+  place t44cb2_4 on 4
+  set cell c118 field to 10
+  call npush_v addr c118
+  set h_rax to answer
+  set global half 2438 to 10
+  call npop addr ge10
+  set h_rax to answer
+  place p44ce9
+  place t44ce9_2 on 2
+  set h_rax to global half 3562
+  if h_rax is not global half 3530
+    go to p44d30
+  end
+  place p44cf9
+  set cell c118 field to 1
+  call npush_v addr c118
+  set h_rax to answer
+  set global half 2438 to 1
+  call npop addr ge10
+  set h_rax to answer
+  place p44d30
+  place t44d30_7 on 7
+  call starttest 8
+  set h_rax to answer
+  call bspush_ca 9
+  set h_rax to answer
+  set h_rax to global half 3562
+  place p44d4d
+  set n44d4d_0 to h_rax
+  and 65535 into n44d4d_0
+  if n44d4d_0 is global half 3530
+    go to p44dc8
+  end
+  set unwind to 0
+  backtrack
+  place p44d85
+  place t44d85_3 on 3
+  call bspush_ca 5
+  set h_rax to answer
+  set h_rax to global half 3550
+  go to p44ca5
+  place p44d9c
+  place t44d9c_5 on 5
+  call bspush_ca 6
+  set h_rax to answer
+  set h_rax to global half 3562
+  go to p44ca5
+  place p44db3
+  place t44db3_6 on 6
+  set h_rax to global half 3538
+  go to p44ca5
+  place p44dbf
+  place t44dbf_9 on 9
+  set h_rax to global half 3534
+  go to p44d4d
+  place p44dc8
+  place t44dc8_10 on 10
+  set cell c118 field to 3
+  call npush_v addr c118
+  set h_rax to answer
+  set global half 2438 to 3
+  call npop addr ge10
+  set h_rax to answer
+  match
+  place tm_8 on 8
+  match
+end
+
+rule estimate_nsylls takes 4
+  instead
+  local cf0 bytes 8
+  local c100 bytes 8
+  local c110 bytes 8
+  local c128 bytes 8
+  local c138 bytes 8
+  local c148 bytes 8
+  local c158 bytes 8
+  local c168 bytes 8
+  local c178 bytes 8
+  local c188 bytes 8
+  local v118 word
+  local h_rax
+  place p44e34
+  place p44e76
+  place p44ed9
+  call get_parm addr c178 arg 1 -6
+  set h_rax to answer
+  call get_parm addr c168 arg 2 -6
+  set h_rax to answer
+  set v118 to arg 3
+  call get_parm addr cf0 arg 3 -4
+  set h_rax to answer
+  call push_ptr_init addr c100
+  set h_rax to answer
+  call push_ptr_init addr c128
+  set h_rax to answer
+  call push_ptr_init addr c138
+  set h_rax to answer
+  call push_ptr_init addr c110
+  set h_rax to answer
+  call push_ptr_init addr c188
+  set h_rax to answer
+  call push_ptr_init addr c158
+  set h_rax to answer
+  call push_ptr_init addr c148
+  set h_rax to answer
+  call fence 0 sym eti_null
+  set h_rax to answer
+  set h_rax to global half 3554
+  if h_rax is not global half 3530
+    go to p44fca
+  end
+  place p44fb0
+  place t44fb0_2 on 2
+  set h_rax to cell cf0 field
+  put h_rax into arg 3 at 2 half
+  match
+  place p44fca
+  place p44fd1
+  place t44fd1_1 on 1
+  and 0 into cell cf0 field
+  call startloop 2
+  set h_rax to answer
+  call lpta_loadpn addr c178
+  set h_rax to answer
+  call lpta_mover 2
+  set h_rax to answer
+  call lpta_storep addr c100
+  set h_rax to answer
+  call lpta_loadpn addr c168
+  set h_rax to answer
+  call lpta_mover 2
+  set h_rax to answer
+  call lpta_storep addr c138
+  set h_rax to answer
+  call forall_to_test addr c100 addr c138
+  set h_rax to answer
+  if h_rax is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4505f
+  place t4505f_17 on 17
+  call bspush_ca 4
+  set h_rax to answer
+  call lpta_loadp addr c100
+  call setscan_r 2
+  set h_rax to answer
+  if h_rax is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p45084
+  call advance_tok
+  set h_rax to answer
+  if h_rax is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p45094
+  place t45094_5 on 5
+  call savescptr 5 addr c128
+  set h_rax to answer
+  place p450a6
+  place t450a6_3 on 3
+  set h_rax to global half 3542
+  if h_rax is global half 3530
+    go to p451d1
+  end
+  place p450ba
+  call lpta_loadp addr c100
+  call setscan_r 7
+  set h_rax to answer
+  if h_rax is not 0
+    go to p451d1
+  end
+  place p450d4
+  call advance_tok
+  set h_rax to answer
+  if h_rax is not 0
+    go to p451d1
+  end
+  place p450e4
+  call startloop 7
+  set h_rax to answer
+  call lpta_loadpn addr c100
+  set h_rax to answer
+  call lpta_mover 7
+  set h_rax to answer
+  call lpta_storep addr c110
+  set h_rax to answer
+  call lpta_loadpn addr c128
+  set h_rax to answer
+  call lpta_mover 7
+  set h_rax to answer
+  call lpta_storep addr c188
+  set h_rax to answer
+  call forall_to_test addr c110 addr c188
+  set h_rax to answer
+  if h_rax is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p4515f
+  place t4515f_10 on 10
+  call bspush_ca 9
+  set h_rax to answer
+  call lpta_loadp addr c110
+  call setscan_r 7
+  set h_rax to answer
+  if h_rax is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p45184
+  call advance_tok
+  set h_rax to answer
+  if h_rax is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p45194
+  place t45194_8 on 8
+  call c_assvar addr cf0
+  set h_rax to answer
+  increment cell cf0 field
+  place p451aa
+  place t451aa_9 on 9
+  call forto_adv_upto_r 7 8 10 7 addr c110 addr c188
+  set h_rax to answer
+  go to p452cb
+  place p451d1
+  place t451d1_6 on 6
+  call startloop 4
+  set h_rax to answer
+  call copyvar addr c158 addr c100
+  set h_rax to answer
+  call copyvar addr c188 addr c128
+  set h_rax to answer
+  call forall_to_test addr c158 addr c188
+  set h_rax to answer
+  if h_rax is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p45216
+  place t45216_16 on 16
+  call bspush_ca 12
+  set h_rax to answer
+  call lpta_loadp addr c158
+  call setscan_l 4
+  set h_rax to answer
+  if h_rax is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p45237
+  place t45237_11 on 11
+  call lpta_loadp addr c158
+  call setscan_r 4
+  set h_rax to answer
+  if h_rax is not 0
+    go to p45290
+  end
+  place p45249
+  call advanc
+  set h_rax to answer
+  if h_rax is not 0
+    go to p45290
+  end
+  place p45255
+  place t45255_14 on 14
+  call savescptr 14 addr c148
+  set h_rax to answer
+  call starttest_l 15
+  set h_rax to answer
+  call estimate_lang_nsylls addr cf0 addr c158 addr c148
+  set h_rax to answer
+  go to p452ad
+  place p45290
+  place t45290_13 on 13
+  call starttest 12
+  set h_rax to answer
+  call lpta_loadp addr c158
+  call setscan_r 4
+  set h_rax to answer
+  if h_rax is 0
+    go to p452d1
+  end
+  place p452ad
+  place t452ad_12 on 12
+  place t452ad_15 on 15
+  call forto_adv_r 4 11 16 4 addr c158 addr c188
+  set h_rax to answer
+  place p452cb
+  if h_rax is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p452cf
+  go to p4530a
+  place p452d1
+  call testFldeq 4 1 2
+  set h_rax to answer
+  if h_rax is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p452e6
+  call advance_tok
+  set h_rax to answer
+  if h_rax is not 0
+    set unwind to 0
+    backtrack
+  end
+  place p452f2
+  call c_assvar addr cf0
+  set h_rax to answer
+  increment cell cf0 field
+  go to p452ad
+  place p4530a
+  place t4530a_4 on 4
+  place t4530a_7 on 7
+  call forto_adv_upto_r 2 3 17 2 addr c100 addr c138
+  set h_rax to answer
+  if h_rax is 0
+    go to p44fb0
+  end
+  set unwind to 0
+  backtrack
+end

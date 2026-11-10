@@ -14,10 +14,13 @@
  *
  * usage: eti <library> <cases> [ours]
  *
- * With a third argument the abbreviation dictionary and phrase prediction are
- * turned on, which is what 6.1 does and what ours does not unless asked
- * (docs/quirks.md says why). 6.1 has no parameter 11 to set and must not be
- * handed one, so this is asked of ours only.
+ * With a third argument the abbreviation dictionary is turned on, which is
+ * what 6.1 does and what ours does not unless asked (docs/quirks.md says
+ * why), and the dictionary a language of ours carries is turned off, since
+ * 6.1 carries none and the question here is what the rules make of a
+ * sentence. Phrase prediction is left as each engine has it: eciSetParam
+ * refuses eleven in ours as it did in IBM's, and 6.1 has no parameter 11 at
+ * all. It has no parameter 34 either, so that is set only on ours.
  */
 
 #include <dlfcn.h>
@@ -106,7 +109,7 @@ int main(int argc, char **argv)
         reg(h, (void *)on_message, NULL);
         if (argc > 3) {
             set(h, 3, 0);
-            set(h, 11, 1);
+            set(h, 34, 0);
         }
         if (atoi(mode) >= 0)
             set(h, 2, atoi(mode));

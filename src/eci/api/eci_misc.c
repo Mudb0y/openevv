@@ -105,6 +105,8 @@ int32_t STDCALL eo_getParam(OldInst *h, int32_t which)
         return inst->wideband;
     if (which == ECI_OLD_PAUSES)
         return inst->pauses;
+    if (which == ECI_OLD_BUILTIN)
+        return inst->builtin;
     if (which >= 0x11)
         return v;
     if (which == 0x0b)
@@ -127,6 +129,7 @@ int32_t STDCALL eo_getParam(OldInst *h, int32_t which)
    of nought means none has been chosen, and the answer is the one built
    in. */
 int32_t g_DefaultPauses = PAUSES_DEFAULT;
+int32_t g_DefaultBuiltin = BUILTIN_DEFAULT;
 
 int32_t STDCALL es_getDefaultParam(int32_t which)
 {
@@ -134,6 +137,8 @@ int32_t STDCALL es_getDefaultParam(int32_t which)
 
     if (which == ECI_OLD_PAUSES)
         return g_DefaultPauses;
+    if (which == ECI_OLD_BUILTIN)
+        return g_DefaultBuiltin;
     if (which < 0 || which >= ENV_WORDS)
         return v;
 
@@ -156,6 +161,13 @@ int32_t STDCALL es_setDefaultParam(int32_t which, int32_t value)
             return -1;
         old = g_DefaultPauses;
         g_DefaultPauses = value;
+        return old;
+    }
+    if (which == ECI_OLD_BUILTIN) {
+        if (value < 0 || value > 1)
+            return -1;
+        old = g_DefaultBuiltin;
+        g_DefaultBuiltin = value;
         return old;
     }
     if (which < 0 || which >= ENV_WORDS)
@@ -309,6 +321,7 @@ int STDCALL es_reset(OldInst *h)
        utterance, as it is of any other change. */
     inst->wideband = 0;
     inst->pauses = g_DefaultPauses;
+    inst->builtin = g_DefaultBuiltin;
 
     eo_clearManualQueue(inst);
     if (!eo_getDefaultEnvironment(inst, 0)

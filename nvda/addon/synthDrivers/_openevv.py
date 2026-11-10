@@ -194,6 +194,8 @@ LOCALES = {
 	0x40000: "de_DE",
 	0x50000: "it_IT",
 	0x80000: "ja_JP",
+	0x90000: "fi_FI",
+	0x70000: "pt_BR",
 	0x110000: "pl_PL",
 	0x120000: "ru_RU",
 }
@@ -211,6 +213,8 @@ LANGUAGE_NAMES = {
 	0x40000: "German",
 	0x50000: "Italian",
 	0x80000: "Japanese",
+	0x90000: "Finnish",
+	0x70000: "Brazilian Portuguese",
 	0x110000: "Polish",
 	0x120000: "Russian",
 }
@@ -262,7 +266,8 @@ _INSTEAD.update({chr(n): chr(n - 0xfee0) for n in range(0xff01, 0xff5f)
 #: They are Windows' own short names for the languages, which is where IBM's
 #: drivers got enu, eng and deu, and so they are the names the community's
 #: files already carry. Polish, which IBM never shipped, takes Windows' plk on
-#: the same terms.
+#: the same terms, and Finnish and Brazilian Portuguese, which came from ETI's
+#: 6.1, take fin and ptb.
 DICTIONARY_CODES = {
 	0x10000: "enu",
 	0x10001: "eng",
@@ -273,6 +278,8 @@ DICTIONARY_CODES = {
 	0x40000: "deu",
 	0x50000: "ita",
 	0x80000: "jpn",
+	0x90000: "fin",
+	0x70000: "ptb",
 	0x110000: "plk",
 }
 
@@ -293,7 +300,8 @@ def dictionaryFiles(folders, language):
 
 	Matched without regard to case. The community's files are called
 	ENURoot.dic and IBM's drivers ask for enuroot.dic, which is one file on
-	Windows and two names that miss each other anywhere else.
+	Windows and two names that miss each other anywhere else. A folder may
+	come paired with the languages it is not read for.
 	"""
 	code = DICTIONARY_CODES.get(language)
 	found = []
@@ -301,6 +309,10 @@ def dictionaryFiles(folders, language):
 		return found
 	listed = []
 	for folder in folders:
+		if not isinstance(folder, str):
+			folder, passed = folder
+			if language in passed:
+				continue
 		try:
 			listed.append((folder, sorted(os.listdir(folder))))
 		except OSError:

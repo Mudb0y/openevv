@@ -2,10 +2,11 @@
  * "put the registers back and go there" without also unwinding.
  *
  * Both calling conventions are here. They agree about rbx, rbp and r12 to r15
- * belonging to the callee; Windows adds rdi and rsi, which are saved too, so
- * one buffer serves either. The first argument is the buffer -- rdi on the
- * System V convention, rcx on Windows -- and the second, the value the save
- * appears to answer with when it is landed on, is rsi or rdx.
+ * belonging to the callee; Windows adds rdi and rsi, which are saved on both,
+ * and xmm6 to xmm15 with the two control words, which are saved only there,
+ * as the C library's setjmp does on each. The first argument is the buffer --
+ * rdi on the System V convention, rcx on Windows -- and the second, the value
+ * the save appears to answer with when it is landed on, is rsi or rdx.
  *
  * Nothing here is allowed to touch the red zone below the stack pointer, and
  * nothing does: the save writes only through the buffer.
@@ -274,6 +275,20 @@ EVV_LAND_HIDE
 "    mov %r11,  64(%rax)\n"
 "    mov (%rsp), %r11\n"
 "    mov %r11,  72(%rax)\n"
+#if defined(_WIN32)
+"    movdqu %xmm6,   80(%rax)\n"
+"    movdqu %xmm7,   96(%rax)\n"
+"    movdqu %xmm8,  112(%rax)\n"
+"    movdqu %xmm9,  128(%rax)\n"
+"    movdqu %xmm10, 144(%rax)\n"
+"    movdqu %xmm11, 160(%rax)\n"
+"    movdqu %xmm12, 176(%rax)\n"
+"    movdqu %xmm13, 192(%rax)\n"
+"    movdqu %xmm14, 208(%rax)\n"
+"    movdqu %xmm15, 224(%rax)\n"
+"    stmxcsr       240(%rax)\n"
+"    fnstcw        244(%rax)\n"
+#endif
 "    xor %eax, %eax\n"
 "    ret\n"
 
@@ -282,6 +297,20 @@ EVV_LAND_HIDE
 "evv_land_jump:\n"
 "    mov " EVV_A1 ", %rax\n"
 "    mov " EVV_A2 ", %r10d\n"
+#if defined(_WIN32)
+"    movdqu  80(%rax), %xmm6\n"
+"    movdqu  96(%rax), %xmm7\n"
+"    movdqu 112(%rax), %xmm8\n"
+"    movdqu 128(%rax), %xmm9\n"
+"    movdqu 144(%rax), %xmm10\n"
+"    movdqu 160(%rax), %xmm11\n"
+"    movdqu 176(%rax), %xmm12\n"
+"    movdqu 192(%rax), %xmm13\n"
+"    movdqu 208(%rax), %xmm14\n"
+"    movdqu 224(%rax), %xmm15\n"
+"    ldmxcsr       240(%rax)\n"
+"    fldcw         244(%rax)\n"
+#endif
 "    mov   0(%rax), %rbx\n"
 "    mov   8(%rax), %rbp\n"
 "    mov  16(%rax), %r12\n"

@@ -161,7 +161,56 @@ typedef struct delta_language {
     /* the settings this language carries in the image */
     const char *ini;
     int32_t     ini_size;
+
+    /* Whether the interface tells a machine of this language a setting only
+       when the caller has changed it, as 6.1's interface does. 4.3's sends
+       every setting the first time an instance speaks, as annotations ahead
+       of the caller's text, which 4.3's rules read past and the rules of a
+       language lifted from 6.1 read as part of what was said. */
+    int32_t     settings_on_change;
+
+    /* The dictionary the language carries, consulted by the rules after
+       whatever dictionary the caller has put in force; null for a language
+       that carries none. tools/module/builtindict.py writes it. */
+    const struct delta_builtin_dict *builtin_dict;
 } delta_language;
+
+/* One line of a dictionary a language carries: the word, and what is said
+   in its place, exactly as a line of a dictionary file a caller loads says
+   them. The three volumes are a caller's three -- main, root and
+   abbreviation -- and each is sorted by its words byte for byte, so a lookup
+   is a search by halves and nothing has to be built when an instance starts. */
+typedef struct delta_dict_entry {
+    const char *word;
+    const char *says;
+} delta_dict_entry;
+
+/* A sorted set of words as one block of text, each ended by a null, with
+   where every sixteenth begins, so that a word is found by halves among the
+   sixteenths and then a few steps along. A set with no words is empty. */
+typedef struct delta_wordset {
+    const char     *words;
+    const uint32_t *index;
+    int32_t         count;
+} delta_wordset;
+
+typedef struct delta_builtin_dict {
+    const delta_dict_entry *volume[3];
+    int32_t                 count[3];
+    /* Whether a word with a capital inside it that no dictionary holds is
+       read as the words it is made of, and the beginnings that make such a
+       word a name to leave whole, ending in a null. */
+    int32_t                 split;
+    const char *const      *whole;
+    /* What tells a word in small letters that can be said from one that
+       cannot: how one may begin and end, the words that fail that test and
+       are words, and the short words one that cannot be said may be cut
+       into. A language with no onsets cuts nothing. */
+    delta_wordset           onset;
+    delta_wordset           coda;
+    delta_wordset           kept;
+    delta_wordset           pieces;
+} delta_builtin_dict;
 
 /* Every language linked into this program, ending with a null, and the
    numbers each of them states filled into it. The build writes both,

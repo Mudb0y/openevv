@@ -1,0 +1,20 @@
+Normaali puhe `vs50 nyt paljon hitaampaa kuin ennen.
+Aanenvoimakkuus `vv30 hiljempaa, sitten `vv90 taas kovempaa.
+Korkeus `vb20 matala ja `vb80 korkea samassa lauseessa.
+Aani `v2 kaksi, `v5 viisi, ja `v1 taas yksi.
+Tauko `0 lyhyt ja `4 pitka sanojen valissa.
+Karheus `vr40 ja hengitys `vf60 muutettu.
+Kirjaimellinen \`takahipsu luetaan tekstina.
+Nopeus nimella `vsfast ja sitten `vsslow takaisin.
+Paan koko `vh30 sitten `vh70 samalla rivilla.
+Sukupuoli `vg1 ja `vg0 vuorotellen.
+Ennen `ui"merkki yksi" ja jalkeen indeksimerkin.
+Merkki `aud"piip" aanellinen keskella rivia.
+`vs40 Merkinta heti rivin alussa.
+Paattyy merkintaan aivan rivin lopussa `vs60
+Virheelliset `vzz ja `q ja `v999 kaikki samalla rivilla.
+Kaksi `vs30`vv40 merkintaa ilman mitaan valissa.
+`ui"a"`ui"b" kaksi merkkia ilman mitaan valissa.
+Sulkematon `ui"merkki joka ei koskaan paaty
+Yhdessa `v3 aani `vs70 nopeus `vv50 voimakkuus kerralla.
+Sarkain	ja rivin rivitys `vb40 muutoksella.

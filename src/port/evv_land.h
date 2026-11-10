@@ -16,11 +16,14 @@
  *
  * So the landing place is ours and it is kept outside the machine's memory
  * altogether. The buffer's address is only a name; evv_land.c keeps one place
- * per name. What it saves is the registers the two calling conventions agree
- * belong to the callee, the two more Windows adds, the stack pointer and where
- * to resume. No floating point register, because nothing between planting a
- * landing and entering it holds a value in one: the interpreter and the rules
- * are integer code from end to end.
+ * per name. What it saves is what each platform's own setjmp saves: the
+ * registers the two calling conventions agree belong to the callee, the stack
+ * pointer and where to resume, and on Windows rdi, rsi, xmm6 to xmm15 and the
+ * control halves of MXCSR and the x87 control word besides. That the rules are
+ * integer code does not excuse the SSE registers: gcc packs pairs of integers
+ * into them and keeps the pair in xmm6 across a call, in compiled rules that
+ * plant landings, and a landing skips the epilogue that would have put it
+ * back. test/harness/landsaves.c checks every one of them.
  */
 
 #ifndef EVV_LAND_H
@@ -30,8 +33,13 @@
 
 #if defined(__x86_64__)
 
-/* Eighty bytes, and eight of them is all the alignment it asks for. */
+/* Eighty bytes, or 246 on Windows, and eight of them is all the alignment it
+   asks for: the SSE registers go in with unaligned stores. */
+#if defined(_WIN32)
+#define EVV_LAND_WORDS 31
+#else
 #define EVV_LAND_WORDS 10
+#endif
 
 #elif defined(__thumb2__)
 

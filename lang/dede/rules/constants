@@ -1,0 +1,36 @@
+# Bytes a rule of ours names by address, laid down by tools/rules/consts.py
+# into delta_authored_dede.c and recorded in rules/symbols. See the top of
+# that tool for what the bytes are: not ASCII, but one code per character in
+# the alphabet the statement type declares.
+#
+# 6.1's own strings, which the rules lifted out of it in ut_norm.up test
+# against and lay down.
+bytes eti_null         00
+bytes eti_s_13c0d8     48
+bytes eti_s_13c0d9     47
+bytes eti_s_13c0da     51
+bytes eti_s_13c0db     60
+bytes eti_s_13c0dc     49
+bytes eti_s_13c0dd     a8
+bytes eti_s_13c0de     ac
+bytes eti_s_13c0df     41
+bytes eti_s_13c101     43
+bytes eti_s_13c103     42
+bytes eti_s_13c104     45
+bytes eti_s_13c105     44
+bytes eti_s_13c106     40
+bytes eti_s_13c107     04
+bytes eti_s_13c108     46
+bytes eti_s_13c109     46 47
+bytes eti_s_13c11c     a7
+bytes eti_s_13c11d     4c
+bytes eti_s_13c11e     ab
+bytes eti_s_13c121     50
+bytes eti_s_13c122     53
+bytes eti_s_13c123     52
+bytes eti_s_13c124     5e
+bytes eti_s_13c125     5f
+bytes eti_s_13c12b     48 48
+bytes eti_s_13c12d     54
+bytes eti_s_13c12e     41 48
+bytes eti_s_13c130     c7

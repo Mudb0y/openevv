@@ -45,7 +45,7 @@ CONSTS_C = os.path.join(LANG_DIR, 'delta_consts_%s.c' % LANG_TAG)
 OPS = ['call', 'jump', 'branch', 'cmp', 'alu2', 'alu1', 'load',
        'store', 'switch', 'map', 'return', 'scale', 'addk', 'mul',
        'div', 'widen', 'setcc', 'push', 'setarg', 'popn', 'popreg',
-       'ftol']
+       'ftol', 'muldiv']
 
 KINDS = ['none', 'imm', 'sym', 'slot', 'slotaddr', 'state', 'statefld',
          'reg', 'ind']
@@ -252,6 +252,14 @@ class Code:
                     steps.append((what, self.u16(q2), self.u16(q2 + 2)))
                     q2 += 4
             return ('ftol', tuple(steps)), (self.code[q2],), ops, [], q2 + 1
+
+        if op == 'muldiv':
+            # How it rounds, three operands, and the register the answer
+            # goes in, which is the last byte as it is for mul.
+            _a, _av, q2 = one(q + 1)
+            _b, _bv, q3 = one(q2)
+            _c, _cv, q4 = one(q3)
+            return ('muldiv', self.code[q]), (), ops, [], q4 + 1
 
         if op in ('popn', 'popreg'):
             return (op,), (self.code[q],), ops, [], q + 1

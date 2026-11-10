@@ -5,3 +5,4 @@ Test 1 2 3, ABC XYZ, Bindestrich-Woerter und GROSSBUCHSTABEN.
 Ein Wort. Und noch eins; dazu "zitierter Text" mittendrin.
 Rechtschreibpruefung, Donaudampfschifffahrt, 42% von 3,14159, und Herr Mueller-Lued Jr.
 Er sagte: nicht doch! Dann (nebenbei) 1/2 + 3/4 = 5/4; siehe S. 12.
+Als der Regen am Morgen leise gegen die Fenster klopfte, sass Daniel an seinem Schreibtisch und verglich die Ergebnisse von zwei Sprachsynthesizern, wobei er genau darauf achtete, wie jeder von ihnen mit ungewoehnlichen Namen, technischen Ausdruecken, langen zusammengesetzten Woertern und feinen Unterschieden in der Zeichensetzung umging, als eine Nachricht von seiner Kollegin eintraf, die wissen wollte, ob das letzte Update den Rhythmus langer Saetze, die Klarheit von Abkuerzungen und die Aussprache von Woertern verbessert hatte, die sowohl Nomen als auch Verben sein koennen, worauf er sein Testdokument noch einmal oeffnete und jedem Detail sorgfaeltig zuhoerte.

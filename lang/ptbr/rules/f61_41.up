@@ -1,0 +1,1102 @@
+# The rules of Brazilian Portuguese, lifted by tools/rules/lift64.py out of ETI
+# Eloquence 6.1 as Apple ships it, by tools/module/lift61.py. Each says
+# `instead' because it is written afresh rather than re-expressed from one of
+# IBM's: nothing of IBM's is under it.
+
+rule print_por_SPR takes 3
+  instead
+  local c100 bytes 8
+  local c110 bytes 8
+  local h_rdx
+  place pb76f3
+  place pb7736
+  place pb7769
+  set h_rdx to arg 1
+  call get_parm addr c100 h_rdx -6
+  set h_rdx to arg 2
+  call get_parm addr c110 h_rdx -6
+  call fence 0 sym eti_null
+  set h_rdx to 4
+  call lpta_loadp addr c100
+  call setscan_r h_rdx
+  if answer is not 0
+    go to pb77d8
+  end
+  place pb77bb
+  set h_rdx to 1
+  call test_string_s 4 h_rdx sym eti_s_f0462
+  if answer is 0
+    go to pb7a31
+  end
+  place pb77d8
+  place tb77d8_1 on 1
+  set h_rdx to 4
+  call lpta_loadp addr c100
+  call setscan_r h_rdx
+  if answer is not 0
+    go to pb780b
+  end
+  place pb77ee
+  set h_rdx to 1
+  call test_string_s 4 h_rdx sym eti_s_f0463
+  if answer is 0
+    go to pb7abd
+  end
+  place pb780b
+  place tb780b_3 on 3
+  set h_rdx to 4
+  call lpta_loadp addr c100
+  call setscan_r h_rdx
+  if answer is not 0
+    go to pb783e
+  end
+  place pb7821
+  set h_rdx to 1
+  call test_string_s 4 h_rdx sym eti_s_f0464
+  if answer is 0
+    go to pb7ab4
+  end
+  place pb783e
+  place tb783e_4 on 4
+  set h_rdx to 4
+  call lpta_loadp addr c100
+  call setscan_r h_rdx
+  if answer is not 0
+    go to pb7871
+  end
+  place pb7854
+  set h_rdx to 1
+  call test_string_s 4 h_rdx sym eti_s_f0465
+  if answer is 0
+    go to pb7aab
+  end
+  place pb7871
+  place tb7871_5 on 5
+  set h_rdx to 4
+  call lpta_loadp addr c100
+  call setscan_r h_rdx
+  if answer is not 0
+    go to pb78a4
+  end
+  place pb7887
+  set h_rdx to 1
+  call test_string_s 4 h_rdx sym eti_s_f0466
+  if answer is 0
+    go to pb7aa2
+  end
+  place pb78a4
+  place tb78a4_6 on 6
+  set h_rdx to 4
+  call lpta_loadp addr c100
+  call setscan_r h_rdx
+  if answer is not 0
+    go to pb78d7
+  end
+  place pb78ba
+  set h_rdx to 1
+  call test_string_s 4 h_rdx sym eti_s_f0467
+  if answer is 0
+    go to pb7a99
+  end
+  place pb78d7
+  place tb78d7_7 on 7
+  call starttest 8
+  set h_rdx to 4
+  call lpta_loadp addr c100
+  call setscan_r h_rdx
+  if answer is not 0
+    go to pb792a
+  end
+  place pb78f8
+  set h_rdx to 10
+  call testFldeq 4 h_rdx 1
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place pb790d
+  call advance_tok
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place pb7919
+  call advance_tok
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place pb7925
+  go to pb79b5
+  place pb792a
+  place tb792a_8 on 8
+  call starttest 10
+  set h_rdx to 4
+  call lpta_loadp addr c100
+  call setscan_r h_rdx
+  if answer is not 0
+    go to pb79d3
+  end
+  place pb794f
+  set h_rdx to 10
+  call testFldeq 4 h_rdx 2
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place pb7964
+  call advance_tok
+  if answer is not 0
+    set unwind to 0
+    backtrack
+  end
+  place pb7970
+  call advance_tok
+  if answer is 0
+    go to pb7a3a
+  end
+  set unwind to 0
+  backtrack
+  place pb79b5
+  place tb79b5_9 on 9
+  set h_rdx to addr c110
+  call savescptr 9 h_rdx
+  set h_rdx to sym eti_s_ebc5c
+  go to pb7a53
+  place pb79d3
+  place tb79d3_10 on 10
+  set h_rdx to 4
+  call lpta_loadp addr c100
+  call setscan_r h_rdx
+  if answer is not 0
+    go to pb7a02
+  end
+  place pb79e9
+  set h_rdx to 1
+  call test_string_s 4 h_rdx sym eti_s_f0468
+  if answer is 0
+    go to pb7a5e
+  end
+  place pb7a02
+  place tb7a02_12 on 12
+  set h_rdx to addr c110
+  call lpta_rpta_loadp addr c100 h_rdx
+  set h_rdx to 4
+  call print_stream 8 h_rdx 0 sym eti_s_ec48c
+  go to pb7a5e
+  place pb7a31
+  set h_rdx to sym eti_s_ebc3e
+  go to pb7a53
+  place pb7a3a
+  place tb7a3a_11 on 11
+  set h_rdx to addr c110
+  call savescptr 11 h_rdx
+  set h_rdx to sym eti_s_ebc5e
+  place pb7a53
+  call print_lit 8 h_rdx
+  place pb7a5e
+  place tb7a5e_2 on 2
+  put cell c110 value into arg 2 at 4
+  match
+  place pb7a99
+  set h_rdx to sym eti_s_ebc57
+  go to pb7a53
+  place pb7aa2
+  set h_rdx to sym eti_s_ebc52
+  go to pb7a53
+  place pb7aab
+  set h_rdx to sym eti_s_ebc4d
+  go to pb7a53
+  place pb7ab4
+  set h_rdx to sym eti_s_ebc48
+  go to pb7a53
+  place pb7abd
+  set h_rdx to sym eti_s_ebc43
+  go to pb7a53
+end
+
+rule insert_por_spr_phone takes 3
+  instead
+  local c100 bytes 8
+  local c110 bytes 8
+  place pb7afc
+  place pb7b37
+  place pb7b97
+  call get_parm addr c110 arg 1 -6
+  call get_parm addr c100 arg 2 -6
+  call fence 0 sym eti_null
+  call lpta_loadp addr c110
+  call setscan_r 1
+  if answer is not 0
+    go to pb7c56
+  end
+  place pb7be2
+  call test_string_s 1 1 sym eti_s_f0469
+  if answer is not 0
+    go to pb7c56
+  end
+  place pb7bfa
+  call lpta_loadp addr c100
+  call test_ptr
+  if answer is not 0
+    go to pb7c56
+  end
+  place pb7c20
+  call lpta_rpta_loadp addr c110 addr c100
+  call insert_2pt_s 4 1 sym eti_s_f046a 0
+  if answer is 0
+    match
+  end
+  place pb7c56
+  call lpta_loadp addr c110
+  call setscan_r 1
+  if answer is not 0
+    go to pb7ce0
+  end
+  place pb7c6c
+  call test_string_s 1 1 sym eti_s_f046b
+  if answer is not 0
+    go to pb7ce0
+  end
+  place pb7c84
+  call lpta_loadp addr c100
+  call test_ptr
+  if answer is not 0
+    go to pb7ce0
+  end
+  place pb7caa
+  call lpta_rpta_loadp addr c110 addr c100
+  call insert_2pt_s 4 1 sym eti_s_f046c 0
+  if answer is 0
+    match
+  end
+  place pb7ce0
+  call lpta_loadp addr c110
+  call setscan_r 1
+  if answer is not 0
+    go to pb7d6a
+  end
+  place pb7cf6
+  call test_string_s 1 1 sym eti_s_f046d
+  if answer is not 0
+    go to pb7d6a
+  end
+  place pb7d0e
+  call lpta_loadp addr c100
+  call test_ptr
+  if answer is not 0
+    go to pb7d6a
+  end
+  place pb7d34
+  call lpta_rpta_loadp addr c110 addr c100
+  call insert_2pt_s 4 1 sym eti_s_f046e 0
+  if answer is 0
+    match
+  end
+  place pb7d6a
+  call lpta_loadp addr c110
+  call setscan_r 1
+  if answer is not 0
+    go to pb7df4
+  end
+  place pb7d80
+  call test_string_s 1 1 sym eti_s_f046f
+  if answer is not 0
+    go to pb7df4
+  end
+  place pb7d98
+  call lpta_loadp addr c100
+  call test_ptr
+  if answer is not 0
+    go to pb7df4
+  end
+  place pb7dbe
+  call lpta_rpta_loadp addr c110 addr c100
+  call insert_2pt_s 4 1 sym eti_s_f0470 0
+  if answer is 0
+    match
+  end
+  place pb7df4
+  call lpta_loadp addr c110
+  call setscan_r 1
+  if answer is not 0
+    go to pb7e7e
+  end
+  place pb7e0a
+  call test_string_s 1 1 sym eti_s_f0471
+  if answer is not 0
+    go to pb7e7e
+  end
+  place pb7e22
+  call lpta_loadp addr c100
+  call test_ptr
+  if answer is not 0
+    go to pb7e7e
+  end
+  place pb7e48
+  call lpta_rpta_loadp addr c110 addr c100
+  call insert_2pt_s 4 1 sym eti_s_f0472 0
+  if answer is 0
+    match
+  end
+  place pb7e7e
+  call lpta_loadp addr c110
+  call setscan_r 1
+  if answer is not 0
+    go to pb7f08
+  end
+  place pb7e94
+  call test_string_s 1 1 sym eti_s_f0473
+  if answer is not 0
+    go to pb7f08
+  end
+  place pb7eac
+  call lpta_loadp addr c100
+  call test_ptr
+  if answer is not 0
+    go to pb7f08
+  end
+  place pb7ed2
+  call lpta_rpta_loadp addr c110 addr c100
+  call insert_2pt_s 4 1 sym eti_s_f0474 0
+  if answer is 0
+    match
+  end
+  place pb7f08
+  call lpta_loadp addr c110
+  call setscan_r 1
+  if answer is not 0
+    go to pb7f92
+  end
+  place pb7f1e
+  call test_string_s 1 1 sym eti_s_f0468
+  if answer is not 0
+    go to pb7f92
+  end
+  place pb7f36
+  call lpta_loadp addr c100
+  call test_ptr
+  if answer is not 0
+    go to pb7f92
+  end
+  place pb7f5c
+  call lpta_rpta_loadp addr c110 addr c100
+  call insert_2pt_s 4 1 sym eti_s_f0475 0
+  if answer is 0
+    match
+  end
+  place pb7f92
+  call lpta_loadp addr c110
+  call setscan_r 1
+  if answer is not 0
+    go to pb801c
+  end
+  place pb7fa8
+  call test_string_s 1 1 sym eti_s_f0476
+  if answer is not 0
+    go to pb801c
+  end
+  place pb7fc0
+  call lpta_loadp addr c100
+  call test_ptr
+  if answer is not 0
+    go to pb801c
+  end
+  place pb7fe6
+  call lpta_rpta_loadp addr c110 addr c100
+  call insert_2pt_s 4 1 sym eti_s_f0477 0
+  if answer is 0
+    match
+  end
+  place pb801c
+  call lpta_loadp addr c110
+  call setscan_r 1
+  if answer is not 0
+    go to pb80a6
+  end
+  place pb8032
+  call test_string_s 1 1 sym eti_s_f0478
+  if answer is not 0
+    go to pb80a6
+  end
+  place pb804a
+  call lpta_loadp addr c100
+  call test_ptr
+  if answer is not 0
+    go to pb80a6
+  end
+  place pb8070
+  call lpta_rpta_loadp addr c110 addr c100
+  call insert_2pt_s 4 1 sym eti_s_f0479 0
+  if answer is 0
+    match
+  end
+  place pb80a6
+  call lpta_loadp addr c110
+  call setscan_r 1
+  if answer is not 0
+    go to pb8130
+  end
+  place pb80bc
+  call test_string_s 1 1 sym eti_s_f047a
+  if answer is not 0
+    go to pb8130
+  end
+  place pb80d4
+  call lpta_loadp addr c100
+  call test_ptr
+  if answer is not 0
+    go to pb8130
+  end
+  place pb80fa
+  call lpta_rpta_loadp addr c110 addr c100
+  call insert_2pt_s 4 1 sym eti_s_f047b 0
+  if answer is 0
+    match
+  end
+  place pb8130
+  call lpta_loadp addr c110
+  call setscan_r 1
+  if answer is not 0
+    go to pb81ba
+  end
+  place pb8146
+  call test_string_s 1 1 sym eti_s_f047c
+  if answer is not 0
+    go to pb81ba
+  end
+  place pb815e
+  call lpta_loadp addr c100
+  call test_ptr
+  if answer is not 0
+    go to pb81ba
+  end
+  place pb8184
+  call lpta_rpta_loadp addr c110 addr c100
+  call insert_2pt_s 4 1 sym eti_s_f047d 0
+  if answer is 0
+    match
+  end
+  place pb81ba
+  call lpta_loadp addr c110
+  call setscan_r 1
+  if answer is not 0
+    go to pb8244
+  end
+  place pb81d0
+  call test_string_s 1 1 sym eti_s_f047e
+  if answer is not 0
+    go to pb8244
+  end
+  place pb81e8
+  call lpta_loadp addr c100
+  call test_ptr
+  if answer is not 0
+    go to pb8244
+  end
+  place pb820e
+  call lpta_rpta_loadp addr c110 addr c100
+  call insert_2pt_s 4 1 sym eti_s_f0469 0
+  if answer is 0
+    match
+  end
+  place pb8244
+  call lpta_loadp addr c110
+  call setscan_r 1
+  if answer is not 0
+    go to pb82ce
+  end
+  place pb825a
+  call test_string_s 1 1 sym eti_s_f0465
+  if answer is not 0
+    go to pb82ce
+  end
+  place pb8272
+  call lpta_loadp addr c100
+  call test_ptr
+  if answer is not 0
+    go to pb82ce
+  end
+  place pb8298
+  call lpta_rpta_loadp addr c110 addr c100
+  call insert_2pt_s 4 1 sym eti_s_f0476 0
+  if answer is 0
+    match
+  end
+  place pb82ce
+  call lpta_loadp addr c110
+  call setscan_r 1
+  if answer is not 0
+    go to pb8358
+  end
+  place pb82e4
+  call test_string_s 1 1 sym eti_s_f047f
+  if answer is not 0
+    go to pb8358
+  end
+  place pb82fc
+  call lpta_loadp addr c100
+  call test_ptr
+  if answer is not 0
+    go to pb8358
+  end
+  place pb8322
+  call lpta_rpta_loadp addr c110 addr c100
+  call insert_2pt_s 4 1 sym eti_s_f046d 0
+  if answer is 0
+    match
+  end
+  place pb8358
+  call lpta_loadp addr c110
+  call setscan_r 1
+  if answer is not 0
+    go to pb83e2
+  end
+  place pb836e
+  call test_string_s 1 1 sym eti_s_f0480
+  if answer is not 0
+    go to pb83e2
+  end
+  place pb8386
+  call lpta_loadp addr c100
+  call test_ptr
+  if answer is not 0
+    go to pb83e2
+  end
+  place pb83ac
+  call lpta_rpta_loadp addr c110 addr c100
+  call insert_2pt_s 4 1 sym eti_s_f0473 0
+  if answer is 0
+    match
+  end
+  place pb83e2
+  call lpta_loadp addr c110
+  call setscan_r 1
+  if answer is not 0
+    go to pb846c
+  end
+  place pb83f8
+  call test_string_s 1 1 sym eti_s_f0467
+  if answer is not 0
+    go to pb846c
+  end
+  place pb8410
+  call lpta_loadp addr c100
+  call test_ptr
+  if answer is not 0
+    go to pb846c
+  end
+  place pb8436
+  call lpta_rpta_loadp addr c110 addr c100
+  call insert_2pt_s 4 1 sym eti_s_f0481 0
+  if answer is 0
+    match
+  end
+  place pb846c
+  call lpta_loadp addr c110
+  call setscan_r 1
+  if answer is not 0
+    go to pb84f6
+  end
+  place pb8482
+  call test_string_s 1 1 sym eti_s_f0482
+  if answer is not 0
+    go to pb84f6
+  end
+  place pb849a
+  call lpta_loadp addr c100
+  call test_ptr
+  if answer is not 0
+    go to pb84f6
+  end
+  place pb84c0
+  call lpta_rpta_loadp addr c110 addr c100
+  call insert_2pt_s 4 1 sym eti_s_f0483 0
+  if answer is 0
+    match
+  end
+  place pb84f6
+  call lpta_loadp addr c110
+  call setscan_r 1
+  if answer is not 0
+    go to pb8580
+  end
+  place pb850c
+  call test_string_s 1 1 sym eti_s_f0484
+  if answer is not 0
+    go to pb8580
+  end
+  place pb8524
+  call lpta_loadp addr c100
+  call test_ptr
+  if answer is not 0
+    go to pb8580
+  end
+  place pb854a
+  call lpta_rpta_loadp addr c110 addr c100
+  call insert_2pt_s 4 1 sym eti_s_f0471 0
+  if answer is 0
+    match
+  end
+  place pb8580
+  call lpta_loadp addr c110
+  call setscan_r 1
+  if answer is not 0
+    go to pb860a
+  end
+  place pb8596
+  call test_string_s 1 1 sym eti_s_f0485
+  if answer is not 0
+    go to pb860a
+  end
+  place pb85ae
+  call lpta_loadp addr c100
+  call test_ptr
+  if answer is not 0
+    go to pb860a
+  end
+  place pb85d4
+  call lpta_rpta_loadp addr c110 addr c100
+  call insert_2pt_s 4 1 sym eti_s_f0486 0
+  if answer is 0
+    match
+  end
+  place pb860a
+  call lpta_loadp addr c110
+  call setscan_r 1
+  if answer is not 0
+    go to pb8694
+  end
+  place pb8620
+  call test_string_s 1 1 sym eti_s_f0486
+  if answer is not 0
+    go to pb8694
+  end
+  place pb8638
+  call lpta_loadp addr c100
+  call test_ptr
+  if answer is not 0
+    go to pb8694
+  end
+  place pb865e
+  call lpta_rpta_loadp addr c110 addr c100
+  call insert_2pt_s 4 1 sym eti_s_f0480 0
+  if answer is 0
+    match
+  end
+  place pb8694
+  call lpta_loadp addr c110
+  call setscan_r 1
+  if answer is not 0
+    go to pb871e
+  end
+  place pb86aa
+  call test_string_s 1 1 sym eti_s_f0487
+  if answer is not 0
+    go to pb871e
+  end
+  place pb86c2
+  call lpta_loadp addr c100
+  call test_ptr
+  if answer is not 0
+    go to pb871e
+  end
+  place pb86e8
+  call lpta_rpta_loadp addr c110 addr c100
+  call insert_2pt_s 4 1 sym eti_s_f046b 0
+  if answer is 0
+    match
+  end
+  place pb871e
+  call lpta_loadp addr c110
+  call setscan_r 1
+  if answer is not 0
+    go to pb87a9
+  end
+  place pb8734
+  call test_string_s 1 2 sym eti_s_f0488
+  if answer is not 0
+    go to pb87a9
+  end
+  place pb874d
+  call lpta_loadp addr c100
+  call test_ptr
+  if answer is not 0
+    go to pb87a9
+  end
+  place pb8773
+  call lpta_rpta_loadp addr c110 addr c100
+  call insert_2pt_s 4 1 sym eti_s_f0467 0
+  if answer is 0
+    match
+  end
+  place pb87a9
+  call lpta_loadp addr c110
+  call setscan_r 1
+  if answer is not 0
+    go to pb8833
+  end
+  place pb87bf
+  call test_string_s 1 1 sym eti_s_f048a
+  if answer is not 0
+    go to pb8833
+  end
+  place pb87d7
+  call lpta_loadp addr c100
+  call test_ptr
+  if answer is not 0
+    go to pb8833
+  end
+  place pb87fd
+  call lpta_rpta_loadp addr c110 addr c100
+  call insert_2pt_s 4 1 sym eti_s_f0484 0
+  if answer is 0
+    match
+  end
+  place pb8833
+  call lpta_loadp addr c110
+  call setscan_r 1
+  if answer is not 0
+    go to pb88bd
+  end
+  place pb8849
+  call test_string_s 1 1 sym eti_s_f048b
+  if answer is not 0
+    go to pb88bd
+  end
+  place pb8861
+  call lpta_loadp addr c100
+  call test_ptr
+  if answer is not 0
+    go to pb88bd
+  end
+  place pb8887
+  call lpta_rpta_loadp addr c110 addr c100
+  call insert_2pt_s 4 1 sym eti_s_f048c 0
+  if answer is 0
+    match
+  end
+  place pb88bd
+  call lpta_loadp addr c110
+  call setscan_r 1
+  if answer is not 0
+    go to pb8947
+  end
+  place pb88d3
+  call test_string_s 1 1 sym eti_s_f048d
+  if answer is not 0
+    go to pb8947
+  end
+  place pb88eb
+  call lpta_loadp addr c100
+  call test_ptr
+  if answer is not 0
+    go to pb8947
+  end
+  place pb8911
+  call lpta_rpta_loadp addr c110 addr c100
+  call insert_2pt_s 4 1 sym eti_s_f047a 0
+  if answer is 0
+    match
+  end
+  place pb8947
+  call lpta_loadp addr c110
+  call setscan_r 1
+  if answer is not 0
+    go to pb89d1
+  end
+  place pb895d
+  call test_string_s 1 1 sym eti_s_f048e
+  if answer is not 0
+    go to pb89d1
+  end
+  place pb8975
+  call lpta_loadp addr c100
+  call test_ptr
+  if answer is not 0
+    go to pb89d1
+  end
+  place pb899b
+  call lpta_rpta_loadp addr c110 addr c100
+  call insert_2pt_s 4 1 sym eti_s_f046f 0
+  if answer is 0
+    match
+  end
+  place pb89d1
+  call lpta_loadp addr c110
+  call setscan_r 1
+  if answer is not 0
+    go to pb8a5b
+  end
+  place pb89e7
+  call test_string_s 1 1 sym eti_s_f0470
+  if answer is not 0
+    go to pb8a5b
+  end
+  place pb89ff
+  call lpta_loadp addr c100
+  call test_ptr
+  if answer is not 0
+    go to pb8a5b
+  end
+  place pb8a25
+  call lpta_rpta_loadp addr c110 addr c100
+  call insert_2pt_s 4 1 sym eti_s_f048d 0
+  if answer is 0
+    match
+  end
+  place pb8a5b
+  call lpta_loadp addr c110
+  call setscan_r 1
+  if answer is not 0
+    go to pb8ae5
+  end
+  place pb8a71
+  call test_string_s 1 1 sym eti_s_f046a
+  if answer is not 0
+    go to pb8ae5
+  end
+  place pb8a89
+  call lpta_loadp addr c100
+  call test_ptr
+  if answer is not 0
+    go to pb8ae5
+  end
+  place pb8aaf
+  call lpta_rpta_loadp addr c110 addr c100
+  call insert_2pt_s 4 1 sym eti_s_f048f 0
+  if answer is 0
+    match
+  end
+  place pb8ae5
+  call lpta_loadp addr c110
+  call setscan_r 1
+  if answer is not 0
+    go to pb8b6f
+  end
+  place pb8afb
+  call test_string_s 1 1 sym eti_s_f046c
+  if answer is not 0
+    go to pb8b6f
+  end
+  place pb8b13
+  call lpta_loadp addr c100
+  call test_ptr
+  if answer is not 0
+    go to pb8b6f
+  end
+  place pb8b39
+  call lpta_rpta_loadp addr c110 addr c100
+  call insert_2pt_s 4 1 sym eti_s_f0490 0
+  if answer is 0
+    match
+  end
+  place pb8b6f
+  call lpta_loadp addr c110
+  call setscan_r 1
+  if answer is not 0
+    go to pb8bf9
+  end
+  place pb8b85
+  call test_string_s 1 1 sym eti_s_f046e
+  if answer is not 0
+    go to pb8bf9
+  end
+  place pb8b9d
+  call lpta_loadp addr c100
+  call test_ptr
+  if answer is not 0
+    go to pb8bf9
+  end
+  place pb8bc3
+  call lpta_rpta_loadp addr c110 addr c100
+  call insert_2pt_s 4 1 sym eti_s_f0478 0
+  if answer is 0
+    match
+  end
+  place pb8bf9
+  call lpta_loadp addr c110
+  call setscan_r 1
+  if answer is not 0
+    go to pb8c83
+  end
+  place pb8c0f
+  call test_string_s 1 1 sym eti_s_f0472
+  if answer is not 0
+    go to pb8c83
+  end
+  place pb8c27
+  call lpta_loadp addr c100
+  call test_ptr
+  if answer is not 0
+    go to pb8c83
+  end
+  place pb8c4d
+  call lpta_rpta_loadp addr c110 addr c100
+  call insert_2pt_s 4 1 sym eti_s_f048b 0
+  if answer is 0
+    match
+  end
+  place pb8c83
+  call lpta_loadp addr c110
+  call setscan_r 1
+  if answer is not 0
+    go to pb8d0d
+  end
+  place pb8c99
+  call test_string_s 1 1 sym eti_s_f0477
+  if answer is not 0
+    go to pb8d0d
+  end
+  place pb8cb1
+  call lpta_loadp addr c100
+  call test_ptr
+  if answer is not 0
+    go to pb8d0d
+  end
+  place pb8cd7
+  call lpta_rpta_loadp addr c110 addr c100
+  call insert_2pt_s 4 1 sym eti_s_f047f 0
+  if answer is 0
+    match
+  end
+  place pb8d0d
+  call lpta_loadp addr c110
+  call setscan_r 1
+  if answer is not 0
+    go to pb8d97
+  end
+  place pb8d23
+  call test_string_s 1 1 sym eti_s_f047d
+  if answer is not 0
+    go to pb8d97
+  end
+  place pb8d3b
+  call lpta_loadp addr c100
+  call test_ptr
+  if answer is not 0
+    go to pb8d97
+  end
+  place pb8d61
+  call lpta_rpta_loadp addr c110 addr c100
+  call insert_2pt_s 4 1 sym eti_s_f0491 0
+  if answer is 0
+    match
+  end
+  place pb8d97
+  call lpta_loadp addr c110
+  call setscan_r 1
+  if answer is not 0
+    go to pb8e22
+  end
+  place pb8dad
+  call test_string_s 1 2 sym eti_s_f0492
+  if answer is not 0
+    go to pb8e22
+  end
+  place pb8dc6
+  call lpta_loadp addr c100
+  call test_ptr
+  if answer is not 0
+    go to pb8e22
+  end
+  place pb8dec
+  call lpta_rpta_loadp addr c110 addr c100
+  call insert_2pt_s 4 1 sym eti_s_f0464 0
+  if answer is 0
+    match
+  end
+  place pb8e22
+  call lpta_loadp addr c110
+  call setscan_r 1
+  if answer is not 0
+    go to pb8ead
+  end
+  place pb8e38
+  call test_string_s 1 2 sym eti_s_f0494
+  if answer is not 0
+    go to pb8ead
+  end
+  place pb8e51
+  call lpta_loadp addr c100
+  call test_ptr
+  if answer is not 0
+    go to pb8ead
+  end
+  place pb8e77
+  call lpta_rpta_loadp addr c110 addr c100
+  call insert_2pt_s 4 1 sym eti_s_f0463 0
+  if answer is 0
+    match
+  end
+  place pb8ead
+  call lpta_loadp addr c110
+  call setscan_r 1
+  if answer is not 0
+    go to pb8f38
+  end
+  place pb8ec3
+  call test_string_s 1 2 sym eti_s_f0496
+  if answer is not 0
+    go to pb8f38
+  end
+  place pb8edc
+  call lpta_loadp addr c100
+  call test_ptr
+  if answer is not 0
+    go to pb8f38
+  end
+  place pb8f02
+  call lpta_rpta_loadp addr c110 addr c100
+  call insert_2pt_s 4 1 sym eti_s_f0462 0
+  if answer is 0
+    match
+  end
+  place pb8f38
+  call lpta_loadp addr c110
+  call setscan_r 1
+  if answer is not 0
+    go to pb8fc3
+  end
+  place pb8f4e
+  call test_string_s 1 2 sym eti_s_f0498
+  if answer is not 0
+    go to pb8fc3
+  end
+  place pb8f67
+  call lpta_loadp addr c100
+  call test_ptr
+  if answer is not 0
+    go to pb8fc3
+  end
+  place pb8f8d
+  call lpta_rpta_loadp addr c110 addr c100
+  call insert_2pt_s 4 1 sym eti_s_f0465 0
+  if answer is 0
+    match
+  end
+  place pb8fc3
+  call lpta_loadp addr c110
+  call setscan_r 1
+  if answer is not 0
+    give up
+  end
+  place pb8fdd
+  call test_string_s 1 2 sym eti_s_f049a
+  if answer is not 0
+    give up
+  end
+  place pb8ffa
+  call lpta_loadp addr c100
+  call test_ptr
+  if answer is not 0
+    give up
+  end
+  place pb9024
+  call lpta_rpta_loadp addr c110 addr c100
+  call insert_2pt_s 4 1 sym eti_s_f0466 0
+  if answer is not 0
+    give up
+  end
+  match
+end

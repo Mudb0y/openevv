@@ -12,7 +12,9 @@
 # in the tree and not on a runner, so this runs where it is installed and
 # nowhere else. EVV_ETI names the directory with eci.so and eci.ini in it, and
 # EVV_ETI_LIBS where its libc++ is; on a machine whose Speech Dispatcher runs
-# Eloquence through that package both are read from its module.
+# Eloquence through that package both are read from its module, and failing
+# that a copy kept in analysis/eti61 is used, the package's own directory as
+# eloquence and the four libraries it loads as lib.
 #
 # usage: test/harness/eti.sh [cases.txt ...]
 
@@ -22,11 +24,15 @@ root=$(cd "$here/../.." && pwd)
 
 if [ -z "${EVV_ETI:-}" ] || [ -z "${EVV_ETI_LIBS:-}" ]; then
     module=$(readlink -f /run/current-system/sw/lib/speech-dispatcher-modules/sd_eloquence 2>/dev/null)
-    if [ -n "$module" ]; then
+    if [ -n "$module" ] && [ -r "$module" ]; then
         : "${EVV_ETI:=$(dirname "$(dirname "$module")")/eloquence}"
         : "${EVV_ETI_LIBS:=$(grep -o "LD_LIBRARY_PATH='[^']*'" "$module" \
                              | sed "s/LD_LIBRARY_PATH='//; s/'$//" | paste -sd:)}"
     fi
+fi
+if [ -z "${EVV_ETI:-}" ] && [ -r "$root/analysis/eti61/eloquence/eci.so" ]; then
+    EVV_ETI=$root/analysis/eti61/eloquence
+    : "${EVV_ETI_LIBS:=$root/analysis/eti61/lib}"
 fi
 if [ ! -r "${EVV_ETI:-}/eci.so" ]; then
     echo "eti: no ETI Eloquence 6.1 here; EVV_ETI names its directory" >&2

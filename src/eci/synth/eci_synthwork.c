@@ -168,6 +168,7 @@ extern THIS void rz_romClearErrors(void *r)
 extern int setNativeSampleRate(delta_state *d, int32_t hz);
 extern int setWidebandSynthesis(delta_state *d, int32_t on);
 extern delta_state *ew_machine(void *engine);
+extern void builtin_dict_enable(delta_state *d, int32_t on);
 extern int32_t ev_engineHz(int32_t rate);
 
 extern THIS char *fm_filterText(void *m, const char *text, int32_t engine)
@@ -283,6 +284,15 @@ THIS char *stw_filterText(SynthThread *t, const char *text, int32_t engine)
 
    Asking hands back an object that has to be let go of again, and an engine
    that answers at all is by that token not old. */
+/* Tell the engine in use whether its language's own dictionary is wanted.
+   Called whenever the thread takes up an engine and whenever the setting
+   changes, since each language's engine keeps its own. */
+void stw_tellBuiltin(SynthThread *t)
+{
+    if (ST_ENGINE(t) != 0)
+        builtin_dict_enable(ew_machine(ST_ENGINE(t)), ST_BUILTIN(t));
+}
+
 THIS int32_t stw_isOldEngine(SynthThread *t)
 {
     void *answer = 0;
@@ -588,6 +598,93 @@ static char *finishStretch(SynthThread *t, const char *left)
     return out;
 }
 
+/* ---- brackets --------------------------------------------------------- */
+
+/* Ours. Every language pauses at a round bracket as at a comma, and at a
+   square, curly or angle one not at all, so "[optional]" ran on into the
+   words either side of it -- and French and Italian named the closing angle
+   bracket of a pair as greater than. A pair of any of the three is read as
+   round brackets here, where it encloses something as an aside does: the
+   opening one with no letter or digit before it and something after it, the
+   closing one with something before it and no letter or digit after it. So
+   x[0] and f<x> are left as they were, and so is a lone < or >, which is a
+   comparison and read as one. Swapping one byte for another keeps every
+   count of characters the index marks rest on.
+
+   Only in the default text mode, whose number the thread keeps from what
+   the romanizer was told and from a `ts annotation in the text, since in
+   the others a bracket is named and a square one is not a round one; never
+   inside an annotation, since a phonetic spelling is written in square
+   brackets; and not in Japanese, whose text may carry these bytes inside a
+   character. */
+#define FAMILY_JAPANESE 8
+
+static int isWordByte(unsigned char c)
+{
+    if (c >= 0x80)
+        return !(c == 0x82 || c == 0x84 || c == 0x85 || c == 0x8b
+                 || (c >= 0x91 && c <= 0x97) || c == 0x9b
+                 || (c >= 0xa0 && c <= 0xbf) || c == 0xd7 || c == 0xf7);
+    return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z')
+        || (c >= 'a' && c <= 'z');
+}
+
+static char closerOf(char c)
+{
+    return c == '[' ? ']' : c == '{' ? '}' : c == '<' ? '>' : 0;
+}
+
+/* Past an annotation that starts at i: the index of its last byte, noting
+   a text mode on the way. */
+static int32_t pastAnnotation(SynthThread *t, const char *s, int32_t n,
+                              int32_t i)
+{
+    if (i + 3 < n && s[i + 1] == 't' && s[i + 2] == 's'
+        && s[i + 3] >= '0' && s[i + 3] <= '9')
+        ST_TEXTMODE(t) = s[i + 3] - '0';
+    while (i + 1 < n && !isSpace((unsigned char)s[i + 1]))
+        i++;
+    return i;
+}
+
+static void stw_roundBrackets(SynthThread *t, char *s, int32_t n)
+{
+    int32_t i, j, depth;
+
+    if (((ST_ENGINE_ID(t) >> 16) & 0xff) == FAMILY_JAPANESE)
+        return;
+    for (i = 0; i < n; i++) {
+        char close;
+
+        if (startsAnnotation(s, i, 0)) {
+            i = pastAnnotation(t, s, n, i);
+            continue;
+        }
+        close = closerOf(s[i]);
+        if (!close || ST_TEXTMODE(t) != 0 || i + 1 >= n
+            || isSpace((unsigned char)s[i + 1])
+            || (i > 0 && isWordByte((unsigned char)s[i - 1])))
+            continue;
+        depth = 0;
+        for (j = i + 1; j < n; j++) {
+            if (startsAnnotation(s, j, 0)) {
+                while (j + 1 < n && !isSpace((unsigned char)s[j + 1]))
+                    j++;
+                continue;
+            }
+            if (s[j] == s[i])
+                depth++;
+            else if (s[j] == close && depth-- == 0)
+                break;
+        }
+        if (j < n && !isSpace((unsigned char)s[j - 1])
+            && (j + 1 == n || !isWordByte((unsigned char)s[j + 1]))) {
+            s[i] = '(';
+            s[j] = ')';
+        }
+    }
+}
+
 /* ---- text into the engine -------------------------------------------- */
 
 /* A sentence the romanizer has finished with, on its way to the engine.
@@ -613,6 +710,7 @@ THIS void stw_addTextToEngine(SynthThread *t, char *text, int32_t len)
 
     memcpy(copy, text, (size_t)len);
     copy[len] = 0;
+    stw_roundBrackets(t, copy, len);
 
     /* Read before the marks are shortened, which would leave every one of
        them looking like an annotation. The count below then takes in what
@@ -666,8 +764,10 @@ THIS void stw_processRemaining(SynthThread *t)
     else if (n == 0)
         left = 0;
 
-    if (left)
+    if (left) {
+        stw_roundBrackets(t, left, (int32_t)strlen(left));
         ST_TAIL(t) = tailOf(left, (int32_t)strlen(left), ST_TAIL(t));
+    }
     made = finishStretch(t, left);
     ST_TAIL(t) = TAIL_NONE;
 

@@ -5277,3 +5277,35 @@ at glob.obj ZZstring312 dede_evv_glob_data_3 1188
 at glob.obj ZZstring373 dede_evv_glob_data_3 1316
 at glob.obj ZZstring275 dede_evv_glob_data_3 1052
 at glob.obj ZZstring374 dede_evv_glob_data_3 1320
+
+# And the constants of our own, out of rules/constants by tools/rules/consts.py.
+store dede_evv_authored_data
+at * eti_null dede_evv_authored_data 0
+at * eti_s_13c0d8 dede_evv_authored_data 1
+at * eti_s_13c0d9 dede_evv_authored_data 2
+at * eti_s_13c0da dede_evv_authored_data 3
+at * eti_s_13c0db dede_evv_authored_data 4
+at * eti_s_13c0dc dede_evv_authored_data 5
+at * eti_s_13c0dd dede_evv_authored_data 6
+at * eti_s_13c0de dede_evv_authored_data 7
+at * eti_s_13c0df dede_evv_authored_data 8
+at * eti_s_13c101 dede_evv_authored_data 9
+at * eti_s_13c103 dede_evv_authored_data 10
+at * eti_s_13c104 dede_evv_authored_data 11
+at * eti_s_13c105 dede_evv_authored_data 12
+at * eti_s_13c106 dede_evv_authored_data 13
+at * eti_s_13c107 dede_evv_authored_data 14
+at * eti_s_13c108 dede_evv_authored_data 15
+at * eti_s_13c109 dede_evv_authored_data 16
+at * eti_s_13c11c dede_evv_authored_data 18
+at * eti_s_13c11d dede_evv_authored_data 19
+at * eti_s_13c11e dede_evv_authored_data 20
+at * eti_s_13c121 dede_evv_authored_data 21
+at * eti_s_13c122 dede_evv_authored_data 22
+at * eti_s_13c123 dede_evv_authored_data 23
+at * eti_s_13c124 dede_evv_authored_data 24
+at * eti_s_13c125 dede_evv_authored_data 25
+at * eti_s_13c12b dede_evv_authored_data 26
+at * eti_s_13c12d dede_evv_authored_data 28
+at * eti_s_13c12e dede_evv_authored_data 29
+at * eti_s_13c130 dede_evv_authored_data 31
