@@ -14,7 +14,7 @@
 		android:icon="@mipmap/ic_launcher"
 		android:label="@string/app_name"
 		android:supportsRtl="true"
-		android:theme="@style/Theme.Evvdroid">
+		android:theme="@style/Theme.OpenEVV">
 
 		<!-- Startable on the lock screen, which is where a screen reader is
 		     wanted first. What it reads there is in DirectBoot.kt. -->

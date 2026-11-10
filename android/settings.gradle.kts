@@ -14,5 +14,5 @@ dependencyResolutionManagement {
 	}
 }
 
-rootProject.name = "evvdroid"
+rootProject.name = "openevv-android"
 include(":app")

@@ -14,10 +14,10 @@ plugins {
 	alias(libs.plugins.kotlin.compose)
 }
 
-val abis = (findProperty("evvdroid.abis") as String? ?: "arm64-v8a,armeabi-v7a,x86_64")
+val abis = (findProperty("openevv.abis") as String? ?: "arm64-v8a,armeabi-v7a,x86_64")
 	.split(",").map { it.trim() }.filter { it.isNotEmpty() }
-val rulesForm = findProperty("evvdroid.rules") as String? ?: "c"
-val languages = findProperty("evvdroid.langs") as String?
+val rulesForm = findProperty("openevv.rules") as String? ?: "c"
+val languages = findProperty("openevv.langs") as String?
 	?: ALL_LANGUAGES.joinToString(" ") { "lang/$it" }
 // The number the development workflow publishes as "build: <n>" in the dev release's notes, the commit
 // count, so that the updater can tell whether the dev build on GitHub is newer than this one. A
@@ -65,12 +65,12 @@ val buildNative by tasks.registering(Exec::class) {
 }
 
 android {
-	namespace = "org.evvdroid"
+	namespace = "com.mudb0y.openevv"
 	compileSdk = 36
 	ndkVersion = "27.0.12077973"
 
 	defaultConfig {
-		applicationId = "org.evvdroid"
+		applicationId = "com.mudb0y.openevv"
 		minSdk = 23
 		targetSdk = 36
 		versionCode = 2
@@ -135,7 +135,7 @@ android {
 
 	splits {
 		abi {
-			isEnable = (findProperty("evvdroid.abiSplits") as String?)?.toBoolean() ?: true
+			isEnable = (findProperty("openevv.abiSplits") as String?)?.toBoolean() ?: true
 			reset()
 			include(*abis.toTypedArray())
 			isUniversalApk = true

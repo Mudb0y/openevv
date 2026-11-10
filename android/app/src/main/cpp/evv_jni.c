@@ -20,7 +20,7 @@
 
 #include "eci.h"
 
-#define TAG "evvdroid"
+#define TAG "openevv"
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, TAG, __VA_ARGS__)
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, TAG, __VA_ARGS__)
 
@@ -200,7 +200,7 @@ static int ECICALL on_message(ECIHand handle, ECIMessage message, int param, voi
 	return eciDataProcessed;
 }
 
-JNIEXPORT jlong JNICALL Java_org_evvdroid_EvvNative_create(JNIEnv* env, jclass cls, jint language) {
+JNIEXPORT jlong JNICALL Java_com_mudb0y_openevv_EvvNative_create(JNIEnv* env, jclass cls, jint language) {
 	instance* in;
 	(void)env;
 	(void)cls;
@@ -242,7 +242,7 @@ JNIEXPORT jlong JNICALL Java_org_evvdroid_EvvNative_create(JNIEnv* env, jclass c
 	return (jlong)(intptr_t)in;
 }
 
-JNIEXPORT void JNICALL Java_org_evvdroid_EvvNative_destroy(JNIEnv* env, jclass cls, jlong handle) {
+JNIEXPORT void JNICALL Java_com_mudb0y_openevv_EvvNative_destroy(JNIEnv* env, jclass cls, jlong handle) {
 	instance* in = unwrap(handle);
 	(void)env;
 	(void)cls;
@@ -281,7 +281,7 @@ JNIEXPORT void JNICALL Java_org_evvdroid_EvvNative_destroy(JNIEnv* env, jclass c
  * the engine allows only for Chinese, Japanese and Korean; Kotlin has already
  * turned it into that set. It is kept until the next utterance because nothing
  * here knows whether the engine copied it. */
-JNIEXPORT jboolean JNICALL Java_org_evvdroid_EvvNative_speak(JNIEnv* env, jclass cls, jlong handle, jbyteArray text) {
+JNIEXPORT jboolean JNICALL Java_com_mudb0y_openevv_EvvNative_speak(JNIEnv* env, jclass cls, jlong handle, jbyteArray text) {
 	instance*      in = unwrap(handle);
 	jsize          n;
 	unsigned char* buf;
@@ -325,7 +325,7 @@ JNIEXPORT jboolean JNICALL Java_org_evvdroid_EvvNative_speak(JNIEnv* env, jclass
 
 /* Bytes out, blocking until there are some. Answers 0 at the end of the
    utterance and -1 when it was stopped. */
-JNIEXPORT jint JNICALL Java_org_evvdroid_EvvNative_read(JNIEnv* env, jclass cls, jlong handle, jbyteArray dst) {
+JNIEXPORT jint JNICALL Java_com_mudb0y_openevv_EvvNative_read(JNIEnv* env, jclass cls, jlong handle, jbyteArray dst) {
 	instance*      in = unwrap(handle);
 	size_t         room;
 	size_t         got;
@@ -364,7 +364,7 @@ JNIEXPORT jint JNICALL Java_org_evvdroid_EvvNative_read(JNIEnv* env, jclass cls,
 
 /* Wakes the callback before asking the engine to stop, since the callback may
    be waiting for room that a stopped reader will never make. */
-JNIEXPORT void JNICALL Java_org_evvdroid_EvvNative_stop(JNIEnv* env, jclass cls, jlong handle) {
+JNIEXPORT void JNICALL Java_com_mudb0y_openevv_EvvNative_stop(JNIEnv* env, jclass cls, jlong handle) {
 	instance* in = unwrap(handle);
 	(void)env;
 	(void)cls;
@@ -406,7 +406,7 @@ static int ensure_dict(instance* in) {
 
 /* Hands a file to the engine's own dictionary loader. Answers one of the
    eciDict codes, so nought is success. */
-JNIEXPORT jint JNICALL Java_org_evvdroid_EvvNative_loadDictionary(JNIEnv* env, jclass cls, jlong handle, jint volume, jstring path) {
+JNIEXPORT jint JNICALL Java_com_mudb0y_openevv_EvvNative_loadDictionary(JNIEnv* env, jclass cls, jlong handle, jint volume, jstring path) {
 	instance*   in = unwrap(handle);
 	const char* name;
 	jint        answer;
@@ -423,7 +423,7 @@ JNIEXPORT jint JNICALL Java_org_evvdroid_EvvNative_loadDictionary(JNIEnv* env, j
 
 /* Teaches one word, which is the other way in and the one that does not depend
    on the engine agreeing about a file format. */
-JNIEXPORT jint JNICALL Java_org_evvdroid_EvvNative_teachWord(JNIEnv* env, jclass cls, jlong handle, jint volume, jbyteArray key, jbyteArray say) {
+JNIEXPORT jint JNICALL Java_com_mudb0y_openevv_EvvNative_teachWord(JNIEnv* env, jclass cls, jlong handle, jint volume, jbyteArray key, jbyteArray say) {
 	instance*      in = unwrap(handle);
 	jsize          keyLen;
 	jsize          sayLen;
@@ -448,7 +448,7 @@ JNIEXPORT jint JNICALL Java_org_evvdroid_EvvNative_teachWord(JNIEnv* env, jclass
 
 /* What a key was taught, or nothing. This is how a test says a dictionary
    really went in rather than that a call answered nought. */
-JNIEXPORT jstring JNICALL Java_org_evvdroid_EvvNative_lookUpWord(JNIEnv* env, jclass cls, jlong handle, jint volume, jbyteArray key) {
+JNIEXPORT jstring JNICALL Java_com_mudb0y_openevv_EvvNative_lookUpWord(JNIEnv* env, jclass cls, jlong handle, jint volume, jbyteArray key) {
 	instance*      in = unwrap(handle);
 	jsize          keyLen;
 	unsigned char* want;
@@ -471,7 +471,7 @@ JNIEXPORT jstring JNICALL Java_org_evvdroid_EvvNative_lookUpWord(JNIEnv* env, jc
 
 /* Puts the set aside and takes it away, so the engine is back to the language's
    own dictionary. */
-JNIEXPORT void JNICALL Java_org_evvdroid_EvvNative_forgetDictionaries(JNIEnv* env, jclass cls, jlong handle) {
+JNIEXPORT void JNICALL Java_com_mudb0y_openevv_EvvNative_forgetDictionaries(JNIEnv* env, jclass cls, jlong handle) {
 	instance* in = unwrap(handle);
 	(void)env;
 	(void)cls;
@@ -482,42 +482,42 @@ JNIEXPORT void JNICALL Java_org_evvdroid_EvvNative_forgetDictionaries(JNIEnv* en
 	in->dict = NULL_DICT_HAND;
 }
 
-JNIEXPORT jint JNICALL Java_org_evvdroid_EvvNative_setParam(JNIEnv* env, jclass cls, jlong handle, jint param, jint value) {
+JNIEXPORT jint JNICALL Java_com_mudb0y_openevv_EvvNative_setParam(JNIEnv* env, jclass cls, jlong handle, jint param, jint value) {
 	instance* in = unwrap(handle);
 	(void)env;
 	(void)cls;
 	return in == NULL ? -1 : eciSetParam(in->eci, param, value);
 }
 
-JNIEXPORT jint JNICALL Java_org_evvdroid_EvvNative_getParam(JNIEnv* env, jclass cls, jlong handle, jint param) {
+JNIEXPORT jint JNICALL Java_com_mudb0y_openevv_EvvNative_getParam(JNIEnv* env, jclass cls, jlong handle, jint param) {
 	instance* in = unwrap(handle);
 	(void)env;
 	(void)cls;
 	return in == NULL ? -1 : eciGetParam(in->eci, param);
 }
 
-JNIEXPORT jint JNICALL Java_org_evvdroid_EvvNative_setVoiceParam(JNIEnv* env, jclass cls, jlong handle, jint voice, jint param, jint value) {
+JNIEXPORT jint JNICALL Java_com_mudb0y_openevv_EvvNative_setVoiceParam(JNIEnv* env, jclass cls, jlong handle, jint voice, jint param, jint value) {
 	instance* in = unwrap(handle);
 	(void)env;
 	(void)cls;
 	return in == NULL ? -1 : eciSetVoiceParam(in->eci, voice, param, value);
 }
 
-JNIEXPORT jint JNICALL Java_org_evvdroid_EvvNative_getVoiceParam(JNIEnv* env, jclass cls, jlong handle, jint voice, jint param) {
+JNIEXPORT jint JNICALL Java_com_mudb0y_openevv_EvvNative_getVoiceParam(JNIEnv* env, jclass cls, jlong handle, jint voice, jint param) {
 	instance* in = unwrap(handle);
 	(void)env;
 	(void)cls;
 	return in == NULL ? -1 : eciGetVoiceParam(in->eci, voice, param);
 }
 
-JNIEXPORT jint JNICALL Java_org_evvdroid_EvvNative_copyVoice(JNIEnv* env, jclass cls, jlong handle, jint from, jint to) {
+JNIEXPORT jint JNICALL Java_com_mudb0y_openevv_EvvNative_copyVoice(JNIEnv* env, jclass cls, jlong handle, jint from, jint to) {
 	instance* in = unwrap(handle);
 	(void)env;
 	(void)cls;
 	return in == NULL ? -1 : eciCopyVoice(in->eci, from, to);
 }
 
-JNIEXPORT jintArray JNICALL Java_org_evvdroid_EvvNative_languages(JNIEnv* env, jclass cls) {
+JNIEXPORT jintArray JNICALL Java_com_mudb0y_openevv_EvvNative_languages(JNIEnv* env, jclass cls) {
 	unsigned int found[32];
 	int          n = 0;
 	jintArray    out;
@@ -535,7 +535,7 @@ JNIEXPORT jintArray JNICALL Java_org_evvdroid_EvvNative_languages(JNIEnv* env, j
 	return out;
 }
 
-JNIEXPORT jstring JNICALL Java_org_evvdroid_EvvNative_version(JNIEnv* env, jclass cls) {
+JNIEXPORT jstring JNICALL Java_com_mudb0y_openevv_EvvNative_version(JNIEnv* env, jclass cls) {
 	char buffer[ECI_VERSION_LENGTH];
 	(void)cls;
 	memset(buffer, 0, sizeof buffer);
