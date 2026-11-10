@@ -333,8 +333,14 @@ say-test: $(BUILD)/evv $(BUILD)/openevv-say
 
 probe: $(BUILD)/probe$(SUF)
 
+# Android's C library has the threads in it and no libpthread to link, and
+# docs/android.md builds the probe with the NDK's clang to hold an Android
+# build to the recorded answers. The compiler says which it is building for.
+ANDROID_TARGET := $(shell echo __ANDROID__ | $(CC) -E -P - 2>/dev/null | tail -1)
+LIBPTHREAD     := $(if $(filter 1,$(ANDROID_TARGET)),,-lpthread)
+
 $(BUILD)/probe$(SUF): cli/probe.c $(BUILD)/libevv$(SUF).a
-	@$(CC) $(ALL_CFLAGS) cli/probe.c $(BUILD)/libevv$(SUF).a -lpthread -lm -o $@
+	@$(CC) $(ALL_CFLAGS) cli/probe.c $(BUILD)/libevv$(SUF).a $(LIBPTHREAD) -lm -o $@
 	@echo "built $@"
 
 # The engine as a shared library, under the names IBM published: the same
