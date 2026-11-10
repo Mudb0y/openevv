@@ -1,0 +1,10 @@
+/* The configurator's resources: the dialog, and the manifest that asks for
+ * version six of the common controls and for being drawn at the screen's
+ * own resolution rather than scaled up and blurred.
+ */
+
+#include <windows.h>
+
+#include "dialog.rc"
+
+CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "config.manifest"

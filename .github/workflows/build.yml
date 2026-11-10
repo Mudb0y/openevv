@@ -338,7 +338,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y gcc-mingw-w64-x86-64 binutils-mingw-w64-x86-64 \
-                                  gcc-mingw-w64-i686 binutils-mingw-w64-i686
+                                  gcc-mingw-w64-i686 binutils-mingw-w64-i686 \
+                                  g++-mingw-w64-x86-64 g++-mingw-w64-i686
 
       # Every language on every push, for the reason the Linux job gives. The
       # exes and the DLLs keep their plain names whatever is in them, so
@@ -352,7 +353,7 @@ jobs:
           *)            version=0.0.0 ;;
           esac
           make -j"$(nproc)" LANGS="$langs" EVV_VERSION="$version" win win-dlltest win32 \
-            build/landsaves.exe
+            build/landsaves.exe sapi5-stage
 
       - name: Say what came out
         run: |
@@ -367,6 +368,13 @@ jobs:
                   | grep -cE '\beci[A-Za-z]+@[0-9]+' || true)
             echo "$dll: $n decorated exports"
             test "$n" = 0
+          done
+          # The voice is found by COM asking for four names, plain.
+          for dll in build/sapi5/openevv_sapi5.dll build/sapi5/openevv_sapi5_x86.dll; do
+            n=$(x86_64-w64-mingw32-objdump -p "$dll" \
+                  | grep -cE ' Dll(GetClassObject|CanUnloadNow|RegisterServer|UnregisterServer)$' || true)
+            echo "$dll: $n of the four COM names"
+            test "$n" = 4
           done
 
       # The add-on is built here because it wants both libraries, and this is
@@ -397,6 +405,14 @@ jobs:
             build/dlltest32.exe
             build/landsaves.exe
             build/openevv-*.nvda-addon
+          if-no-files-found: error
+
+      # Both voices with both libraries, laid out as the installer installs
+      # them, for the job below to register, speak through and pack.
+      - uses: actions/upload-artifact@v7
+        with:
+          name: openevv-sapi5-stage
+          path: build/sapi5/
           if-no-files-found: error
 
   # The one thing the cross build cannot answer: whether it runs on Windows.
@@ -550,9 +566,101 @@ jobs:
           "wanted:               $want"
           if ($have -ne $want) { throw "the 32-bit library says something else through ctypes" }
 
+  # The SAPI 5 voice on Windows itself, in both word sizes: driven directly,
+  # then registered and asked for through SAPI the way any program that
+  # speaks asks, then unregistered, then packed into the installer, installed,
+  # asked for again and uninstalled. Registering writes HKEY_LOCAL_MACHINE,
+  # which a runner may, and SAPI will not make a voice registered anywhere
+  # else, so this is the one place the whole path can be walked.
+  sapi5-check:
+    needs: windows
+    runs-on: windows-latest
+    env:
+      # Eight voices for each of the twelve languages the build carries.
+      SAPI5_VOICES: 96
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: openevv-sapi5-stage
+          path: build/sapi5
+
+      - name: Speak through the voice without registering it
+        shell: pwsh
+        working-directory: build/sapi5
+        run: |
+          .\voice_test.exe openevv_sapi5.dll
+          if ($LASTEXITCODE -ne 0) { throw "voice_test ended with $LASTEXITCODE" }
+          .\voice_test32.exe openevv_sapi5_x86.dll
+          if ($LASTEXITCODE -ne 0) { throw "voice_test32 ended with $LASTEXITCODE" }
+
+      # Each word size registers with its own regsvr32, into its own view of
+      # the registry, and is asked for from a PowerShell of its own size.
+      - name: Register, speak through SAPI, unregister
+        shell: pwsh
+        run: |
+          $dir = (Resolve-Path build/sapi5).Path
+          $sizes = @(
+            @{ Dll = 'openevv_sapi5.dll';     Sys = 'System32' },
+            @{ Dll = 'openevv_sapi5_x86.dll'; Sys = 'SysWOW64' })
+          function Run($exe, $arguments) {
+            $p = Start-Process -FilePath $exe -ArgumentList $arguments -Wait -PassThru -NoNewWindow
+            if ($p.ExitCode -ne 0) { throw "$exe $arguments ended with $($p.ExitCode)" }
+          }
+          function Speak($sys, $expect) {
+            & "$env:WINDIR\$sys\WindowsPowerShell\v1.0\powershell.exe" -NoProfile `
+              -ExecutionPolicy Bypass -File sapi5/speak.ps1 -Expect $expect -Out speak
+            if ($LASTEXITCODE -ne 0) { throw "speak.ps1 from $sys ended with $LASTEXITCODE" }
+          }
+          foreach ($s in $sizes) { Run "$env:WINDIR\$($s.Sys)\regsvr32.exe" "/s `"$dir\$($s.Dll)`"" }
+          foreach ($s in $sizes) { Speak $s.Sys $env:SAPI5_VOICES }
+          foreach ($s in $sizes) { Run "$env:WINDIR\$($s.Sys)\regsvr32.exe" "/u /s `"$dir\$($s.Dll)`"" }
+          foreach ($s in $sizes) { Speak $s.Sys 0 }
+
+      - name: Build the installer
+        shell: pwsh
+        run: |
+          $version = '0.0.0'
+          if ($env:GITHUB_REF -like 'refs/tags/v*') { $version = $env:GITHUB_REF_NAME.Substring(1) }
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress }
+          & $iscc "/DAppVersion=$version" sapi5\installer\openevv.iss
+          if ($LASTEXITCODE -ne 0) { throw "iscc ended with $LASTEXITCODE" }
+
+      # The uninstaller hands over to a copy of itself and returns at once,
+      # so what is waited for is the voice leaving the folder.
+      - name: Install, speak through SAPI, uninstall
+        shell: pwsh
+        run: |
+          $setup = (Get-Item build\openevv-*-sapi5-setup.exe).FullName
+          $p = Start-Process $setup '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART' -Wait -PassThru
+          if ($p.ExitCode -ne 0) { throw "the installer ended with $($p.ExitCode)" }
+          $app = "$env:ProgramFiles\OpenEVV Voice"
+          Get-ChildItem -Recurse $app | Select-Object FullName, Length | Format-Table -AutoSize
+          foreach ($sys in 'System32', 'SysWOW64') {
+            & "$env:WINDIR\$sys\WindowsPowerShell\v1.0\powershell.exe" -NoProfile `
+              -ExecutionPolicy Bypass -File sapi5/speak.ps1 -Expect $env:SAPI5_VOICES -Out installed
+            if ($LASTEXITCODE -ne 0) { throw "speak.ps1 from $sys ended with $LASTEXITCODE" }
+          }
+          Start-Process "$app\unins000.exe" '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART' -Wait
+          for ($i = 0; $i -lt 120 -and (Test-Path "$app\openevv_sapi5_x86.dll"); $i++) { Start-Sleep 1 }
+          if (Test-Path "$app\openevv_sapi5_x86.dll") { throw "the uninstaller left the voice behind" }
+          foreach ($sys in 'System32', 'SysWOW64') {
+            & "$env:WINDIR\$sys\WindowsPowerShell\v1.0\powershell.exe" -NoProfile `
+              -ExecutionPolicy Bypass -File sapi5/speak.ps1 -Expect 0
+            if ($LASTEXITCODE -ne 0) { throw "speak.ps1 from $sys ended with $LASTEXITCODE" }
+          }
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: openevv-sapi5-setup
+          path: build/openevv-*-sapi5-setup.exe
+          if-no-files-found: error
+
   release:
     needs: [linux, linux-bytecode, words-bytecode, windows, windows-check,
-            windows-check-32]
+            windows-check-32, sapi5-check]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
@@ -572,6 +680,12 @@ jobs:
         with:
           name: evv-linux-x86_64
           path: dist/linux
+
+      # The voice's installer goes out as a file of its own, as the add-on
+      # does: it is something to run rather than something to unpack.
+      - uses: actions/download-artifact@v8
+        with:
+          name: openevv-sapi5-setup
 
       - name: Make the archives
         run: |
@@ -603,7 +717,7 @@ jobs:
           echo "what is going out:"
           unzip -l openevv-${GITHUB_REF_NAME}-windows-x86_64.zip
           tar -tzf openevv-${GITHUB_REF_NAME}-linux-x86_64.tar.gz
-          ls -l openevv-*.nvda-addon
+          ls -l openevv-*.nvda-addon openevv-*-sapi5-setup.exe
 
       - name: Release
         env:
@@ -614,4 +728,5 @@ jobs:
             --notes-file .github/release-notes.md \
             openevv-*-windows-x86_64.zip \
             openevv-*-linux-x86_64.tar.gz \
-            openevv-*.nvda-addon
+            openevv-*.nvda-addon \
+            openevv-*-sapi5-setup.exe

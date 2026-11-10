@@ -1,0 +1,16 @@
+#include <initguid.h>
+
+#include "guids.h"
+
+DEFINE_GUID(CLSID_OpenEvvVoice, 0x7cae4aca, 0x3e08, 0x4b9b, 0xa3, 0x8e, 0xd7,
+            0x91, 0x1d, 0x77, 0x48, 0x5e);
+
+DEFINE_GUID(CLSID_OpenEvvTokenUI, 0xb2aeee40, 0x798c, 0x463f, 0x80, 0xd0,
+            0x52, 0xf8, 0x79, 0xdf, 0x5d, 0x2d);
+
+// SAPI's name for the one audio format there is. sapi.h declares it and
+// mingw has no library that defines it, so it is defined here, with the
+// value Microsoft's sapi.lib gives it.
+// {C31ADBAE-527F-4FF5-A230-F62BB61FF70C}
+DEFINE_GUID(SPDFID_WaveFormatEx, 0xc31adbae, 0x527f, 0x4ff5, 0xa2, 0x30, 0xf6,
+            0x2b, 0xb6, 0x1f, 0xf7, 0x0c);
