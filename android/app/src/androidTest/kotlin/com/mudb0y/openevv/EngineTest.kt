@@ -1,4 +1,4 @@
-package org.evvdroid
+package com.mudb0y.openevv
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.After
@@ -256,18 +256,18 @@ class EngineTest {
 	@Test
 	fun theEncoderKeepsTheWordsAndLosesNothingThatMatters() {
 		assertEquals(
-			"It's a \"test\" - really...",
-			latin1(WesternText.encode("It’s a “test” — really…"))
+			"It\u2019s a \u201ctest\u201d \u2014 really\u2026",
+			western(EngineText.encode(ENGLISH, "It\u2019s a \u201ctest\u201d \u2014 really\u2026"))
 		)
-		assertEquals("Dvorák", latin1(WesternText.encode("Dvořák")))
-		assertEquals("café", latin1(WesternText.encode("café")))
+		assertEquals("Dvor\u00e1k", western(EngineText.encode(ENGLISH, "Dvo\u0159\u00e1k")))
+		assertEquals("caf\u00e9", western(EngineText.encode(ENGLISH, "caf\u00e9")))
 		assertTrue(
 			"a nought byte would end the text early",
-			WesternText.encode("a b").none { it.toInt() == 0 }
+			EngineText.encode(ENGLISH, "a\u0000b").none { it.toInt() == 0 }
 		)
 	}
 
-	private fun latin1(bytes: ByteArray) = String(bytes, Charsets.ISO_8859_1)
+	private fun western(bytes: ByteArray) = String(bytes, charset("windows-1252"))
 
 	private fun open(): EvvEngine {
 		val made = EvvEngine.open(ENGLISH)

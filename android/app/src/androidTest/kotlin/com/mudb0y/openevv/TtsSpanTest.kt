@@ -18,37 +18,25 @@ class TtsSpanTest {
 
 	@Test
 	fun plainTextHasNothingToExpand() {
-		assertNull(Punctuation.expandTtsSpans("Hello, world."))
-		assertNull(Punctuation.expandTtsSpans(SpannableString("Hello, world.")))
+		assertNull(TalkBackSpans.expand("Hello, world."))
+		assertNull(TalkBackSpans.expand(SpannableString("Hello, world.")))
 	}
 
 	@Test
-	fun textSpansAreSpokenAndNamedOnce() {
+	fun textSpansAreSpokenInPlaceOfTheirMarks() {
 		val text = SpannableString("Hello (x), world.")
 		text.span(6, "left paren")
 		text.span(8, "right paren")
-		val expanded = Punctuation.expandTtsSpans(text)!!
-		assertEquals(
-			"Hello left paren x right paren comma, world dot. ",
-			Punctuation.apply(expanded, Punctuation.LEVEL_ALL, ENGLISH)
-		)
-		assertEquals(
-			"Hello left paren x right paren , world.",
-			Punctuation.apply(expanded, Punctuation.LEVEL_NONE, ENGLISH)
-		)
+		assertEquals("Hello left paren x right paren , world.", TalkBackSpans.expand(text))
 	}
 
 	@Test
 	fun verbatimSpansAreLeftToTheEngine() {
 		val text = SpannableString("Call ABC.")
 		text.setSpan(TtsSpan.VerbatimBuilder("ABC").build(), 5, 8, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-		assertNull(Punctuation.expandTtsSpans(text))
+		assertNull(TalkBackSpans.expand(text))
 	}
 
 	private fun SpannableString.span(at: Int, said: String) =
 		setSpan(TtsSpan.TextBuilder(said).build(), at, at + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-
-	private companion object {
-		const val ENGLISH = 0x00010000
-	}
 }

@@ -12,6 +12,13 @@ object Eci {
 	const val PARAM_REAL_WORLD_UNITS = 8
 	const val PARAM_LANGUAGE_DIALECT = 9
 	const val PARAM_NUMBER_MODE = 10
+	const val PARAM_WIDEBAND = 32
+	const val PARAM_PAUSE_MODE = 33
+
+	/** What eciPauseMode takes. */
+	const val PAUSES_KEPT = 0
+	const val PAUSES_AT_END = 1
+	const val PAUSES_SHORT = 2
 
 	const val VOICE_GENDER = 0
 	const val VOICE_HEAD_SIZE = 1
@@ -41,9 +48,8 @@ object Eci {
 	const val DICT_MAIN = 0
 	const val DICT_ROOT = 1
 	const val DICT_ABBREVIATION = 2
-	const val DICT_EMOJI = 3
 
-	val DICT_VOLUMES = listOf(DICT_MAIN, DICT_ROOT, DICT_ABBREVIATION, DICT_EMOJI)
+	val DICT_VOLUMES = listOf(DICT_MAIN, DICT_ROOT, DICT_ABBREVIATION)
 
 	/**
 	 * The speed every voice is spoken at unless someone has chosen otherwise.

@@ -169,59 +169,7 @@ fun SettingsScreen(state: SettingsModel) {
 				checked = state.abbreviations,
 				onChange = state::chooseAbbreviations
 			)
-			SwitchRow(
-				label = stringResource(R.string.read_emoji_label),
-				checked = state.readEmoji,
-				onChange = state::chooseReadEmoji
-			)
 
-			// ---- Punctuation Pronunciation Settings ----
-			Gap()
-			ChoiceRow(
-				label = stringResource(R.string.punctuation_label),
-				options = listOf(
-					stringResource(R.string.punctuation_level_none),
-					stringResource(R.string.punctuation_level_some),
-					stringResource(R.string.punctuation_level_most),
-					stringResource(R.string.punctuation_level_all)
-				),
-				chosen = state.punctuationLevel,
-				onChoose = state::choosePunctuationLevel
-			)
-
-			// ---- Number Reading Settings ----
-			Gap()
-			SwitchRow(
-				label = stringResource(R.string.number_processing_label),
-				checked = state.processNumbers,
-				onChange = state::chooseProcessNumbers
-			)
-			if (state.processNumbers) {
-				ChoiceRow(
-					label = stringResource(R.string.number_mode_label),
-					options = listOf(
-						stringResource(R.string.number_mode_default),
-						stringResource(R.string.number_mode_digits),
-						stringResource(R.string.number_mode_pairs),
-						stringResource(R.string.number_mode_triplets),
-						stringResource(R.string.number_mode_words)
-					),
-					chosen = state.numberMode,
-					onChoose = state::chooseNumberMode
-				)
-			}
-			SwitchRow(
-				label = stringResource(R.string.number_time_label),
-				checked = state.readTimeNaturally,
-				onChange = state::chooseReadTimeNaturally
-			)
-			SwitchRow(
-				label = stringResource(R.string.number_roman_label),
-				checked = state.readRomanNumerals,
-				onChange = state::chooseReadRomanNumerals
-			)
-
-			// ---- User Dictionaries ----
 			Gap()
 			for (volume in Eci.DICT_VOLUMES) {
 				val volLabel = stringResource(dictionaryLabelOf(volume))
@@ -244,11 +192,15 @@ fun SettingsScreen(state: SettingsModel) {
 				chosen = SettingsModel.RATES.indexOf(state.sampleRateHz).coerceAtLeast(0),
 				onChoose = { state.chooseSampleRate(SettingsModel.RATES[it]) }
 			)
+			SwitchRow(
+				label = stringResource(R.string.wideband_label),
+				checked = state.wideband,
+				onChange = state::chooseWideband
+			)
 
 			Gap()
 			ActionRow(stringResource(R.string.stability_label)) { stability = true }
 
-			// ---- Updates ----
 			Gap()
 			UpdateChannelRow(state = state)
 			CheckForUpdatesRow(state = state)
@@ -1135,8 +1087,7 @@ private fun AddEditWordDialog(
 private fun dictionaryLabelOf(volume: Int): Int = when (volume) {
 	Eci.DICT_MAIN -> R.string.dictionary_main
 	Eci.DICT_ROOT -> R.string.dictionary_root
-	Eci.DICT_ABBREVIATION -> R.string.dictionary_abbreviation
-	else -> R.string.dictionary_emoji
+	else -> R.string.dictionary_abbreviation
 }
 
 private fun labelOf(param: Int): Int = when (param) {

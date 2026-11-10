@@ -67,10 +67,10 @@ class EvvEngine private constructor(private var handle: Long, val language: Int)
 		EvvNative.setParam(handle, Eci.PARAM_LANGUAGE_DIALECT, language)
 		EvvNative.setParam(handle, Eci.PARAM_SYNTH_MODE, 0)
 		EvvNative.setParam(handle, Eci.PARAM_REAL_WORLD_UNITS, 0)
-		// Always on. The engine is the only thing that can act on an annotation,
-		// nothing in this app speaks without wanting pauses shortened, and one
-		// that is malformed is spoken rather than obeyed, so ordinary text
-		// carrying a backtick is read out as it stands.
+		// Always on, since the rate, the pitch and phrase prediction travel as
+		// annotations in front of every utterance. One that is malformed is
+		// spoken rather than obeyed, so ordinary text carrying a backtick is
+		// read out as it stands.
 		setAnnotations(true)
 		setSampleRate(Eci.sampleRateHz(EvvNative.getParam(handle, Eci.PARAM_SAMPLE_RATE)))
 	}
@@ -80,6 +80,15 @@ class EvvEngine private constructor(private var handle: Long, val language: Int)
 		val index = Eci.sampleRateIndex(hz)
 		EvvNative.setParam(handle, Eci.PARAM_SAMPLE_RATE, index)
 		sampleRateHz = Eci.sampleRateHz(index)
+	}
+
+	/** Which pauses the engine shortens: one of the Eci.PAUSES numbers. */
+	fun setPauseMode(mode: Int) = synchronized(guard) {
+		if (!closed) EvvNative.setParam(handle, Eci.PARAM_PAUSE_MODE, mode.coerceIn(Eci.PAUSES_KEPT, Eci.PAUSES_SHORT))
+	}
+
+	fun setWideband(on: Boolean) = synchronized(guard) {
+		if (!closed) EvvNative.setParam(handle, Eci.PARAM_WIDEBAND, if (on) 1 else 0)
 	}
 
 	fun setAnnotations(on: Boolean) = synchronized(guard) {
@@ -173,14 +182,18 @@ class EvvEngine private constructor(private var handle: Long, val language: Int)
 		if (closed) -1 else EvvNative.loadDictionary(handle, volume, path)
 	}
 
+	/** An entry goes to the engine as the bytes its file holds, which is how
+	 *  the files people share are written and what the engine's own loader
+	 *  would have read. [Dictionaries] reads them a byte a character, so this
+	 *  gives the same bytes back. */
 	fun teachWord(volume: Int, key: String, say: String): Int = synchronized(guard) {
 		if (closed) -1 else EvvNative.teachWord(
-			handle, volume, EngineText.encode(language, key), EngineText.encode(language, say)
+			handle, volume, key.toByteArray(Charsets.ISO_8859_1), say.toByteArray(Charsets.ISO_8859_1)
 		)
 	}
 
 	fun lookUpWord(volume: Int, key: String): String? = synchronized(guard) {
-		if (closed) null else EvvNative.lookUpWord(handle, volume, EngineText.encode(language, key))
+		if (closed) null else EvvNative.lookUpWord(handle, volume, key.toByteArray(Charsets.ISO_8859_1))
 	}
 
 	fun forgetDictionaries() = synchronized(guard) {

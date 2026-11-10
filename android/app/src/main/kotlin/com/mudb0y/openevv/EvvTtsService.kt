@@ -33,8 +33,6 @@ class EvvTtsService : TextToSpeechService() {
 
 	private data class LoadedDictState(val path: String, val lastModified: Long, val length: Long)
 	private var loadedDictStates: Map<Int, LoadedDictState> = emptyMap()
-	private var lastEmojiModified: Long = -1L
-	private var lastEmojiLength: Long = -1L
 	@Volatile
 	private var activeCaseSensitiveEntries: List<Dictionaries.CachedCaseSensitiveEntry> = emptyList()
 
@@ -128,8 +126,6 @@ class EvvTtsService : TextToSpeechService() {
 		if (held != null && held.language == language) return held
 		held?.close()
 		loadedDictStates = emptyMap()
-		lastEmojiModified = -1L
-		lastEmojiLength = -1L
 		val made = EvvEngine.open(language)
 		engine = made
 		if (made != null) applySettings(made)
@@ -139,6 +135,8 @@ class EvvTtsService : TextToSpeechService() {
 	private fun applySettings(target: EvvEngine) {
 		val s = settings ?: return
 		target.setSampleRate(s.sampleRateHz)
+		target.setWideband(s.wideband)
+		target.setPauseMode(s.pauses)
 		target.setAbbreviations(s.abbreviations)
 		loadDictionaries(target, s)
 		// A voice is written, so the engine can refuse it while it is speaking.
@@ -154,36 +152,19 @@ class EvvTtsService : TextToSpeechService() {
 			val f = java.io.File(path)
 			LoadedDictState(path, f.lastModified(), f.length())
 		}
-		val emojiPath = s.dictionaryPath(Eci.DICT_EMOJI)
-			?: java.io.File(DirectBoot.dictionaries(this), "volume-3-emoji.dic").takeIf { it.exists() }?.absolutePath
-		val emojiFile = emojiPath?.let { java.io.File(it) }
-		val emojiModified = emojiFile?.lastModified() ?: 0L
-		val emojiLength = emojiFile?.length() ?: 0L
-
-		if (currentStates == loadedDictStates && emojiModified == lastEmojiModified && emojiLength == lastEmojiLength) {
-			return
-		}
+		if (currentStates == loadedDictStates) return
 
 		Log.i(TAG, "Reloading dictionaries because files or settings changed...")
 		target.forgetDictionaries()
 		val csList = mutableListOf<Dictionaries.CachedCaseSensitiveEntry>()
 		for ((volume, path) in wantPaths) {
 			val file = java.io.File(path)
-			if (volume == Eci.DICT_EMOJI) {
-				Emoji.loadUserEmoji(file)
-				continue
-			}
 			val (taught, entries) = Dictionaries.loadWithCaseSensitive(target, volume, file)
 			csList.addAll(entries)
 			Log.i(TAG, "volume $volume: $taught active entries from ${file.name}")
 		}
-		if (emojiFile != null && emojiFile.exists()) {
-			Emoji.loadUserEmoji(emojiFile)
-		}
 		activeCaseSensitiveEntries = csList
 		loadedDictStates = currentStates
-		lastEmojiModified = emojiModified
-		lastEmojiLength = emojiLength
 	}
 
 	override fun onStop() {
@@ -233,52 +214,23 @@ class EvvTtsService : TextToSpeechService() {
 				loadDictionaries(target, s)
 			}
 		}
-		// Re-sent every time rather than once, because it is the one setting
-		// with no way of telling whether something else has moved it.
-		s?.let { target.setAbbreviations(it.abbreviations) }
+		// Re-sent every time rather than once. A setting is written rather than
+		// annotated, so the engine refuses one while it is still finishing the
+		// utterance before, and nothing says whether it landed.
+		s?.let {
+			target.setAbbreviations(it.abbreviations)
+			target.setPauseMode(it.pauses)
+			target.setWideband(it.wideband)
+		}
 		target.setRatePercent(request.speechRate)
 		target.setPitchPercent(request.pitch)
+		// What TalkBack has put into words is read in place of the marks it
+		// names, and a word the listener's own dictionary holds by its case is
+		// put the way they wrote it. Everything else is the engine's to read.
 		val charSeq = request.charSequenceText
-		val rawText = Punctuation.expandTtsSpans(charSeq) ?: charSeq?.toString().orEmpty()
-		if (rawText.isEmpty()) {
-			callback.start(target.sampleRateHz, AudioFormat.ENCODING_PCM_16BIT, 1)
-			callback.done()
-			return
-		}
-
-		var processedText = rawText
+		var text = TalkBackSpans.expand(charSeq) ?: charSeq?.toString().orEmpty()
 		val cs = activeCaseSensitiveEntries
-		if (cs.isNotEmpty()) {
-			processedText = Dictionaries.applyCaseSensitiveDict(processedText, cs)
-		}
-		if (s?.readEmoji != false) {
-			processedText = Emoji.apply(processedText)
-		}
-		if (s?.processNumbers == true) {
-			processedText = Numbers.apply(
-				processedText,
-				mode = s.numberMode,
-				readTimeNaturally = s.readTimeNaturally,
-				readRomanNumerals = s.readRomanNumerals
-			)
-		} else if (s?.readTimeNaturally == true || s?.readRomanNumerals == true) {
-			processedText = Numbers.apply(
-				processedText,
-				mode = Numbers.MODE_DEFAULT,
-				readTimeNaturally = s.readTimeNaturally,
-				readRomanNumerals = s.readRomanNumerals
-			)
-		}
-		// Run at every level, even none: marks a screen reader has already
-		// named are flagged so they are not named twice, and only this takes
-		// the flag back out.
-		val punctLevel = if (s?.readPunctuation != false) {
-			s?.punctuationLevel ?: Punctuation.LEVEL_SOME
-		} else {
-			Punctuation.LEVEL_NONE
-		}
-		processedText = Punctuation.apply(processedText, punctLevel, target.language)
-		val text = TextFixes.apply(processedText)
+		if (cs.isNotEmpty()) text = Dictionaries.applyCaseSensitiveDict(text, cs)
 		if (text.isEmpty()) {
 			callback.start(target.sampleRateHz, AudioFormat.ENCODING_PCM_16BIT, 1)
 			callback.done()
@@ -296,10 +248,6 @@ class EvvTtsService : TextToSpeechService() {
 		val pace = Pace(target.sampleRateHz * BYTES_PER_SAMPLE)
 		// Piece by piece, so that asking for silence waits out a piece rather
 		// than the whole message: the engine cannot abandon what it is saying.
-		// Pauses are shortened after the split rather than before it: the
-		// annotation sits in front of the full stop, and a piece boundary is
-		// found by looking at the end of a word.
-		val pauses = settings?.pauses ?: Pauses.ALL
 		val prosody = Prosody.prefix(settings?.phrasePrediction ?: false)
 		val pieces = TextPieces.split(text)
 		Log.i(TAG, "#$id ${text.length} chars in ${pieces.size} pieces")
@@ -308,7 +256,7 @@ class EvvTtsService : TextToSpeechService() {
 				Log.i(TAG, "#$id stopped before piece $at")
 				break
 			}
-			val piece = prosody + Pauses.apply(raw, pauses, at == pieces.lastIndex)
+			val piece = prosody + raw
 			if (!target.speak(piece)) {
 				Log.e(TAG, "#$id the engine refused ${piece.length} characters")
 				Log.e(TAG, "#$id refused piece $at: ${piece.take(200)}")

@@ -49,14 +49,10 @@ object Dictionaries {
 		if (!file.exists() || file.length() == 0L) {
 			return Pair(0, csList)
 		}
-		if (volume == Eci.DICT_EMOJI || file.name.contains("emoji", ignoreCase = true)) {
-			Emoji.loadUserEmoji(file)
-			return Pair(count(file), csList)
-		}
 		var taught = 0
 		var refused = 0
 		try {
-			file.forEachLine(charsetFor(file)) { rawLine ->
+			file.forEachLine(BYTES) { rawLine ->
 				val line = rawLine.trim()
 				if (line.isEmpty() || line.startsWith("#") || line.startsWith("//")) return@forEachLine
 				val split = line.indexOf('\t')
@@ -114,7 +110,7 @@ object Dictionaries {
 		if (!file.exists()) return emptyList()
 		val entries = mutableListOf<DictEntry>()
 		try {
-			file.forEachLine(charsetFor(file)) { rawLine ->
+			file.forEachLine(BYTES) { rawLine ->
 				val trimmed = rawLine.trim()
 				if (trimmed.isEmpty() || trimmed.startsWith("//")) return@forEachLine
 				val isSuspended = trimmed.startsWith("#")
@@ -140,11 +136,11 @@ object Dictionaries {
 		return entries
 	}
 
-	/** Writes list of dictionary entries to [file] encoded as UTF-8 for emoji or ISO-8859-1 for traditional dictionaries. */
+	/** Writes list of dictionary entries to [file], a byte a character as the files people share are. */
 	fun writeDictEntries(file: File, entries: List<DictEntry>) {
 		try {
 			file.parentFile?.mkdirs()
-			file.bufferedWriter(charsetFor(file)).use { writer ->
+			file.bufferedWriter(BYTES).use { writer ->
 				for (entry in entries) {
 					val prefix = if (entry.suspended) "#" else ""
 					if (entry.caseSensitive) {
@@ -223,7 +219,7 @@ object Dictionaries {
 	/** How many active entries a file offers, ignoring suspended/commented lines. */
 	fun count(file: File): Int = try {
 		if (!file.exists()) 0
-		else file.useLines(charsetFor(file)) { lines ->
+		else file.useLines(BYTES) { lines ->
 			lines.count {
 				val t = it.trim()
 				t.isNotEmpty() && !t.startsWith("#") && !t.startsWith("//") && t.contains('\t')
@@ -233,8 +229,8 @@ object Dictionaries {
 		0
 	}
 
-	private fun charsetFor(file: File): java.nio.charset.Charset =
-		if (file.name.contains("emoji", ignoreCase = true)) Charsets.UTF_8 else Charsets.ISO_8859_1
+	/** A byte a character, both ways, which is what the files are. */
+	private val BYTES = Charsets.ISO_8859_1
 
 	private const val TAG = "openevv"
 }

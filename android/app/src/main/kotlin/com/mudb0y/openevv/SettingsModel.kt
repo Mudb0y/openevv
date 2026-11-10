@@ -51,25 +51,7 @@ class SettingsModel(context: Context) {
 	var phrasePrediction by mutableStateOf(settings.phrasePrediction)
 		private set
 
-	var processNumbers by mutableStateOf(settings.processNumbers)
-		private set
-
-	var numberMode by mutableStateOf(settings.numberMode)
-		private set
-
-	var readTimeNaturally by mutableStateOf(settings.readTimeNaturally)
-		private set
-
-	var readRomanNumerals by mutableStateOf(settings.readRomanNumerals)
-		private set
-
-	var readPunctuation by mutableStateOf(settings.readPunctuation)
-		private set
-
-	var punctuationLevel by mutableStateOf(settings.punctuationLevel)
-		private set
-
-	var readEmoji by mutableStateOf(settings.readEmoji)
+	var wideband by mutableStateOf(settings.wideband)
 		private set
 
 	/** How the phone treats the engine in the background, read again each time
@@ -200,41 +182,6 @@ class SettingsModel(context: Context) {
 		settings.abbreviations = on
 	}
 
-	fun chooseProcessNumbers(on: Boolean) {
-		processNumbers = on
-		settings.processNumbers = on
-	}
-
-	fun chooseNumberMode(mode: Int) {
-		numberMode = mode
-		settings.numberMode = mode
-	}
-
-	fun chooseReadTimeNaturally(on: Boolean) {
-		readTimeNaturally = on
-		settings.readTimeNaturally = on
-	}
-
-	fun chooseReadRomanNumerals(on: Boolean) {
-		readRomanNumerals = on
-		settings.readRomanNumerals = on
-	}
-
-	fun chooseReadPunctuation(on: Boolean) {
-		readPunctuation = on
-		settings.readPunctuation = on
-	}
-
-	fun choosePunctuationLevel(level: Int) {
-		punctuationLevel = level
-		settings.punctuationLevel = level
-	}
-
-	fun chooseReadEmoji(on: Boolean) {
-		readEmoji = on
-		settings.readEmoji = on
-	}
-
 	/** What the row for [volume] says: the file picked for it, or nothing. */
 	fun dictionaryName(volume: Int): String = dictionaries[volume] ?: app.getString(R.string.dictionary_none)
 
@@ -245,8 +192,7 @@ class SettingsModel(context: Context) {
 		val defaultName = when (volume) {
 			Eci.DICT_MAIN -> "volume-0-main.dic"
 			Eci.DICT_ROOT -> "volume-1-root.dic"
-			Eci.DICT_ABBREVIATION -> "volume-2-abbr.dic"
-			else -> "volume-3-emoji.dic"
+			else -> "volume-2-abbr.dic"
 		}
 		return java.io.File(dir, defaultName)
 	}
@@ -291,17 +237,13 @@ class SettingsModel(context: Context) {
 		val name = when (volume) {
 			Eci.DICT_MAIN -> app.getString(R.string.dictionary_main)
 			Eci.DICT_ROOT -> app.getString(R.string.dictionary_root)
-			Eci.DICT_ABBREVIATION -> app.getString(R.string.dictionary_abbreviation)
-			else -> app.getString(R.string.dictionary_emoji)
+			else -> app.getString(R.string.dictionary_abbreviation)
 		}
 		val activeCount = updated.count { !it.suspended }
 		val label = app.getString(R.string.dictionary_entries, name, activeCount)
 		settings.setDictionary(volume, file.absolutePath, label)
 		dictionaries = dictionaries + (volume to label)
 		activeDictWords = updated
-		if (volume == Eci.DICT_EMOJI) {
-			Emoji.loadUserEmoji(file)
-		}
 		closeAddWordDialog()
 		return updated
 	}
@@ -312,8 +254,7 @@ class SettingsModel(context: Context) {
 		val name = when (volume) {
 			Eci.DICT_MAIN -> app.getString(R.string.dictionary_main)
 			Eci.DICT_ROOT -> app.getString(R.string.dictionary_root)
-			Eci.DICT_ABBREVIATION -> app.getString(R.string.dictionary_abbreviation)
-			else -> app.getString(R.string.dictionary_emoji)
+			else -> app.getString(R.string.dictionary_abbreviation)
 		}
 		val activeCount = updated.count { !it.suspended }
 		val label = if (updated.isEmpty()) {
@@ -324,9 +265,6 @@ class SettingsModel(context: Context) {
 		settings.setDictionary(volume, file.absolutePath, label)
 		dictionaries = dictionaries + (volume to label)
 		activeDictWords = updated
-		if (volume == Eci.DICT_EMOJI) {
-			Emoji.loadUserEmoji(file)
-		}
 		return updated
 	}
 
@@ -336,8 +274,7 @@ class SettingsModel(context: Context) {
 		val name = when (volume) {
 			Eci.DICT_MAIN -> app.getString(R.string.dictionary_main)
 			Eci.DICT_ROOT -> app.getString(R.string.dictionary_root)
-			Eci.DICT_ABBREVIATION -> app.getString(R.string.dictionary_abbreviation)
-			else -> app.getString(R.string.dictionary_emoji)
+			else -> app.getString(R.string.dictionary_abbreviation)
 		}
 		val activeCount = updated.count { !it.suspended }
 		val label = if (updated.isEmpty()) {
@@ -353,9 +290,6 @@ class SettingsModel(context: Context) {
 			dictionaries = dictionaries + (volume to label)
 		}
 		activeDictWords = updated
-		if (volume == Eci.DICT_EMOJI) {
-			Emoji.loadUserEmoji(file)
-		}
 		return updated
 	}
 
@@ -424,11 +358,16 @@ class SettingsModel(context: Context) {
 		settings.sampleRateHz = hz
 	}
 
+	fun chooseWideband(on: Boolean) {
+		wideband = on
+		settings.wideband = on
+	}
+
 	// ---- hearing it ------------------------------------------------------
 
 	fun say() {
 		val sentence = app.getString(Sentences.preview(languages.getOrNull(language)))
-		preview?.say(sentence, voice, settings.shape(voice), sampleRateHz)
+		preview?.say(sentence, voice, settings.shape(voice), sampleRateHz, wideband, pauses)
 	}
 
 	private fun adoptVoice() {

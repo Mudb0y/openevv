@@ -75,16 +75,16 @@ class LanguagesTest {
 	}
 
 	/** Polish declares eight letters of its own and the engine converts its
-	 *  text from UTF-8 to reach them. Everything else in the line is still
-	 *  flattened, which is what the quotation marks and the dash say. */
+	 *  text from UTF-8 itself, so it is handed UTF-8 as it stands, as the NVDA
+	 *  add-on hands it: composed, and without what only lays text out. */
 	@Test
-	fun polishKeepsItsOwnLettersAndFlattensTheRest() {
+	fun polishIsHandedUtf8() {
 		assertEquals(POLISH_SENTENCE, utf8(EngineText.encode(Eci.POLISH, POLISH_SENTENCE)))
 		assertEquals(
-			"\"tak\" - \u017caba",
+			"\u201etak\u201d \u2014 \u017caba",
 			utf8(EngineText.encode(Eci.POLISH, "\u201etak\u201d \u2014 \u017caba"))
 		)
-		assertEquals("Dvor\u00e1k", utf8(EngineText.encode(Eci.POLISH, "Dvo\u0159\u00e1k")))
+		assertEquals("\u017caba", utf8(EngineText.encode(Eci.POLISH, "z\u0307a\u00adba")))
 	}
 
 	/** Japanese has a romanizer in front of the engine and it reads Shift-JIS.
@@ -100,13 +100,21 @@ class LanguagesTest {
 		)
 	}
 
-	/** And every other language is still a byte a character in the Western
-	 *  set, which is the path nothing above was allowed to disturb. */
+	/** And every other language is a byte a character in the Windows Western
+	 *  set, with what it has no room for the nearest thing it has, or a space. */
 	@Test
-	fun theRestAreStillWesternBytes() {
-		assertEquals(FRENCH_SENTENCE, latin1(EngineText.encode(FRENCH, FRENCH_SENTENCE)))
-		assertEquals("caf\u00e9", latin1(EngineText.encode(FRENCH, "caf\u00e9")))
-		assertEquals("Dvor\u00e1k", latin1(EngineText.encode(FRENCH, "Dvo\u0159\u00e1k")))
+	fun theRestAreWesternBytes() {
+		assertEquals(FRENCH_SENTENCE, western(EngineText.encode(FRENCH, FRENCH_SENTENCE)))
+		assertEquals("caf\u00e9", western(EngineText.encode(FRENCH, "caf\u00e9")))
+		assertEquals("Dvor\u00e1k", western(EngineText.encode(FRENCH, "Dvo\u0159\u00e1k")))
+		// The set's own curly quotes, dash and euro are its own bytes.
+		assertEquals(
+			"\u201cun\u201d \u2014 5 \u20ac",
+			western(EngineText.encode(FRENCH, "\u201cun\u201d \u2014 5 \u20ac"))
+		)
+		assertEquals("a b", western(EngineText.encode(FRENCH, "a\uD83D\uDE00b")))
+		assertEquals("a b", western(EngineText.encode(FRENCH, "a\u202fb")))
+		assertEquals("office", western(EngineText.encode(FRENCH, "o\ufb03ce")))
 	}
 
 	private fun open(language: Int): EvvEngine {
@@ -142,7 +150,7 @@ class LanguagesTest {
 		return top
 	}
 
-	private fun latin1(bytes: ByteArray) = String(bytes, Charsets.ISO_8859_1)
+	private fun western(bytes: ByteArray) = String(bytes, Charset.forName("windows-1252"))
 
 	private fun utf8(bytes: ByteArray) = String(bytes, Charsets.UTF_8)
 

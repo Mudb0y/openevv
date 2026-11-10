@@ -44,18 +44,17 @@
 	<string name="pauses_all">Shorten all pauses</string>
 	<string name="phrase_prediction_label">Phrase prediction</string>
 	<string name="abbreviations_label">Expand abbreviations</string>
-	<string name="read_emoji_label">Read emojis with spoken descriptions</string>
 
 	<string name="dictionary_main">Main dictionary</string>
 	<string name="dictionary_root">Root dictionary</string>
 	<string name="dictionary_abbreviation">Abbreviation dictionary</string>
-	<string name="dictionary_emoji">Emoji dictionary</string>
 	<string name="dictionary_none">None</string>
 	<string name="dictionary_entries">%1$s, %2$d words</string>
 	<string name="dictionary_remove">Remove dictionaries</string>
 
 	<string name="sample_rate_label">Sample rate</string>
 	<string name="hertz">%1$d Hz</string>
+	<string name="wideband_label">Wideband above 11 kHz</string>
 
 	<string name="percent">%1$d%%</string>
 	<string name="percent_spoken">%1$d percent</string>
@@ -63,24 +62,6 @@
 	<string name="switch_on">On</string>
 	<string name="switch_off">Off</string>
 	<string name="cancel">Cancel</string>
-
-	<!-- Number Reading -->
-	<string name="number_processing_label">Process numbers</string>
-	<string name="number_mode_label">Number reading style</string>
-	<string name="number_mode_default">Normal</string>
-	<string name="number_mode_digits">Digits</string>
-	<string name="number_mode_pairs">Pairs</string>
-	<string name="number_mode_triplets">Triplets</string>
-	<string name="number_mode_words">Words</string>
-	<string name="number_time_label">Natural time reading</string>
-	<string name="number_roman_label">Roman numerals</string>
-
-	<!-- Punctuation -->
-	<string name="punctuation_label">Punctuation pronunciation</string>
-	<string name="punctuation_level_none">None</string>
-	<string name="punctuation_level_some">Some</string>
-	<string name="punctuation_level_most">Most</string>
-	<string name="punctuation_level_all">All</string>
 
 	<!-- User Dictionary Management -->
 	<string name="dictionary_manage_words">Manage words (%1$s)</string>

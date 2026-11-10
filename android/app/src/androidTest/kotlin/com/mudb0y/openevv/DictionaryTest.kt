@@ -28,9 +28,11 @@ class DictionaryTest {
 	fun aWordCanBeTaughtAndIsThenSaidDifferently() {
 		val e = open()
 		try {
+			// US English carries DOJ said by its letters already, so what is
+			// taught has to be something else for the sound to change.
 			val before = samples(e, "DOJ")
-			assertEquals("the engine refused the word", 0, e.teachWord(Eci.DICT_MAIN, "DOJ", "dee oe jeigh"))
-			assertEquals("dee oe jeigh", e.lookUpWord(Eci.DICT_MAIN, "DOJ"))
+			assertEquals("the engine refused the word", 0, e.teachWord(Eci.DICT_MAIN, "DOJ", "department of justice"))
+			assertEquals("department of justice", e.lookUpWord(Eci.DICT_MAIN, "DOJ"))
 			val after = samples(e, "DOJ")
 			assertTrue("teaching the word changed nothing", after != before)
 		} finally {
