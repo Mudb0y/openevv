@@ -346,7 +346,7 @@ jobs:
       - name: Build
         run: |
           set -eu
-          langs=$(printf 'lang/%s ' enus engb dede eses esus frfr frca itit plpl jajp fifi ptbr)
+          langs=$(printf 'lang/%s ' enus engb dede eses esus frfr frca itit plpl ruru jajp fifi ptbr)
           case "$GITHUB_REF" in
           refs/tags/v*) version=${GITHUB_REF_NAME#v} ;;
           *)            version=0.0.0 ;;
@@ -382,7 +382,7 @@ jobs:
           refs/tags/v*) version=${GITHUB_REF_NAME#v} ;;
           *)            version=0.0+${GITHUB_SHA::8} ;;
           esac
-          python3 nvda/build.py --version "$version"
+          python3 nvda/build.py --version "$version" --rulex build
 
       - uses: actions/upload-artifact@v7
         with:

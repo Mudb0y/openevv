@@ -16,6 +16,9 @@
 
 #include <stdint.h>
 #include <string.h>
+#ifdef EVV_LANG_RURU
+#include "eci_russian.h"
+#endif
 #include "eci_synththread.h"
 #include "evv_abi.h"
 
@@ -304,6 +307,9 @@ static void stl_build(SynthThread *t, void *app, void *state)
     ST_SAMPLES(t) = 0;
     ST_PENDING(t) = 0;
     ST_LASTMARK(t) = 0;
+#ifdef EVV_LANG_RURU
+    ru_spellingForget(t);
+#endif
     sti_indexQueueCtor(ST_INDEXQ(t));
     ST_OUTFMT(t) = 0;
     ST_SOUND(t) = 0;
@@ -615,6 +621,10 @@ THIS int32_t stl_stop(SynthThread *t)
     ST_STOPPED(t) = 0;
     ST_POSTED(t) = 0;
     ST_TAIL(t) = 0;
+#ifdef EVV_LANG_RURU
+    /* Russian keeps whether the engine is spelling, and a stop ends it. */
+    ru_spellingForget(t);
+#endif
     sy_eventUnsignal(ST_SYNCED(t));
 
     if (ST_SOUND(t))

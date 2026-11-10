@@ -215,6 +215,11 @@ THIS void li_setString(LanguageId *l)
         strcpy(l->major, "Pl");
         strcpy(l->minor, "PL");
         break;
+    /* And Russian, family eighteen, which IBM never had either. */
+    case 18:
+        strcpy(l->major, "Ru");
+        strcpy(l->minor, "RU");
+        break;
     default:
         strcpy(l->major, "");
         strcpy(l->minor, "");

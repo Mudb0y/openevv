@@ -42,6 +42,46 @@ from synthDriverHandler import (
 from . import _openevv
 from . import _openevv_dictionaries as dictionaries
 
+# The add-on's own translations, out of its locale folder. Without this the
+# labels below go through NVDA's catalog, which has none of them.
+try:
+	import addonHandler
+
+	addonHandler.initTranslation()
+except Exception:
+	pass
+
+#: The languages' names, to be shown in front of each voice. Marked here so the
+#: add-on's catalog carries them; _openevv.py keeps the English it is given.
+LANGUAGE_NAMES = {
+	# Translators: A language, shown in front of a voice's name.
+	0x10000: _("US English"),
+	# Translators: A language, shown in front of a voice's name.
+	0x10001: _("British English"),
+	# Translators: A language, shown in front of a voice's name.
+	0x20000: _("Castilian Spanish"),
+	# Translators: A language, shown in front of a voice's name.
+	0x20001: _("Latin American Spanish"),
+	# Translators: A language, shown in front of a voice's name.
+	0x30000: _("French"),
+	# Translators: A language, shown in front of a voice's name.
+	0x30001: _("Canadian French"),
+	# Translators: A language, shown in front of a voice's name.
+	0x40000: _("German"),
+	# Translators: A language, shown in front of a voice's name.
+	0x50000: _("Italian"),
+	# Translators: A language, shown in front of a voice's name.
+	0x80000: _("Japanese"),
+	# Translators: A language, shown in front of a voice's name.
+	0x90000: _("Finnish"),
+	# Translators: A language, shown in front of a voice's name.
+	0x70000: _("Brazilian Portuguese"),
+	# Translators: A language, shown in front of a voice's name.
+	0x110000: _("Polish"),
+	# Translators: A language, shown in front of a voice's name.
+	0x120000: _("Russian"),
+}
+
 #: What the engine's speed setting is worth at either end of the reader's
 #: nought to a hundred. The engine will take nought to two hundred and fifty,
 #: but the top of that range is far past intelligible and the bottom is a
@@ -642,7 +682,7 @@ class SynthDriver(SynthDriver):
 			for number, name in names.items():
 				voices[self._voiceId(language, number)] = VoiceInfo(
 					self._voiceId(language, number),
-					"%s - %s" % (_openevv.nameOf(language), name),
+					"%s - %s" % (LANGUAGE_NAMES.get(language) or _openevv.nameOf(language), name),
 					_openevv.localeOf(language),
 				)
 		return voices

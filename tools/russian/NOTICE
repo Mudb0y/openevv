@@ -1,0 +1,48 @@
+What in tools/russian is whose, and what goes where.
+
+None of it reaches a build whose LANGS does not name lang/ruru: the Makefile
+runs nothing here and compiles nothing of Russian's for such a build, so a
+library without Russian carries none of what is listed below.
+
+openrussian.tsv.gz is made from the dictionary of OpenRussian
+(https://en.openrussian.org), as published at
+https://github.com/Badestrand/russian-dictionary. It keeps, for each inflected
+form of each word there, which vowel the stress falls on, and drops the rest:
+translations, grammar and the forms of one syllable. openrussian.py is what
+made it.
+
+That dictionary is licensed under the Creative Commons Attribution-ShareAlike
+4.0 International licence, https://creativecommons.org/licenses/by-sa/4.0/,
+and so is openrussian.tsv.gz, and so is the table tools/russian/stress.py
+writes out of it, build/ruru/eci_russian_stress.h, and the part of any built
+library that table becomes -- which is to say every library built with
+lang/ruru, and only those. Anyone redistributing them has to say where they
+came from, as this file does, and pass them on under the same licence.
+
+rulex/ is RuLex, Igor B. Poretsky's pronunciation dictionary for Russian
+(https://github.com/poretsky/rulex), as its source files are published, the
+test dictionary gzipped. It is licensed under the GNU General Public
+License, version 2; rulex/LICENSE.GPL-2 is that licence. rulex.py turns it
+into rulex.dat, which the NVDA add-on carries beside the engine's library.
+rulex.dat is a file the engine reads when it is there, not part of the
+engine: the engine speaks Russian without it, and nothing GPL is compiled
+into any library. Wherever rulex.dat goes, its complete corresponding source
+goes with it, as the licence asks: tools/russian/make-ruru.py writes
+build/rulex-source.zip, which holds rulex/ as it is here and rulex.py, the
+program that makes rulex.dat out of it, and the add-on carries that zip and
+the licence beside rulex.dat.
+
+rules/ru_val.up and rules/ru_spr.up are not ours alone. They are written
+for the module tools/russian/make-ruru.py makes out of lang/enus, and are
+adapted from IBM's rules in it: ru_val.up begins with lines of eng_ret_Fv's
+own and takes its numbers from lang/eses, and ru_spr.up is one of the
+module's own wrappers, ZZlprp_load__insert_2pt_s_2_1_ZZstring34, with the code
+it inserts changed. So they are IBM's data as lang/enus and
+lang/eses are, governed by what NOTICE at the top of this repository says of
+those, and the MIT licence does not reach them. The same is true of the
+changes make-ruru.py makes to the copied module's rules, which are IBM's
+rules edited, and of the module it writes, lang/ruru.
+
+Everything else here -- stress.txt, the scripts, and the engine's Russian
+reader in rom/ruru, including the code that reads rulex.dat -- is ours and
+under the MIT licence in LICENSE at the top of this repository.
