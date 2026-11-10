@@ -550,9 +550,154 @@ jobs:
           "wanted:               $want"
           if ($have -ne $want) { throw "the 32-bit library says something else through ctypes" }
 
+  # The Android voice in android/: the engine cross-compiled with the NDK for
+  # three ABIs, the app around it, and the app's own unit tests. Its device
+  # tests want an Android to run on and are run beside the recorded answers on
+  # an emulator, which docs/android.md describes; nothing here starts one.
+  #
+  # Every build but a pull request's is signed with the release key in the
+  # repository's secrets, the development builds as well as the releases, so
+  # that a phone can move from one channel to the other and every build
+  # installs over the one before it. A pull request is not given the secrets
+  # and builds unsigned.
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      # All of it: the version code is the commit count and the version name
+      # comes from the newest tag.
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v6
+
+      # The NDK the app names, rather than whichever the runner carries, so
+      # that what is built here is what nix develop .#android builds.
+      - name: Install the NDK
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" \
+            --install "ndk;27.0.12077973" > /dev/null
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/27.0.12077973" >> "$GITHUB_ENV"
+
+      # Three ABIs of every language's rules compiled as C is most of an hour
+      # from nothing, and most of it comes out as it was last time.
+      - name: Install ccache
+        run: sudo apt-get install -y -q ccache > /dev/null
+
+      - uses: actions/cache@v5
+        with:
+          path: ~/.cache/ccache
+          key: android-ccache-${{ github.sha }}
+          restore-keys: android-ccache-
+
+      - name: Install the signing key
+        env:
+          KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE" ]; then
+            echo "no signing key here, so the packages come out unsigned"
+            exit 0
+          fi
+          printf '%s' "$KEYSTORE" | base64 --decode > "$RUNNER_TEMP/release.jks"
+          {
+            echo "storeFile=$RUNNER_TEMP/release.jks"
+            echo "storePassword=$STORE_PASSWORD"
+            echo "keyAlias=$KEY_ALIAS"
+            echo "keyPassword=$KEY_PASSWORD"
+          } > android/keystore.properties
+
+      - name: Build the packages
+        working-directory: android
+        env:
+          CCACHE_MAXSIZE: 4G
+        run: ./gradlew assembleRelease --console=plain
+
+      - name: Run the app's unit tests
+        working-directory: android
+        run: ./gradlew testReleaseUnitTest -x buildNative --console=plain
+
+      # One package per ABI and a universal one. Named for what they are here
+      # and again for the release they go into.
+      - name: Name the packages
+        run: |
+          mkdir -p dist
+          for abi in arm64-v8a armeabi-v7a x86_64 universal; do
+            apk=$(ls android/app/build/outputs/apk/release/app-$abi-release*.apk)
+            cp "$apk" "dist/openevv-android-$abi.apk"
+          done
+          ls -l dist
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: openevv-android
+          path: dist/*.apk
+          if-no-files-found: error
+
+  # The development channel the app's updater follows: one pre-release,
+  # android-dev, replaced by every push to main. Its notes begin "build: <the
+  # commit count>", which is how the app tells whether it is newer than the
+  # build installed, and then list the commits, newest first.
+  android-dev:
+    needs: android
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: android-dev
+      cancel-in-progress: false
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: openevv-android
+          path: dist
+
+      - name: Replace the development build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          count=$(git rev-list --count HEAD)
+          short=${GITHUB_SHA:0:7}
+          {
+            echo "build: $count"
+            echo
+            # %H cut to seven characters, since %h grows when a short hash
+            # would be ambiguous.
+            git log -n 50 --format='%H %s' HEAD | while IFS= read -r line; do
+              echo "- ${line:0:7} ${line:41}"
+            done
+          } > notes.md
+          title="Android development build $count ($short)"
+          tag=android-dev
+          if gh release view "$tag" > /dev/null 2>&1; then
+            # In place, since deleting it and making it again is a new
+            # release, which tells everyone watching the repository.
+            git tag -f "$tag" "$GITHUB_SHA"
+            git push -f origin "refs/tags/$tag"
+            gh release upload "$tag" dist/*.apk --clobber
+            gh release edit "$tag" --title "$title" --notes-file notes.md --prerelease
+          else
+            gh release create "$tag" dist/*.apk --prerelease \
+              --target "$GITHUB_SHA" --title "$title" --notes-file notes.md
+          fi
+
   release:
     needs: [linux, linux-bytecode, words-bytecode, windows, windows-check,
-            windows-check-32]
+            windows-check-32, android]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
@@ -572,6 +717,11 @@ jobs:
         with:
           name: evv-linux-x86_64
           path: dist/linux
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: openevv-android
+          path: dist/android
 
       - name: Make the archives
         run: |
@@ -604,6 +754,13 @@ jobs:
           unzip -l openevv-${GITHUB_REF_NAME}-windows-x86_64.zip
           tar -tzf openevv-${GITHUB_REF_NAME}-linux-x86_64.tar.gz
           ls -l openevv-*.nvda-addon
+          # The Android packages go out as files of their own, each named for
+          # its ABI, which is what the app's updater picks one by.
+          for apk in dist/android/openevv-android-*.apk; do
+            abi=${apk#dist/android/openevv-android-}
+            cp "$apk" "openevv-${GITHUB_REF_NAME}-android-$abi"
+          done
+          ls -l openevv-*-android-*.apk
 
       - name: Release
         env:
@@ -614,4 +771,5 @@ jobs:
             --notes-file .github/release-notes.md \
             openevv-*-windows-x86_64.zip \
             openevv-*-linux-x86_64.tar.gz \
-            openevv-*.nvda-addon
+            openevv-*.nvda-addon \
+            openevv-*-android-*.apk
