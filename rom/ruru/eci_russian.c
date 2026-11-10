@@ -55,6 +55,7 @@
 #endif
 
 #include "eci_russian.h"
+#include "evv_port.h"
 
 /* ---- the alphabet ------------------------------------------------------ */
 
@@ -771,10 +772,16 @@ static int fromTable(const uint32_t *w, size_t n)
    RuLex's general rules say where the stress falls from the shape of the
    word; only then do the table and the rules of this file have their say.
 
-   Where it is found: wherever ru_setLexicon was told, which is how the
-   Android app says where it copied it; else EVV_RULEX in the environment;
-   else, on Windows, rulex.dat beside the library this code is in, which is
-   where the NVDA add-on puts it. */
+   Where it is found: EVV_RULEX in the environment; else, on Windows,
+   rulex.dat beside the library this code is in, which is where the NVDA
+   add-on puts it.
+
+   The file comes from outside the engine, so nothing in it is trusted: its
+   size is capped, every offset and length in it is held against the size
+   it has before it is followed, and a pattern in its rules may nest only so
+   deep. It is read once, the first time a word wants it, and several
+   instances may be speaking at that moment, so the reading is done by one
+   of them while the others wait for it. */
 
 /* -- a regular expression, the subset RuLex's rules are written in: groups,
    alternation, ?, * and +, bracket classes, the dot and both anchors -- */
@@ -810,8 +817,13 @@ typedef struct {
     const uint32_t *p;
     size_t n, at;
     int groups;
+    int depth;
     int bad;
 } RxParse;
+
+/* How deep groups may nest in a pattern. RuLex's own nest two or three
+   deep; a deeper one is refused rather than recursed into. */
+#define RX_NEST 16
 
 static int rxPeek(RxParse *ps)
 {
@@ -830,7 +842,12 @@ static void rxItem(RxParse *ps, RxItem *it)
     if (c == '(') {
         it->kind = RX_GRP;
         it->gid = ++ps->groups;
+        if (++ps->depth > RX_NEST) {
+            ps->bad = 1;
+            return;
+        }
         rxAlt(ps, &it->grp);
+        ps->depth--;
         if (rxPeek(ps) != ')')
             ps->bad = 1;
         else
@@ -935,6 +952,7 @@ static Rx *rxCompile(const uint32_t *p, size_t n)
     ps.n = n;
     ps.at = 0;
     ps.groups = 0;
+    ps.depth = 0;
     ps.bad = 0;
     rxAlt(&ps, &rx->top);
     if (ps.bad || ps.at != n)
@@ -944,6 +962,11 @@ static Rx *rxCompile(const uint32_t *p, size_t n)
 }
 
 #define RX_GROUPS 16
+
+/* How many quantified items a match may be inside at once. Each costs a few
+   frames of stack, and the engine's threads are not given much: a thousand
+   is far more than a word of at most 255 letters can need. */
+#define RX_DEPTH 1000
 
 typedef struct {
     const uint32_t *w;
@@ -1042,7 +1065,7 @@ static int rxRep(RxMatch *m, const RxSeq *s, int i, int count, int pos,
     const RxItem *it = &s->items[i];
     int r = 0;
 
-    if (++m->depth > 4000) {
+    if (++m->depth > RX_DEPTH) {
         m->depth--;
         return 0;
     }
@@ -1110,10 +1133,16 @@ static int rxSearch(const Rx *rx, const uint32_t *w, int n, RxMatch *m,
 
 /* -- the file -- */
 
-static int rlTried;
+/* The most rulex.dat may be. What tools/russian/rulex.py writes is under
+   three megabytes; anything near this is not that file. */
+#define RL_MAX_FILE (64u << 20)
+
+/* 0 not read yet, 1 being read by one thread, 2 read, whether or not there
+   was a file. Changed only under evv_low_lock, which is never held while the
+   file is read. */
+static int rlState;
 static int rlOk;
-static char rlPath[1024];
-static uint32_t rlWords, rlBlocks, rlBytes;
+static uint32_t rlBlocks, rlBytes;
 static const unsigned char *rlBlockAt, *rlEntries;
 static Rx **rlPrefix;
 static uint32_t **rlPrefixWith;
@@ -1122,22 +1151,13 @@ static int rlNPrefix;
 static Rx **rlGeneral;
 static int rlNGeneral;
 
-void ru_setLexicon(const char *path)
-{
-    size_t n = path ? strlen(path) : 0;
-
-    if (n >= sizeof rlPath)
-        return;
-    memcpy(rlPath, path ? path : "", n + 1);
-    rlTried = 0;
-}
-
 static uint32_t rlU32(const unsigned char *p)
 {
     return (uint32_t)p[0] | ((uint32_t)p[1] << 8) | ((uint32_t)p[2] << 16)
         | ((uint32_t)p[3] << 24);
 }
 
+/* The whole of f, or nought if it is larger than RL_MAX_FILE. */
 static unsigned char *rlReadAll(FILE *f, size_t *len)
 {
     unsigned char *data = 0;
@@ -1149,7 +1169,14 @@ static unsigned char *rlReadAll(FILE *f, size_t *len)
         if (have == room) {
             unsigned char *grown;
 
+            if (room >= RL_MAX_FILE) {
+                free(data);
+                fclose(f);
+                return 0;
+            }
             room = room ? room * 2 : 1 << 20;
+            if (room > RL_MAX_FILE)
+                room = RL_MAX_FILE;
             grown = (unsigned char *)realloc(data, room);
             if (grown == 0) {
                 free(data);
@@ -1168,6 +1195,8 @@ static unsigned char *rlReadAll(FILE *f, size_t *len)
     return data;
 }
 
+static int rlLoad(void);
+
 #ifdef _WIN32
 /* Beside the library: the NVDA add-on puts rulex.dat next to eci.dll. Wide
    characters all the way, since the add-on lives under the user's profile
@@ -1181,7 +1210,7 @@ static FILE *rlOpenBeside(void)
 
     if (!GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS
                             | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-                            (LPCWSTR)(void *)&ru_setLexicon, &module))
+                            (LPCWSTR)(void *)&rlLoad, &module))
         return 0;
     n = GetModuleFileNameW(module, path, 1024 - 16);
     if (n == 0 || n >= 1024 - 16)
@@ -1252,14 +1281,17 @@ static void rlRules(const char *text, size_t len)
             if (section == 1) {
                 Rx *rx = rxCompile(line, n);
                 Rx **p = (Rx **)realloc(rlPrefix, (rlNPrefix + 1) * sizeof *p);
-                uint32_t **w = (uint32_t **)realloc(rlPrefixWith,
-                                                    (rlNPrefix + 1) * sizeof *w);
-                size_t *wn = (size_t *)realloc(rlPrefixWithN,
-                                               (rlNPrefix + 1) * sizeof *wn);
+                uint32_t **w;
+                size_t *wn;
 
-                if (p) rlPrefix = p;
-                if (w) rlPrefixWith = w;
-                if (wn) rlPrefixWithN = wn;
+                if (p)
+                    rlPrefix = p;
+                w = (uint32_t **)realloc(rlPrefixWith, (rlNPrefix + 1) * sizeof *w);
+                if (w)
+                    rlPrefixWith = w;
+                wn = (size_t *)realloc(rlPrefixWithN, (rlNPrefix + 1) * sizeof *wn);
+                if (wn)
+                    rlPrefixWithN = wn;
                 if (rx && p && w && wn) {
                     uint32_t with[64];
                     size_t m = sp < end ? rlCodes(text + sp + 1, end - sp - 1, with, 64) : 0;
@@ -1285,41 +1317,102 @@ static void rlRules(const char *text, size_t len)
     }
 }
 
-/* Read rulex.dat the first time it is wanted. Answers whether there is one. */
-static int rlLoad(void)
+/* Whether the words of rulex.dat can be walked without leaving them: every
+   block starts inside them, after the one before, with a word that shares
+   nothing and whose letters are there. What rlFind reads inside a block is
+   checked as it goes. */
+static int rlBlocksSound(void)
+{
+    uint32_t b, was = 0;
+
+    for (b = 0; b < rlBlocks; b++) {
+        uint32_t at = rlU32(rlBlockAt + (size_t)b * 4);
+
+        if (at < was || (uint64_t)at + 2 > rlBytes)
+            return 0;
+        if (rlEntries[at] != 0
+            || (uint64_t)at + 2 + rlEntries[at + 1] > rlBytes)
+            return 0;
+        if (b == 0 && at != 0)
+            return 0;
+        was = at;
+    }
+    return 1;
+}
+
+/* Read rulex.dat. Answers whether there was one that could be used. */
+static int rlRead(void)
 {
     FILE *f = 0;
     unsigned char *data;
     size_t len = 0;
+    uint64_t need;
     uint32_t rulesLen;
     const char *env;
 
-    if (rlTried)
-        return rlOk;
-    rlTried = 1;
-    rlOk = 0;
-    if (rlPath[0])
-        f = rlOpenPath(rlPath);
-    else if ((env = getenv("EVV_RULEX")) != 0 && env[0])
+    if ((env = getenv("EVV_RULEX")) != 0 && env[0])
         f = rlOpenPath(env);
 #ifdef _WIN32
     else
         f = rlOpenBeside();
 #endif
     data = rlReadAll(f, &len);
-    if (data == 0 || len < 24 || memcmp(data, "EVVRULEX", 8) != 0)
+    if (data == 0)
         return 0;
-    rlWords = rlU32(data + 8);
+    if (len < 24 || memcmp(data, "EVVRULEX", 8) != 0)
+        goto bad;
+    /* data + 8 is how many words there are, which nothing here needs. */
     rlBlocks = rlU32(data + 12);
     rlBytes = rlU32(data + 16);
     rulesLen = rlU32(data + 20);
-    if (24 + (size_t)rlBlocks * 4 + rlBytes + rulesLen > len || rlBlocks == 0)
-        return 0;
+    /* In sixty-four bits, so that no header can wrap the sum round to
+       something small on a thirty-two bit build. */
+    need = 24 + (uint64_t)rlBlocks * 4 + rlBytes + rulesLen;
+    if (rlBlocks == 0 || rlBytes == 0 || need > len)
+        goto bad;
     rlBlockAt = data + 24;
     rlEntries = rlBlockAt + (size_t)rlBlocks * 4;
+    if (!rlBlocksSound())
+        goto bad;
     rlRules((const char *)rlEntries + rlBytes, rulesLen);
-    rlOk = 1;
     return 1;
+
+bad:
+    free(data);
+    rlBlocks = rlBytes = 0;
+    rlBlockAt = rlEntries = 0;
+    return 0;
+}
+
+/* Read rulex.dat the first time it is wanted, once, whichever instance asks
+   first; any other that asks meanwhile waits for it. Answers whether there
+   is one. */
+static int rlLoad(void)
+{
+    int state, mine = 0;
+
+    for (;;) {
+        evv_low_lock();
+        state = rlState;
+        if (state == 0) {
+            rlState = 1;
+            mine = 1;
+        }
+        evv_low_unlock();
+        if (state != 1)
+            break;
+        evv_sleep_ms(1);
+    }
+    if (mine) {
+        int ok = rlRead();
+
+        evv_low_lock();
+        rlOk = ok;
+        rlState = 2;
+        evv_low_unlock();
+        return ok;
+    }
+    return rlOk;
 }
 
 /* -- looking a word up -- */
@@ -1344,7 +1437,7 @@ static int rlFind(const uint32_t *w, size_t n, uint32_t *out, size_t room,
     unsigned char key[256], word[256];
     size_t i, nword = 0, lo = 0, hi = rlBlocks, at, end, read;
 
-    if (n == 0 || n > sizeof key)
+    if (n == 0 || n > sizeof key || rlBlocks == 0)
         return 0;
     for (i = 0; i < n; i++) {
         int c = letterCode(w[i]);
@@ -1364,17 +1457,33 @@ static int rlFind(const uint32_t *w, size_t n, uint32_t *out, size_t room,
     }
     at = rlU32(rlBlockAt + lo * 4);
     end = lo + 1 < rlBlocks ? rlU32(rlBlockAt + (lo + 1) * 4) : rlBytes;
+    if (end > rlBytes || at > end)
+        return 0;
     for (read = 0; at < end && read < 32; read++) {
-        size_t shared = rlEntries[at], rest = rlEntries[at + 1], plen;
+        size_t shared, rest, plen;
         const unsigned char *pron;
         int c;
 
-        if (shared > nword || shared + rest > sizeof word)
+        /* Each entry is held against the end of its block before any of it
+           is read: two bytes, the letters, and a pronunciation of one byte
+           or of two and its length. */
+        if (end - at < 3)
+            return 0;
+        shared = rlEntries[at];
+        rest = rlEntries[at + 1];
+        if (shared > nword || shared + rest > sizeof word
+            || end - at - 2 < rest + 1)
             return 0;
         memcpy(word + shared, rlEntries + at + 2, rest);
         nword = shared + rest;
         pron = rlEntries + at + 2 + rest;
-        plen = pron[0] == 255 ? 2 + (size_t)pron[1] : 1;
+        if (pron[0] == 255) {
+            if (end - at - 2 - rest < 2
+                || end - at - 2 - rest - 2 < (size_t)pron[1])
+                return 0;
+            plen = 2 + (size_t)pron[1];
+        } else
+            plen = 1;
         c = compareCodes(word, nword, key, n);
         if (c > 0)
             return 0;
@@ -2531,13 +2640,15 @@ static struct {
     int spelling;
 } spellingSlots[SPELLING_SLOTS];
 
-int *ru_spelling(const void *key)
+/* The slot for key, made if there is none. Called only under evv_low_lock,
+   since several instances may be speaking at once. */
+static size_t spellingSlot(const void *key)
 {
     size_t k, empty = SPELLING_SLOTS;
 
     for (k = 0; k < SPELLING_SLOTS; k++) {
         if (spellingSlots[k].key == key)
-            return &spellingSlots[k].spelling;
+            return k;
         if (spellingSlots[k].key == 0 && empty == SPELLING_SLOTS)
             empty = k;
     }
@@ -2545,18 +2656,37 @@ int *ru_spelling(const void *key)
         empty = ((size_t)key >> 4) % SPELLING_SLOTS;
     spellingSlots[empty].key = key;
     spellingSlots[empty].spelling = 0;
-    return &spellingSlots[empty].spelling;
+    return empty;
+}
+
+int ru_spellingGet(const void *key)
+{
+    int v;
+
+    evv_low_lock();
+    v = spellingSlots[spellingSlot(key)].spelling;
+    evv_low_unlock();
+    return v;
+}
+
+void ru_spellingSet(const void *key, int spelling)
+{
+    evv_low_lock();
+    spellingSlots[spellingSlot(key)].spelling = spelling;
+    evv_low_unlock();
 }
 
 void ru_spellingForget(const void *key)
 {
     size_t k;
 
+    evv_low_lock();
     for (k = 0; k < SPELLING_SLOTS; k++)
         if (spellingSlots[k].key == key) {
             spellingSlots[k].key = 0;
             spellingSlots[k].spelling = 0;
         }
+    evv_low_unlock();
 }
 
 void ru_free(uint32_t *p)

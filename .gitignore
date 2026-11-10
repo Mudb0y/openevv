@@ -55,8 +55,7 @@ lang/*/rules/constants.letters
 # say now.
 lang/*/rules/.declared
 
-# Russian, all of it written by tools/russian/make-ruru.py as a build starts:
-# the module, made out of lang/enus; the stress table, out of the data in
-# tools/russian; and RuLex's lexicon goes into build/ with everything else.
+# Russian's module, written by tools/russian/make-ruru.py out of lang/enus as
+# a build of Russian starts. Its stress table and RuLex's lexicon go into
+# build/ with everything else.
 lang/ruru/
-src/eci/synth/eci_russian_stress.h

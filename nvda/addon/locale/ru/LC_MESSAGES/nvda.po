@@ -56,14 +56,17 @@ msgstr "Итальянский"
 msgid "Japanese"
 msgstr "Японский"
 
+msgid "Finnish"
+msgstr "Финский"
+
+msgid "Brazilian Portuguese"
+msgstr "Бразильский португальский"
+
 msgid "Polish"
 msgstr "Польский"
 
 msgid "Russian"
 msgstr "Русский"
-
-msgid "Synthesizer reads &punctuation"
-msgstr "Синтезатор читает &знаки препинания"
 
 msgid "Phrase predi&ction"
 msgstr "&Предсказание фраз"

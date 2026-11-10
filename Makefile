@@ -51,17 +51,21 @@ TAG   := $(notdir $(firstword $(LANGS)))
 TAGS  := $(notdir $(LANGS))
 BUILD := build
 
-# Russian is made rather than kept: tools/russian/make-ruru.py writes the
-# stress table src/eci/synth/eci_russian.c is compiled with, which every build
-# wants, and where LANGS names lang/ruru the module itself, out of lang/enus,
-# and RuLex's lexicon into $(BUILD). Here rather than as a target because the
-# rest of this file asks which modules have their rules as text while it is
-# being read, and the module has to be there by then. It writes nothing that
-# is already current.
-RUSSIAN := $(shell python3 tools/russian/make-ruru.py \
-    $(if $(filter lang/ruru,$(LANGS)),--module --rulex $(BUILD)) 1>&2 && echo ok)
+# Russian is made rather than kept, and only for a build whose LANGS names
+# lang/ruru: tools/russian/make-ruru.py writes the module, out of lang/enus,
+# the stress table rom/ruru/eci_russian.c is compiled with into $(BUILD)/ruru,
+# and RuLex's lexicon into $(BUILD). A build without Russian runs none of it
+# and compiles nothing of Russian's, so neither the CC BY-SA table nor the
+# reader ends up in it, and a fault in the script cannot stop it. Here rather
+# than as a target because the rest of this file asks which modules have their
+# rules as text while it is being read, and the module has to be there by
+# then. It writes nothing that is already current.
+ifneq ($(filter lang/ruru,$(LANGS)),)
+RUSSIAN := $(shell python3 tools/russian/make-ruru.py --module \
+    --stress $(BUILD)/ruru --rulex $(BUILD) 1>&2 && echo ok)
 ifneq ($(RUSSIAN),ok)
 $(error tools/russian/make-ruru.py failed)
+endif
 endif
 
 # make has no space of its own to substitute with.
@@ -200,15 +204,17 @@ LANGLIST := $(BUILD)/delta_langs_$(subst $(space),_,$(TAGS)).c
 
 # A language written in another script has a romanizer, which is code of ours
 # rather than data of IBM's and so does not live in lang/. It is built exactly
-# when its language is: rom/<tag> beside lang/<tag>. Nothing but Japanese has
-# one, and an English build carries none of it.
+# when its language is: rom/<tag> beside lang/<tag>. Japanese has one, and
+# Russian's reader, which turns Cyrillic into what lang/ruru says, lives there
+# for the same reason; an English build carries none of either.
 ROMS := $(sort $(foreach l,$(LANGS),$(wildcard rom/$(notdir $(l))/*.c)))
 
 # And which of them is linked, said to the one file that has to know how a
 # romanizer is found. IBM answers that question with the presence of a
 # link-time symbol; a build of ours can hold several languages, so it is
 # answered by name.
-ROMDEFS := $(if $(filter jajp,$(TAGS)),-DEVV_ROM_JAJP)
+ROMDEFS := $(if $(filter jajp,$(TAGS)),-DEVV_ROM_JAJP) \
+           $(if $(filter ruru,$(TAGS)),-DEVV_LANG_RURU)
 
 # The engine, plus every language beside it. port_win32.c is the Windows
 # porting layer and belongs to the reference build; the two rule tables are
@@ -240,7 +246,8 @@ HEADERS := include/eci.h \
            $(filter-out $(RULECODE), \
              $(foreach l,$(LANGS),$(wildcard $(l)/*.h))) \
            $(filter %.h,$(RULECODE)) \
-           $(foreach l,$(LANGS),$(wildcard rom/$(notdir $(l))/*.h))
+           $(foreach l,$(LANGS),$(wildcard rom/$(notdir $(l))/*.h)) \
+           $(if $(filter ruru,$(TAGS)),$(BUILD)/ruru/eci_russian_stress.h)
 
 # Everything a language module holds is named for that module, and the
 # wildcards above take whatever is there. So a file left behind by an earlier
@@ -317,7 +324,8 @@ OPT        ?= -O2
 # rest of the engine reads memory the same way, so this is everywhere.
 ALIAS      := -fno-strict-aliasing
 INCS       := -Iinclude $(addprefix -I,$(SRCDIRS)) $(addprefix -I,$(LANGS)) \
-              $(foreach l,$(LANGS),-Irom/$(notdir $(l)))
+              $(foreach l,$(LANGS),-Irom/$(notdir $(l))) \
+              $(if $(filter ruru,$(TAGS)),-I$(BUILD)/ruru)
 ALL_CFLAGS := $(OPT) $(ALIAS) -std=gnu99 $(INCS) $(WARN) $(LOW) $(TRIM) $(ROMDEFS) \
               $(CFLAGS)
 
@@ -1439,7 +1447,7 @@ $(BUILD)/libevv-win32$(SUF).a: $(OBJECTSWIN32) $(RULESTAMP)
 # library that does not export something the driver calls.
 .PHONY: nvda nvda-test
 nvda: win win32
-	@python3 nvda/build.py
+	@python3 nvda/build.py $(if $(filter ruru,$(TAGS)),--rulex $(BUILD))
 
 # The two checks that want neither Windows, nor the libraries, nor sound.
 # sequence.py is a speech sequence in and the calls it becomes out, with NVDA

@@ -27,7 +27,9 @@
 #include "evv_abi.h"
 #include "delta_lang.h"
 #include "evv_arena.h"
+#ifdef EVV_LANG_RURU
 #include "eci_russian.h"
+#endif
 
 #define APP_CONCATENATIVE  0xc
 #define ROM_CONCATENATIVE  0x3e8
@@ -340,6 +342,7 @@ static int utf8ToWestern(const char *text, uint32_t len, char *out,
     return 1;
 }
 
+#ifdef EVV_LANG_RURU
 /* Russian, which arrives in an alphabet no module has and is said by the
    English one from phonemes. eci_russian.c writes each word as a
    pronunciation annotation, in code points, and this decodes the caller's
@@ -355,6 +358,7 @@ static char *russianText(SynthThread *t, const char *text, uint32_t len,
     uint32_t *said;
     size_t n = 0, said_n = 0, k;
     uint32_t i;
+    int spelling;
     char *out;
 
     if (cps == 0)
@@ -389,7 +393,9 @@ static char *russianText(SynthThread *t, const char *text, uint32_t len,
         cps[n++] = cp;
     }
 
-    said = ru_transcribe(cps, n, &said_n, ru_spelling(t));
+    spelling = ru_spellingGet(t);
+    said = ru_transcribe(cps, n, &said_n, &spelling);
+    ru_spellingSet(t, spelling);
     free(cps);
     if (said == 0)
         return 0;
@@ -434,6 +440,7 @@ not_utf8:
     free(cps);
     return 0;
 }
+#endif
 
 /* Recode the text if the SSML filter is in the way, and answer whichever
    buffer the caller should go on with. Either of the two out parameters may
@@ -543,10 +550,12 @@ THIS void addTextRun(SynthThread *t, char *text, uint32_t len, int32_t seq,
             && (l->codepoints_n > 0 || strcmp(l->tag, "ruru") == 0)) {
             char *out;
 
+#ifdef EVV_LANG_RURU
             /* Russian is said from phonemes rather than converted a
                character at a time, and how is in russianText. */
             if (strcmp(l->tag, "ruru") == 0)
                 mbcs_out = russianText(t, text, len, l);
+#endif
 
             out = mbcs_out != 0 ? 0 : (char *)cpp_new(len + 1);
             if (out != 0) {

@@ -204,6 +204,9 @@ static int32_t eo_tell(OldInst *h, void *inst, int32_t msg, int32_t param,
     return said;
 }
 
+#ifdef EVV_LANG_RURU
+#include "evv_port.h"
+
 /* Russian's words that start with a vowel -- он, она, это, и -- start
    with a click after a pause. The English module that speaks them begins a
    vowel from silence at full strength, half its peak within a millisecond,
@@ -215,7 +218,10 @@ static int32_t eo_tell(OldInst *h, void *inst, int32_t msg, int32_t param,
 
    What it needs to remember between buffers -- how long it has been quiet
    and how far into a fade it is -- is kept per instance by address in a
-   table of its own, since the instance's layout is IBM's. */
+   table of its own, since the instance's layout is IBM's. Finding or making
+   a slot is done under evv_low_lock, since several instances may be
+   speaking at once; a slot is then only ever touched by its own instance's
+   thread. */
 #define DECLICK_SLOTS 32
 #define DECLICK_QUIET 64
 
@@ -238,10 +244,14 @@ static int32_t eo_rateHz(OldInst *h)
 static int32_t eo_declickSlot(OldInst *h)
 {
     int32_t k, slot = -1, empty = -1;
+    int32_t quiet = eo_rateHz(h) / 100;
 
+    evv_low_lock();
     for (k = 0; k < DECLICK_SLOTS; k++) {
-        if (declick[k].key == h)
+        if (declick[k].key == h) {
+            evv_low_unlock();
             return k;
+        }
         if (declick[k].key == 0 && empty < 0)
             empty = k;
     }
@@ -249,7 +259,8 @@ static int32_t eo_declickSlot(OldInst *h)
     memset(&declick[slot], 0, sizeof declick[slot]);
     declick[slot].key = h;
     /* An utterance starts from silence. */
-    declick[slot].quiet = eo_rateHz(h) / 100;
+    declick[slot].quiet = quiet;
+    evv_low_unlock();
     return slot;
 }
 
@@ -286,6 +297,7 @@ static void eo_declick(OldInst *h, int16_t *pcm, int32_t n)
         declick[slot].quiet = 0;
     }
 }
+#endif
 
 /* The engine reports everything here, and this is where it is turned into
    what the older interface promised. The instance the caller knows is the
@@ -304,8 +316,10 @@ int32_t eo_callbackFn(void *inst, int32_t msg, int32_t param, void *data)
         break;
 
     case 1:     /* samples, counted in bytes here and in samples there */
+#ifdef EVV_LANG_RURU
         if (h && OI_SAMPBUF(h) && (OI_LANG(h) & 0xff0000) == 0x120000)
             eo_declick(h, (int16_t *)OI_SAMPBUF(h), param / 2);
+#endif
         if (h && OI_CALLBACK(h))
             eo_tell(h, inst, ECI_WAVEFORM, param / 2, &ret);
         break;
@@ -322,7 +336,6 @@ int32_t eo_callbackFn(void *inst, int32_t msg, int32_t param, void *data)
            and points at nothing. */
         char *rec = EVV_AT(char *, param);
         int32_t mode;
-
 
         if (!h || !OI_CALLBACK(h))
             break;

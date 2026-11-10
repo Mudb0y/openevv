@@ -32,7 +32,7 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 OURS = os.path.join(HERE, "stress.txt")
 THEIRS = os.path.join(HERE, "openrussian.tsv.gz")
-TARGET = os.path.join(HERE, "..", "..", "src", "eci", "synth", "eci_russian_stress.h")
+TARGET = os.path.join(HERE, "..", "..", "build", "ruru", "eci_russian_stress.h")
 
 VOWELS = "аеёиоуыэюя"
 #: The order the engine numbers letters in, from one. eci_russian.c's

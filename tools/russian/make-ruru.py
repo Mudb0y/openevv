@@ -6,7 +6,7 @@ to read Russian spelling for itself. What the US English module has is the
 fullest phonology and prosody of the eleven, and an annotation that takes a
 pronunciation in its own phoneme alphabet with the stress marked: `[.0x.1bWt]
 is about. So Russian is said by the English module from phonemes:
-src/eci/synth/eci_russian.c decides
+rom/ruru/eci_russian.c decides
 each word's stress, reduces its unstressed vowels, assimilates its voicing,
 softens its consonants with a glide and writes the result as one of those
 annotations, and the module speaks it with an English voice and English
@@ -25,18 +25,18 @@ seventeen to Polish, and four more are families IBM's own code says have a
 romanizer. Eighteen is the one that was left.
 
 It writes two more things a build of Russian needs, out of the data beside
-it: src/eci/synth/eci_russian_stress.h, the table of stress eci_russian.c is
-compiled with, which every build wants since eci_russian.c is in every
-build; and with --rulex, rulex.dat, RuLex's lexicon, which the engine reads
-as a file rather than compiling in, since it is GPL. NOTICE here says whose
-each is.
+it: with --stress, eci_russian_stress.h, the table of stress
+rom/ruru/eci_russian.c is compiled with; and with --rulex, rulex.dat, RuLex's
+lexicon, which the engine reads as a file rather than compiling in, since it
+is GPL. NOTICE here says whose each is.
 
-The Makefile runs this as it starts, with --module and --rulex when LANGS
-names lang/ruru, so none of the three is in the tree. Run from anywhere.
-Writes nothing that is already what it would write, so it costs nothing to
-call every time.
+The Makefile runs this as it starts, and only when LANGS names lang/ruru:
+a build without Russian neither runs it nor compiles anything of Russian's.
+None of the three is in the tree, and all of them go under build/ but the
+module. Run from anywhere. Writes nothing that is already what it would
+write, so it costs nothing to call every time.
 
-usage: make-ruru.py [--engine DIR] [--module] [--rulex DIR]
+usage: make-ruru.py [--engine DIR] [--module] [--stress DIR] [--rulex DIR]
 """
 
 import argparse
@@ -46,6 +46,7 @@ import re
 import shutil
 import subprocess
 import sys
+import zipfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ENGINE = os.path.dirname(os.path.dirname(HERE))
@@ -217,11 +218,12 @@ def stale(out, inputs):
     return any(os.path.getmtime(p) > made for p in inputs)
 
 
-def stress_table(engine):
+def stress_table(where):
     """The table of Russian stress the engine's Russian is compiled with:
     half a million words, OpenRussian's as much as ours, so it is written
-    rather than kept."""
-    out = os.path.join(engine, "src", "eci", "synth", "eci_russian_stress.h")
+    rather than kept. It is CC BY-SA 4.0 and goes into Russian builds only."""
+    os.makedirs(where, exist_ok=True)
+    out = os.path.join(where, "eci_russian_stress.h")
     inputs = [os.path.join(HERE, n) for n in ("stress.py", "stress.txt", "openrussian.tsv.gz")]
     if not stale(out, inputs):
         return
@@ -234,9 +236,11 @@ def stress_table(engine):
 
 
 def rulex_lexicon(where):
-    """RuLex's lexicon, rulex.dat, and its licence beside it, where
-    nvda/build.py packs them beside the library. It is GPL, so it is a file
-    the engine reads rather than a table in it."""
+    """RuLex's lexicon, rulex.dat, with its licence and its complete source
+    beside it, where nvda/build.py packs them beside the library. It is GPL,
+    so it is a file the engine reads rather than a table in it, and the
+    source goes wherever it goes: rulex-source.zip is RuLex's files as they
+    are in tools/russian/rulex and rulex.py, which makes rulex.dat of them."""
     os.makedirs(where, exist_ok=True)
     out = os.path.join(where, "rulex.dat")
     src = os.path.join(HERE, "rulex")
@@ -250,6 +254,13 @@ def rulex_lexicon(where):
         )
     shutil.copy(os.path.join(src, "LICENSE.GPL-2"),
                 os.path.join(where, "rulex-LICENSE.GPL-2.txt"))
+    source = os.path.join(where, "rulex-source.zip")
+    if stale(source, inputs + [os.path.join(HERE, "NOTICE")]):
+        with zipfile.ZipFile(source, "w", zipfile.ZIP_DEFLATED) as z:
+            for name in sorted(os.listdir(src)):
+                z.write(os.path.join(src, name), "rulex/" + name)
+            z.write(os.path.join(HERE, "rulex.py"), "rulex.py")
+            z.write(os.path.join(HERE, "NOTICE"), "NOTICE")
 
 
 def q_voiceless(path):
@@ -280,11 +291,14 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--engine", default=ENGINE)
     ap.add_argument("--module", action="store_true", help="write lang/ruru")
+    ap.add_argument("--stress", metavar="DIR",
+                    help="write eci_russian_stress.h into DIR")
     ap.add_argument("--rulex", metavar="DIR", help="write rulex.dat into DIR")
     args = ap.parse_args()
 
     engine = os.path.abspath(args.engine)
-    stress_table(engine)
+    if args.stress:
+        stress_table(os.path.join(engine, args.stress))
     if args.rulex:
         rulex_lexicon(os.path.join(engine, args.rulex))
     if args.module:

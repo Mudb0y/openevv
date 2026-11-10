@@ -382,7 +382,7 @@ jobs:
           refs/tags/v*) version=${GITHUB_REF_NAME#v} ;;
           *)            version=0.0+${GITHUB_SHA::8} ;;
           esac
-          python3 nvda/build.py --version "$version"
+          python3 nvda/build.py --version "$version" --rulex build
 
       - uses: actions/upload-artifact@v7
         with:

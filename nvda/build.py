@@ -235,6 +235,9 @@ def main():
     ap.add_argument("--version")
     ap.add_argument("--tested", default=DEFAULT_TESTED)
     ap.add_argument("--out", default=os.path.join(ROOT, "build"))
+    ap.add_argument("--rulex", metavar="DIR",
+                    help="pack RuLex's rulex.dat, its licence and its source "
+                         "from DIR, for a build with Russian in it")
     args = ap.parse_args()
 
     version = args.version or described()
@@ -273,10 +276,15 @@ def main():
             z.write(path, ENGINE_DIR + "/" + name)
         # RuLex's lexicon for Russian, a file the engine reads from beside
         # the library rather than a table in it: it is GPL, and its licence
-        # goes with it. Written by tools/russian/make-ruru.py.
-        for name in ("rulex.dat", "rulex-LICENSE.GPL-2.txt"):
-            extra = os.path.join(ROOT, "build", name)
-            if os.path.isfile(extra):
+        # and its complete source go with it. Written by
+        # tools/russian/make-ruru.py, and packed only when the Makefile says
+        # the libraries have Russian in them, so that one left in build/ by
+        # an earlier build cannot find its way into an add-on without it.
+        if args.rulex:
+            for name in ("rulex.dat", "rulex-LICENSE.GPL-2.txt", "rulex-source.zip"):
+                extra = os.path.join(args.rulex, name)
+                if not os.path.isfile(extra):
+                    sys.exit("build.py: no %s; build with lang/ruru first" % extra)
                 z.write(extra, ENGINE_DIR + "/" + name)
                 say("packed %s" % name)
         for name, data in translations():
