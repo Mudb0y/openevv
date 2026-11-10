@@ -310,6 +310,10 @@ Its dictionaries are not a text file yet, for the same reason as Finnish's. And 
 
 **US English carries a dictionary of its own, begun from the community's IBMTTSDictionaries, and reads a word it holds the way the entry says.** It came in on 14 October 2026 as a snapshot with entries of ours beside it and became ours on 30 October, one set of files, with the community's changes to that day taken in -- 70,348 root entries, 1,287 main and 84 abbreviation, with 393 of the community's taken out -- and every US English instance consults it after the caller's own dictionary, so a caller's entry still wins and an instance given no dictionary at all has it. It is part of the voice: no front end offers to turn it off, and `eciBuiltInDict` (34) is there for the tools that measure it and the comparisons with IBM's engine. The NVDA add-on reads a dictionary set made from IBMTTSDictionaries for every language but US English, and the community's later changes come in through `tools/measure/dictgate.py`. The tables are sorted when the library is built and searched by halves where they lie, so an instance costs nothing more to make. With it, both Englishes read a word with a capital inside it that no dictionary holds as the words it is made of, NixOS as Nix OS, leaving names such as McDonald whole. `docs/quirks.md` says what it moved and why some entries were taken out, `docs/language.md` says how a word goes in and how the community's changes are taken, and `test/lib/builtin.py` is the check.
 
+## Android
+
+`android` is the engine as an Android voice, which came in from Quin Gillespie's evvdroid on 10 November 2026 and is built from this tree, every language in it. `docs/android.md` is the account of it and of how it is tested.
+
 ## Other processors
 
 The engine ran on x86 only until 6 September 2026, when two faults that x86 cannot see were fixed and it reached aarch64 and armv7a. Neither was found here. Both are Quin Gillespie's, out of getting the engine onto Android as a TalkBack voice and then onto Wear OS, where the Pixel Watch 4 is thirty-two bit ARM and nothing else; the measurements on those devices are his.

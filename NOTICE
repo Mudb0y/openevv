@@ -44,6 +44,14 @@ NVDA add-on's per-language text encoding and its return to the reader's own
 language, in `nvda/addon/synthDrivers/_openevv.py` and `openevv.py`, are
 Felix Steindorff's, from openevv-nvda.
 
+The Android voice in `android` came in whole from evvdroid, Quin Gillespie's
+project at github.com/trypsynth/evvdroid, with the work Aryan Choudhary, aman
+kumar gupta and adil-adysh added to it, under the same MIT licence. Its
+history came with it, so each of its commits is still its author's, and its
+copyright notice is in LICENSE beside ours. What it builds is the engine
+here, so the language data an Android package carries is everything under
+`lang` on the terms below, exactly as in every other build.
+
 IBM's
 -----
 

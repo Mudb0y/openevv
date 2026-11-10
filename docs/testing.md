@@ -32,6 +32,10 @@ Every number in there was blessed by IBM's own binary. The whole differential su
 
 Six cases in the two Englishes are ours as well: plain 8, dict 8 and second 8, the sentence `test/cases/plain.txt` and `plain-engb.txt` end with. It holds the twenty-first deliberate divergence, long numbers with commas read as the same numbers without them, which `docs/quirks.md` describes, and IBM's binary reads its numbers otherwise. So `test/suite.sh` reports those three as differing in both Englishes, and that is the oracle answering what the original does; the baselines say so at the top.
 
+### On Android
+
+The same gate runs on an Android device or emulator. `android/native/tools/probe-on-device.sh` stands in for the probe, so `EVV_MATRIX_NATIVE` can name it: each case goes over, a probe built with the NDK speaks it there, and the wave and the reported lines come back to be held against the same baselines. On 10 November 2026, on an emulator running Android 16 with the rules compiled and all twelve languages in one probe, all 1,327 cases came back as they were from an x86_64 probe and from an arm64 one, which the emulator's image runs through its translator. `docs/android.md` says how to build that probe and start the emulator, and what else tests the Android voice: its own unit tests and its device tests through the JNI bridge.
+
 ### The gate below it, one word to a line
 
     make words
