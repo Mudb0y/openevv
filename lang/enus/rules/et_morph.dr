@@ -1767,6 +1767,9 @@ label L6 was $X5$99561
   popreg r1
 label L7 was $X7$99567
   push reg r6
+  call split_compound_root arity 1 depth 1
+  popreg r1
+  push reg r6
   call ZZstarttest8 arity 1 depth 1
   cmp cmpw imm 1 ind reg r6 4082
   popreg r1

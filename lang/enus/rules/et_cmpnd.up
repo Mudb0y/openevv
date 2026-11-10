@@ -1,0 +1,131 @@
+# A compound whose second half is a word the rules' own root dictionaries
+# hold, divided into its two roots before the letters are read.
+#
+# IBM's compound rules divide a word only for its stress: compound_destress
+# asks the compound sets after the letter rules have read the whole word as
+# one, so a second half is read in the middle of a word and never looked up.
+# Moonfeather was moon-FEE-ther and Nightsword NIGHTS-word, because the
+# letters before feather and sword decide how they are read. IBM wrote the
+# division that does better -- split_initial_compound finding the place and
+# insert_compound giving each half a root of its own, looked up -- but
+# break_into_morphs, the only rule that calls it, is never reached.
+#
+# This finds the place itself and hands it to insert_compound. It divides a
+# word only where the part before is a word set initial_compound_word holds,
+# the part after is a word one of roots1a to roots5 holds -- feather, sword,
+# leather, hover -- and that part is not in set compound_weak_second, whose
+# words are weak at the end of a word however they are said alone: handsome
+# is not hand and some, nor Foxborough fox and borough, nor understandably
+# stand and ably once under is taken off. The part after has three letters or more, so that
+# window is not wind and ow. A part before that is also a prefix
+# nonlex_prefixes holds -- under, over, counter -- is left to the prefix
+# rules' stress, so misunderstood is not under and stood. A word set
+# not_compound holds is never divided.
+# analyze_morphs1 asks it after every prefix rule has had its turn and
+# before the root is looked up, so that overgrown and reinsure go to the
+# prefixes they begin with rather than being divided as compounds.
+
+rule split_compound_root takes 1
+  afresh
+  local csplit bytes 8
+  variable root_start word 876
+  variable root_end word 884
+  call push_ptr_init addr csplit
+  call fence 0 sym eti_null
+  call fence 1 sym eti_s_1be896
+  call lpta_rpta_loadp addr root_start addr root_end
+  call setd_lookup 1 355
+  if answer is 0
+    give up
+  end
+  call lpta_loadp addr root_start
+  call setscan_r 1
+  if answer is not 0
+    give up
+  end
+  call advance_tok
+  if answer is not 0
+    give up
+  end
+  call advance_tok
+  if answer is not 0
+    give up
+  end
+
+place next
+  call advance_tok
+  if answer is not 0
+    give up
+  end
+
+place try
+  call savescptr 1 addr csplit
+  call advance_tok
+  if answer is not 0
+    give up
+  end
+  call advance_tok
+  if answer is not 0
+    give up
+  end
+  call advance_tok
+  if answer is not 0
+    give up
+  end
+  call lpta_loadp addr csplit
+  call setscan_r 1
+  call lpta_rpta_loadp addr root_start addr csplit
+  call setd_lookup 1 353
+  if answer is not 0
+    go to next
+  end
+  call lpta_rpta_loadp addr root_start addr csplit
+  call actd_lookup 8 0 0
+  if answer is 0
+    go to next
+  end
+  call lpta_rpta_loadp addr csplit addr root_end
+  call setd_lookup 1 515
+  if answer is 0
+    go to next
+  end
+  call lpta_rpta_loadp addr csplit addr root_end
+  call actd_lookup 17 0 0
+  if answer is 0
+    go to found
+  end
+  call lpta_rpta_loadp addr csplit addr root_end
+  call actd_lookup 18 0 0
+  if answer is 0
+    go to found
+  end
+  call lpta_rpta_loadp addr csplit addr root_end
+  call actd_lookup 19 0 0
+  if answer is 0
+    go to found
+  end
+  call lpta_rpta_loadp addr csplit addr root_end
+  call actd_lookup 20 0 0
+  if answer is 0
+    go to found
+  end
+  call lpta_rpta_loadp addr csplit addr root_end
+  call actd_lookup 21 0 0
+  if answer is 0
+    go to found
+  end
+  call lpta_rpta_loadp addr csplit addr root_end
+  call actd_lookup 22 0 0
+  if answer is 0
+    go to found
+  end
+  go to next
+
+place moved on 1
+  go to try
+
+place found
+  call insert_compound addr csplit
+  set global half 4082 to 1
+  match
+end
