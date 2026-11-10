@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+	<!-- So that "Battery optimisation" in the settings can ask Android's own
+	     yes-or-no question rather than leave the user to find the engine in a
+	     list. A screen reader's voice being frozen between utterances is what
+	     it is for. -->
+	<uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+	<uses-permission android:name="android.permission.INTERNET" />
+	<uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+
+	<application
+		android:allowBackup="true"
+		android:icon="@mipmap/ic_launcher"
+		android:label="@string/app_name"
+		android:supportsRtl="true"
+		android:theme="@style/Theme.Evvdroid">
+
+		<!-- Startable on the lock screen, which is where a screen reader is
+		     wanted first. What it reads there is in DirectBoot.kt. -->
+		<service
+			android:name=".EvvTtsService"
+			android:label="@string/engine_name"
+			android:directBootAware="true"
+			android:exported="true">
+			<intent-filter>
+				<action android:name="android.intent.action.TTS_SERVICE" />
+				<category android:name="android.intent.category.DEFAULT" />
+			</intent-filter>
+			<meta-data
+				android:name="android.speech.tts"
+				android:resource="@xml/tts_engine" />
+		</service>
+
+		<activity
+			android:name=".CheckVoiceDataActivity"
+			android:exported="true"
+			android:noHistory="true"
+			android:theme="@android:style/Theme.NoDisplay">
+			<intent-filter>
+				<action android:name="android.speech.tts.engine.CHECK_TTS_DATA" />
+				<category android:name="android.intent.category.DEFAULT" />
+			</intent-filter>
+		</activity>
+
+		<activity
+			android:name=".GetSampleTextActivity"
+			android:exported="true"
+			android:noHistory="true"
+			android:theme="@android:style/Theme.NoDisplay">
+			<intent-filter>
+				<action android:name="android.speech.tts.engine.GET_SAMPLE_TEXT" />
+				<category android:name="android.intent.category.DEFAULT" />
+			</intent-filter>
+		</activity>
+
+		<activity
+			android:name=".SettingsActivity"
+			android:exported="true"
+			android:label="@string/app_name">
+			<intent-filter>
+				<action android:name="android.intent.action.MAIN" />
+				<category android:name="android.intent.category.LAUNCHER" />
+			</intent-filter>
+			<intent-filter>
+				<action android:name="android.speech.tts.engine.CONFIGURE_ENGINE" />
+				<category android:name="android.intent.category.DEFAULT" />
+			</intent-filter>
+		</activity>
+
+		<provider
+			android:name="androidx.core.content.FileProvider"
+			android:authorities="${applicationId}.fileprovider"
+			android:exported="false"
+			android:grantUriPermissions="true">
+			<meta-data
+				android:name="android.support.FILE_PROVIDER_PATHS"
+				android:resource="@xml/file_paths" />
+		</provider>
+
+	</application>
+</manifest>

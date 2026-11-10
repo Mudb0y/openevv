@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<!-- No action bar: the settings screen draws its own with Compose. -->
+	<style name="Theme.Evvdroid" parent="Theme.Material3.DayNight.NoActionBar" />
+</resources>

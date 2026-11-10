@@ -1,0 +1,3 @@
+[submodule "native/openevv"]
+	path = native/openevv
+	url = https://github.com/Mudb0y/openevv.git

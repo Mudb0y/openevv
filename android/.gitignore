@@ -1,0 +1,37 @@
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Android
+local.properties
+*.apk
+*.aab
+*.ap_
+*.dex
+.cxx/
+captures/
+output-metadata.json
+
+# The engine is built out of the submodule in place, so its objects and
+# libraries land inside it.
+native/openevv/build/
+
+# Signing
+*.jks
+*.keystore
+keystore.properties
+
+# Editors
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+*.swp
+*~
+
+# Operating systems
+.DS_Store
+Thumbs.db
+desktop.ini

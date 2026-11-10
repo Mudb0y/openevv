@@ -1,0 +1,18 @@
+# Line endings, kept the same everywhere on purpose.
+#
+# Three things here stop working silently if they get CRLF on a Windows
+# checkout, and each of them cost an afternoon before this file existed. A
+# patch under native/patches will not apply and, worse, will not be recognised
+# as already applied, so the build fails on the second run rather than the
+# first. A shell script under native/ is misread by bash a line at a time. And
+# a C source rewritten with CRLF grows stray carriage returns in the middle of
+# lines when anything edits it.
+* text=auto eol=lf
+
+# The one that genuinely wants CRLF.
+*.bat text eol=crlf
+
+# Left alone.
+*.jar binary
+*.png binary
+*.dic binary

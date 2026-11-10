@@ -1,0 +1,1349 @@
+package org.evvdroid
+
+import android.content.Context
+import android.text.format.Formatter
+import android.view.inputmethod.InputMethodManager
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.focusable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.paneTitle
+import androidx.compose.ui.semantics.progressBarRangeInfo
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.setProgress
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogWindowProvider
+import java.text.DateFormat
+import java.util.Date
+import kotlin.math.roundToInt
+
+/**
+ * Every setting the engine has, and a button to hear them.
+ *
+ * Controls are designed with accessibility in mind:
+ * A control is one thing to stop at. A label, a bar and a number are three
+ * stops for a screen reader, so each row merges into a single node that says
+ * what it is and what it is set to, and adjusts in place.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SettingsScreen(state: SettingsModel) {
+	var wanted by remember { mutableStateOf(Eci.DICT_MAIN) }
+	var stability by remember { mutableStateOf(false) }
+	val pick = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+		uri?.let { state.chooseDictionary(wanted, it) }
+	}
+
+	Scaffold(
+		topBar = { TopAppBar(title = { Text(stringResource(R.string.app_name)) }) }
+	) { inset ->
+		Column(
+			modifier = Modifier
+				.fillMaxSize()
+				.padding(inset)
+				.verticalScroll(rememberScrollState())
+				.padding(bottom = 24.dp)
+		) {
+			ChoiceRow(
+				label = stringResource(R.string.voice_label),
+				options = Eci.PRESET_NAMES.toList(),
+				chosen = state.voice,
+				onChoose = state::chooseVoice
+			)
+			Gap()
+			ChoiceRow(
+				label = stringResource(R.string.gender_label),
+				options = listOf(
+					stringResource(R.string.gender_male),
+					stringResource(R.string.gender_female)
+				),
+				chosen = state.gender,
+				onChoose = { state.setShape(Eci.VOICE_GENDER, it) }
+			)
+
+			Gap()
+			for (param in Settings.SLIDERS) {
+				SliderRow(
+					label = stringResource(labelOf(param)),
+					percent = state.percentOf(param),
+					onPercent = { state.setPercent(param, it) },
+					onStep = { state.stepPercent(param, it) }
+				)
+			}
+			Gap()
+			if (state.languages.size > 1) {
+				ChoiceRow(
+					label = stringResource(R.string.preview_language_label),
+					options = state.languageNames,
+					chosen = state.language,
+					onChoose = state::chooseLanguage
+				)
+			}
+			ActionRow(stringResource(R.string.speak_label), state::say)
+			ActionRow(stringResource(R.string.reset_label), state::resetVoice)
+
+			Gap()
+			ChoiceRow(
+				label = stringResource(R.string.pauses_label),
+				options = listOf(
+					stringResource(R.string.pauses_keep),
+					stringResource(R.string.pauses_end),
+					stringResource(R.string.pauses_all)
+				),
+				chosen = state.pauses,
+				onChoose = state::choosePauses
+			)
+			SwitchRow(
+				label = stringResource(R.string.phrase_prediction_label),
+				checked = state.phrasePrediction,
+				onChange = state::choosePhrasePrediction
+			)
+			SwitchRow(
+				label = stringResource(R.string.abbreviations_label),
+				checked = state.abbreviations,
+				onChange = state::chooseAbbreviations
+			)
+			SwitchRow(
+				label = stringResource(R.string.read_emoji_label),
+				checked = state.readEmoji,
+				onChange = state::chooseReadEmoji
+			)
+
+			// ---- Punctuation Pronunciation Settings ----
+			Gap()
+			ChoiceRow(
+				label = stringResource(R.string.punctuation_label),
+				options = listOf(
+					stringResource(R.string.punctuation_level_none),
+					stringResource(R.string.punctuation_level_some),
+					stringResource(R.string.punctuation_level_most),
+					stringResource(R.string.punctuation_level_all)
+				),
+				chosen = state.punctuationLevel,
+				onChoose = state::choosePunctuationLevel
+			)
+
+			// ---- Number Reading Settings ----
+			Gap()
+			SwitchRow(
+				label = stringResource(R.string.number_processing_label),
+				checked = state.processNumbers,
+				onChange = state::chooseProcessNumbers
+			)
+			if (state.processNumbers) {
+				ChoiceRow(
+					label = stringResource(R.string.number_mode_label),
+					options = listOf(
+						stringResource(R.string.number_mode_default),
+						stringResource(R.string.number_mode_digits),
+						stringResource(R.string.number_mode_pairs),
+						stringResource(R.string.number_mode_triplets),
+						stringResource(R.string.number_mode_words)
+					),
+					chosen = state.numberMode,
+					onChoose = state::chooseNumberMode
+				)
+			}
+			SwitchRow(
+				label = stringResource(R.string.number_time_label),
+				checked = state.readTimeNaturally,
+				onChange = state::chooseReadTimeNaturally
+			)
+			SwitchRow(
+				label = stringResource(R.string.number_roman_label),
+				checked = state.readRomanNumerals,
+				onChange = state::chooseReadRomanNumerals
+			)
+
+			// ---- User Dictionaries ----
+			Gap()
+			for (volume in Eci.DICT_VOLUMES) {
+				val volLabel = stringResource(dictionaryLabelOf(volume))
+				ValueRow(
+					label = volLabel,
+					value = state.dictionaryName(volume),
+					onClick = { state.openDictionaryManager(volume) }
+				)
+				ActionRow(
+					label = stringResource(R.string.dictionary_import) + " ($volLabel)",
+					onClick = { wanted = volume; pick.launch(arrayOf("*/*")) }
+				)
+			}
+			ActionRow(stringResource(R.string.dictionary_remove), state::removeDictionaries)
+
+			Gap()
+			ChoiceRow(
+				label = stringResource(R.string.sample_rate_label),
+				options = SettingsModel.RATES.map { stringResource(R.string.hertz, it) },
+				chosen = SettingsModel.RATES.indexOf(state.sampleRateHz).coerceAtLeast(0),
+				onChoose = { state.chooseSampleRate(SettingsModel.RATES[it]) }
+			)
+
+			Gap()
+			ActionRow(stringResource(R.string.stability_label)) { stability = true }
+
+			// ---- Updates ----
+			Gap()
+			UpdateChannelRow(state = state)
+			CheckForUpdatesRow(state = state)
+		}
+	}
+
+	if (stability) {
+		StabilityDialog(state = state, onClose = { stability = false })
+	}
+
+	// Dialog for managing words in a dictionary volume
+	val managingVol = state.managingVolume
+	if (managingVol != null) {
+		DictionaryManagerDialog(state = state, volume = managingVol)
+	}
+
+	// Dialog for adding or editing a single word
+	if (state.isAddEditDialogOpen) {
+		AddEditWordDialog(
+			state = state,
+			volume = state.managingVolume ?: Eci.DICT_MAIN,
+			entry = state.editingEntry
+		)
+	}
+
+	// Dialog for update info, downloading, and installation consent
+	if (state.isUpdateDialogOpen) {
+		UpdateDialog(state = state, onClose = state::closeUpdateDialog)
+	}
+}
+
+/**
+ * Row to select the update channel (Stable or Development) with clear accessibility announcements.
+ */
+@Composable
+private fun UpdateChannelRow(state: SettingsModel) {
+	var open by remember { mutableStateOf(false) }
+	val options = listOf(
+		stringResource(R.string.update_channel_stable),
+		stringResource(R.string.update_channel_dev)
+	)
+	val optionDescriptions = listOf(
+		stringResource(R.string.update_channel_stable_desc),
+		stringResource(R.string.update_channel_dev_desc)
+	)
+	val chosen = state.updateChannel
+	val now = options.getOrElse(chosen) { "" }
+
+	val label = stringResource(R.string.update_channel_label)
+	val desc = stringResource(R.string.update_channel_desc)
+	val selectedText = stringResource(R.string.update_channel_selected, now)
+	val fullAccessibilityDescription = "$label. $desc. $selectedText"
+
+	Column(
+		modifier = Modifier
+			.fillMaxWidth()
+			.clickable(
+				role = Role.Button,
+				onClick = { open = true }
+			)
+			.clearAndSetSemantics {
+				contentDescription = fullAccessibilityDescription
+				role = Role.Button
+			}
+			.padding(horizontal = 16.dp, vertical = 14.dp)
+	) {
+		Text(
+			text = label,
+			style = MaterialTheme.typography.bodyLarge
+		)
+		Text(
+			text = desc,
+			style = MaterialTheme.typography.bodyMedium,
+			color = MaterialTheme.colorScheme.onSurfaceVariant
+		)
+		Text(
+			text = selectedText,
+			style = MaterialTheme.typography.bodySmall,
+			color = MaterialTheme.colorScheme.primary,
+			modifier = Modifier.padding(top = 2.dp)
+		)
+	}
+
+	if (open) {
+		val dialogTitle = stringResource(R.string.update_channel_select_title)
+		AlertDialog(
+			onDismissRequest = { open = false },
+			modifier = Modifier.semantics {
+				paneTitle = dialogTitle
+			},
+			title = {
+				DialogWindowTitle(dialogTitle)
+				Text(dialogTitle)
+			},
+			text = {
+				Column(
+					modifier = Modifier
+						.selectableGroup()
+						.verticalScroll(rememberScrollState())
+				) {
+					options.forEachIndexed { at, option ->
+						val optionDesc = optionDescriptions.getOrElse(at) { "" }
+						val optionSemantics = if (optionDesc.isNotBlank()) "$option, $optionDesc" else option
+						Row(
+							modifier = Modifier
+								.fillMaxWidth()
+								.selectable(
+									selected = at == chosen,
+									onClick = {
+										state.chooseUpdateChannel(at)
+										open = false
+									},
+									role = Role.RadioButton
+								)
+								.semantics {
+									contentDescription = optionSemantics
+								}
+								.padding(vertical = 12.dp),
+							verticalAlignment = Alignment.CenterVertically
+						) {
+							RadioButton(selected = at == chosen, onClick = null)
+							Column(modifier = Modifier.padding(start = 12.dp)) {
+								Text(
+									text = option,
+									style = MaterialTheme.typography.bodyLarge
+								)
+								if (optionDesc.isNotBlank()) {
+									Text(
+										text = optionDesc,
+										style = MaterialTheme.typography.bodySmall,
+										color = MaterialTheme.colorScheme.onSurfaceVariant
+									)
+								}
+							}
+						}
+					}
+				}
+			},
+			confirmButton = {
+				TextButton(onClick = { open = false }) {
+					Text(stringResource(R.string.cancel))
+				}
+			}
+		)
+	}
+}
+
+/**
+ * Row to trigger check for updates and view current update state.
+ */
+@Composable
+private fun CheckForUpdatesRow(state: SettingsModel) {
+	val context = LocalContext.current
+	val currentStatus = state.updateStatus
+	val label = stringResource(R.string.check_for_updates)
+	val statusDescription = when (currentStatus) {
+		is UpdateStatus.Idle -> stringResource(R.string.check_for_updates_idle)
+		is UpdateStatus.Checking -> stringResource(R.string.update_checking)
+		is UpdateStatus.UpdateAvailable -> stringResource(R.string.update_available, currentStatus.release.name)
+		is UpdateStatus.UpToDate -> stringResource(R.string.update_up_to_date, currentStatus.release.name)
+		is UpdateStatus.Downloading -> {
+			val pct = currentStatus.progressPercent
+			if (pct >= 0) stringResource(R.string.update_downloading_percent, pct)
+			else stringResource(R.string.update_downloading_bytes, Formatter.formatFileSize(context, currentStatus.bytesDownloaded))
+		}
+		is UpdateStatus.ReadyToInstall -> stringResource(R.string.update_ready_to_install)
+		is UpdateStatus.Error -> stringResource(R.string.update_error, currentStatus.message)
+	}
+
+	val fullContentDescription = "$label. $statusDescription"
+
+	Column(
+		modifier = Modifier
+			.fillMaxWidth()
+			.clickable(
+				role = Role.Button,
+				onClick = {
+					when (state.updateStatus) {
+						is UpdateStatus.UpdateAvailable,
+						is UpdateStatus.ReadyToInstall,
+						is UpdateStatus.Downloading,
+						is UpdateStatus.UpToDate -> state.openUpdateDialog()
+						else -> state.checkForUpdates()
+					}
+				}
+			)
+			.clearAndSetSemantics {
+				contentDescription = fullContentDescription
+				role = Role.Button
+			}
+			.padding(horizontal = 16.dp, vertical = 14.dp)
+	) {
+		Text(
+			text = label,
+			style = MaterialTheme.typography.bodyLarge
+		)
+		Text(
+			text = statusDescription,
+			style = MaterialTheme.typography.bodyMedium,
+			color = MaterialTheme.colorScheme.onSurfaceVariant
+		)
+	}
+}
+
+/**
+ * Dialog displaying update details, line-by-line release notes, download progress, and installation consent.
+ */
+@Composable
+private fun UpdateDialog(state: SettingsModel, onClose: () -> Unit) {
+	val context = LocalContext.current
+	val currentStatus = state.updateStatus
+
+	val release: ReleaseInfo? = when (currentStatus) {
+		is UpdateStatus.UpdateAvailable -> currentStatus.release
+		is UpdateStatus.UpToDate -> currentStatus.release
+		is UpdateStatus.Downloading -> currentStatus.release
+		is UpdateStatus.ReadyToInstall -> currentStatus.release
+		else -> null
+	}
+
+	val dialogTitle = release?.name ?: stringResource(R.string.update_dialog_title)
+
+	AlertDialog(
+		onDismissRequest = onClose,
+		modifier = Modifier.semantics {
+			paneTitle = dialogTitle
+		},
+		title = {
+			DialogWindowTitle(dialogTitle)
+			Text(
+				text = dialogTitle,
+				style = MaterialTheme.typography.titleLarge
+			)
+		},
+		text = {
+			Column(
+				modifier = Modifier
+					.fillMaxWidth()
+					.verticalScroll(rememberScrollState())
+			) {
+				if (release != null) {
+					val channelName = if (release.isPrerelease || release.tagName == "dev") {
+						stringResource(R.string.update_channel_dev)
+					} else {
+						stringResource(R.string.update_channel_stable)
+					}
+					Text(
+						text = stringResource(R.string.update_channel_info, channelName),
+						style = MaterialTheme.typography.bodyMedium,
+						modifier = Modifier.padding(bottom = 4.dp)
+					)
+					Text(
+						text = stringResource(R.string.update_tag, release.tagName),
+						style = MaterialTheme.typography.bodyMedium,
+						modifier = Modifier.padding(bottom = 4.dp)
+					)
+					if (release.asset.size > 0) {
+						val formattedSize = Formatter.formatFileSize(context, release.asset.size)
+						Text(
+							text = stringResource(R.string.update_size, formattedSize),
+							style = MaterialTheme.typography.bodyMedium,
+							modifier = Modifier.padding(bottom = 8.dp)
+						)
+					}
+				}
+
+				when (currentStatus) {
+					is UpdateStatus.Downloading -> {
+						val pct = currentStatus.progressPercent
+						val downloadedBytes = currentStatus.bytesDownloaded
+						val totalBytes = currentStatus.totalBytes
+						val downloadedFormatted = Formatter.formatFileSize(context, downloadedBytes)
+						val totalFormatted = if (totalBytes > 0) Formatter.formatFileSize(context, totalBytes) else ""
+						val downloadText = if (totalBytes > 0 && pct >= 0) {
+							stringResource(R.string.update_downloading_progress, pct, downloadedFormatted, totalFormatted)
+						} else if (pct >= 0) {
+							stringResource(R.string.update_downloading_percent, pct)
+						} else {
+							stringResource(R.string.update_downloading_bytes, downloadedFormatted)
+						}
+
+						Text(
+							text = downloadText,
+							style = MaterialTheme.typography.bodyLarge,
+							modifier = Modifier
+								.fillMaxWidth()
+								.padding(vertical = 8.dp)
+						)
+
+						val progressFraction = if (pct >= 0) (pct / 100f).coerceIn(0f, 1f) else null
+						if (progressFraction != null) {
+							LinearProgressIndicator(
+								progress = { progressFraction },
+								modifier = Modifier
+									.fillMaxWidth()
+									.padding(bottom = 8.dp)
+									.clearAndSetSemantics {
+										progressBarRangeInfo = ProgressBarRangeInfo(pct.toFloat(), 0f..100f, 100)
+										contentDescription = downloadText
+									}
+							)
+						} else {
+							LinearProgressIndicator(
+								modifier = Modifier
+									.fillMaxWidth()
+									.padding(bottom = 8.dp)
+									.clearAndSetSemantics {
+										contentDescription = downloadText
+									}
+							)
+						}
+					}
+					is UpdateStatus.ReadyToInstall -> {
+						Text(
+							text = stringResource(R.string.update_ready_to_install),
+							style = MaterialTheme.typography.bodyLarge,
+							color = MaterialTheme.colorScheme.primary,
+							modifier = Modifier.padding(vertical = 8.dp)
+						)
+					}
+					is UpdateStatus.Error -> {
+						Text(
+							text = stringResource(R.string.update_error, currentStatus.message),
+							style = MaterialTheme.typography.bodyMedium,
+							color = MaterialTheme.colorScheme.error,
+							modifier = Modifier.padding(vertical = 8.dp)
+						)
+					}
+					else -> {}
+				}
+
+				if (release != null && release.body.isNotBlank()) {
+					HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+					Text(
+						text = stringResource(R.string.update_notes_label),
+						style = MaterialTheme.typography.titleMedium,
+						modifier = Modifier
+							.padding(bottom = 6.dp)
+							.semantics { heading() }
+					)
+					val noteItems = remember(release.body) { Updater.parseReleaseNotes(release.body) }
+					for ((_, item) in noteItems.withIndex()) {
+						if (item.isHeading) {
+							Text(
+								text = item.text,
+								style = MaterialTheme.typography.titleSmall,
+								modifier = Modifier
+									.fillMaxWidth()
+									.padding(top = 8.dp, bottom = 4.dp)
+									.semantics { heading() }
+							)
+						} else if (item.isBullet) {
+							Row(
+								modifier = Modifier
+									.fillMaxWidth()
+									.padding(vertical = 3.dp)
+									.semantics(mergeDescendants = true) {
+										contentDescription = item.text
+									},
+								verticalAlignment = Alignment.Top
+							) {
+								Text(
+									text = "• ",
+									style = MaterialTheme.typography.bodyMedium,
+									color = MaterialTheme.colorScheme.primary,
+									modifier = Modifier.padding(end = 6.dp)
+								)
+								Text(
+									text = item.text,
+									style = MaterialTheme.typography.bodyMedium,
+									modifier = Modifier.weight(1f)
+								)
+							}
+						} else {
+							Text(
+								text = item.text,
+								style = MaterialTheme.typography.bodyMedium,
+								modifier = Modifier
+									.fillMaxWidth()
+									.padding(vertical = 3.dp)
+									.semantics {
+										contentDescription = item.text
+									}
+							)
+						}
+					}
+				}
+			}
+		},
+		confirmButton = {
+			when (currentStatus) {
+				is UpdateStatus.UpdateAvailable -> {
+					Button(onClick = { state.downloadAndInstall(context, currentStatus.release) }) {
+						Text(stringResource(R.string.update_download_install))
+					}
+				}
+				is UpdateStatus.UpToDate -> {
+					Button(onClick = { state.downloadAndInstall(context, currentStatus.release) }) {
+						Text(stringResource(R.string.update_download_install))
+					}
+				}
+				is UpdateStatus.Downloading -> {
+					val pct = currentStatus.progressPercent.coerceAtLeast(0)
+					Button(onClick = {}, enabled = false) {
+						Text(stringResource(R.string.update_downloading_percent, pct))
+					}
+				}
+				is UpdateStatus.ReadyToInstall -> {
+					Button(onClick = { state.installUpdate(context, currentStatus.apkFile) }) {
+						Text(stringResource(R.string.update_install))
+					}
+				}
+				is UpdateStatus.Error -> {
+					Button(onClick = { state.checkForUpdates() }) {
+						Text(stringResource(R.string.check_for_updates))
+					}
+				}
+				else -> {}
+			}
+		},
+		dismissButton = {
+			TextButton(onClick = onClose) {
+				Text(stringResource(R.string.update_dismiss))
+			}
+		}
+	)
+}
+
+/**
+ * What the phone may be doing to the engine in the background, each with the
+ * screen that stops it. A state is shown where Android will say what it is;
+ * auto start and locking in recents belong to the phone's maker, and nothing
+ * can ask about them.
+ */
+@Composable
+private fun StabilityDialog(state: SettingsModel, onClose: () -> Unit) {
+	val context = LocalContext.current
+	val missing = stringResource(R.string.stability_autostart_missing)
+	val on = stringResource(R.string.switch_on)
+	val off = stringResource(R.string.switch_off)
+	var pinning by remember { mutableStateOf(false) }
+
+	AlertDialog(
+		onDismissRequest = onClose,
+		title = { Text(stringResource(R.string.stability_label)) },
+		text = {
+			Column(
+				modifier = Modifier
+					.fillMaxWidth()
+					.verticalScroll(rememberScrollState())
+			) {
+				Text(
+					text = stringResource(R.string.stability_intro),
+					style = MaterialTheme.typography.bodyMedium,
+					modifier = Modifier.padding(bottom = 8.dp)
+				)
+				ValueRow(
+					label = stringResource(R.string.stability_battery),
+					value = if (state.batteryUnrestricted) off else on,
+					onClick = { Stability.openBattery(context) }
+				)
+				if (Stability.hasHibernation) {
+					ValueRow(
+						label = stringResource(R.string.stability_hibernation),
+						value = if (state.hibernationExempt) off else on,
+						onClick = { Stability.openHibernation(context) }
+					)
+				}
+				ActionRow(stringResource(R.string.stability_autostart)) {
+					if (!Stability.openAutoStart(context)) {
+						Toast.makeText(context, missing, Toast.LENGTH_LONG).show()
+					}
+				}
+				ActionRow(stringResource(R.string.stability_pinning)) { pinning = true }
+				ExitHistory(state.exits)
+			}
+		},
+		confirmButton = {
+			TextButton(onClick = onClose) {
+				Text(stringResource(R.string.dictionary_close))
+			}
+		}
+	)
+
+	if (pinning) {
+		AlertDialog(
+			onDismissRequest = { pinning = false },
+			title = { Text(stringResource(R.string.stability_pinning)) },
+			text = { Text(stringResource(R.string.stability_pinning_help)) },
+			confirmButton = {
+				TextButton(onClick = { pinning = false }) {
+					Text(stringResource(R.string.dictionary_close))
+				}
+			}
+		)
+	}
+}
+
+/** What Android remembers of how the engine's process ended, one line a kind,
+ *  with what to do about it where there is anything. A heading first, so a
+ *  screen reader can jump straight here. */
+@Composable
+private fun ExitHistory(exits: Stability.Exits) {
+	Text(
+		text = stringResource(R.string.stability_exits_label),
+		style = MaterialTheme.typography.titleSmall,
+		modifier = Modifier
+			.padding(top = 16.dp, bottom = 4.dp)
+			.semantics { heading() }
+	)
+	val lines = buildList {
+		if (!Stability.hasExitHistory) {
+			add(stringResource(R.string.stability_exits_unavailable))
+			return@buildList
+		}
+		val since = exits.since
+		if (since == null) {
+			add(stringResource(R.string.stability_exits_none))
+			return@buildList
+		}
+		add(stringResource(R.string.stability_exits_since, DateFormat.getDateInstance().format(Date(since))))
+		if (exits.killedInUse > 0) add(stringResource(R.string.stability_exits_killed, exits.killedInUse))
+		if (exits.crashed > 0) add(stringResource(R.string.stability_exits_crashed, exits.crashed))
+		if (exits.unresponsive > 0) add(stringResource(R.string.stability_exits_unresponsive, exits.unresponsive))
+		if (exits.byUser > 0) add(stringResource(R.string.stability_exits_user, exits.byUser))
+		if (exits.idle > 0) add(stringResource(R.string.stability_exits_idle, exits.idle))
+		if (exits.killedInUse > 0) add(stringResource(R.string.stability_exits_advice_killed))
+		if (exits.crashed + exits.unresponsive > 0) add(stringResource(R.string.stability_exits_advice_crashed))
+	}
+	for (line in lines) {
+		Text(
+			text = line,
+			style = MaterialTheme.typography.bodyMedium,
+			modifier = Modifier.padding(vertical = 2.dp)
+		)
+	}
+}
+
+data class WordEntryActionItem(
+	val label: String,
+	val action: () -> Unit
+)
+
+fun getWordEntryActions(
+	entry: DictEntry,
+	editLabel: String,
+	suspendLabel: String,
+	resumeLabel: String,
+	deleteLabel: String,
+	onEdit: () -> Unit,
+	onToggleSuspend: () -> Unit,
+	onDelete: () -> Unit
+): List<WordEntryActionItem> {
+	val toggleLabel = if (entry.suspended) resumeLabel else suspendLabel
+	return listOf(
+		WordEntryActionItem(label = editLabel, action = onEdit),
+		WordEntryActionItem(label = toggleLabel, action = onToggleSuspend),
+		WordEntryActionItem(label = deleteLabel, action = onDelete)
+	)
+}
+
+@Composable
+private fun DictionaryManagerDialog(state: SettingsModel, volume: Int) {
+	val volLabel = stringResource(dictionaryLabelOf(volume))
+	val keyboardController = LocalSoftwareKeyboardController.current
+	val focusManager = LocalFocusManager.current
+	val view = LocalView.current
+
+	fun hideKeyboard() {
+		keyboardController?.hide()
+		focusManager.clearFocus()
+		(view.context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager)
+			?.hideSoftInputFromWindow(view.windowToken, 0)
+	}
+
+	fun closeManager() {
+		hideKeyboard()
+		state.closeDictionaryManager()
+	}
+
+	AlertDialog(
+		onDismissRequest = ::closeManager,
+		title = { Text(stringResource(R.string.dictionary_manage_words, volLabel)) },
+		text = {
+			Column(modifier = Modifier.fillMaxWidth()) {
+				OutlinedTextField(
+					value = state.dictSearchQuery,
+					onValueChange = { state.dictSearchQuery = it },
+					label = { Text(stringResource(R.string.dictionary_search_placeholder)) },
+					singleLine = true,
+					keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+					keyboardActions = KeyboardActions(onSearch = { hideKeyboard() }),
+					modifier = Modifier
+						.fillMaxWidth()
+						.padding(bottom = 8.dp)
+				)
+
+				Button(
+					onClick = {
+						hideKeyboard()
+						state.openAddWordDialog(null)
+					},
+					modifier = Modifier
+						.fillMaxWidth()
+						.padding(vertical = 4.dp)
+				) {
+					Text(stringResource(R.string.dictionary_add_word))
+				}
+
+				HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+
+				val query = state.dictSearchQuery.trim()
+				val filtered = remember(state.activeDictWords, query) {
+					if (query.isEmpty()) state.activeDictWords
+					else state.activeDictWords.filter {
+						it.key.contains(query, ignoreCase = true) ||
+						it.say.contains(query, ignoreCase = true)
+					}
+				}
+
+				if (filtered.isEmpty()) {
+					Text(
+						text = stringResource(R.string.dictionary_empty),
+						style = MaterialTheme.typography.bodyMedium,
+						modifier = Modifier.padding(vertical = 16.dp)
+					)
+				} else {
+					Column(
+						modifier = Modifier
+							.fillMaxWidth()
+							.heightIn(max = 350.dp)
+							.verticalScroll(rememberScrollState())
+					) {
+						filtered.forEach { entry ->
+							WordRow(
+								entry = entry,
+								onEdit = {
+									hideKeyboard()
+									state.openAddWordDialog(entry)
+								},
+								onToggleSuspend = {
+									hideKeyboard()
+									state.toggleSuspendWord(volume, entry)
+								},
+								onDelete = {
+									hideKeyboard()
+									state.deleteWord(volume, entry.key, entry.caseSensitive)
+								}
+							)
+							HorizontalDivider()
+						}
+					}
+				}
+			}
+		},
+		confirmButton = {
+			TextButton(onClick = ::closeManager) {
+				Text(stringResource(R.string.dictionary_close))
+			}
+		}
+	)
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun WordRow(
+	entry: DictEntry,
+	onEdit: () -> Unit,
+	onToggleSuspend: () -> Unit,
+	onDelete: () -> Unit
+) {
+	var showMenu by remember { mutableStateOf(false) }
+
+	val editLabel = stringResource(R.string.dictionary_action_edit)
+	val suspendLabel = stringResource(R.string.dictionary_action_suspend)
+	val resumeLabel = stringResource(R.string.dictionary_action_resume)
+	val deleteLabel = stringResource(R.string.dictionary_action_delete)
+	val moreOptionsDesc = stringResource(R.string.dictionary_more_options, entry.key)
+
+	val actions = remember(entry, editLabel, suspendLabel, resumeLabel, deleteLabel) {
+		getWordEntryActions(
+			entry = entry,
+			editLabel = editLabel,
+			suspendLabel = suspendLabel,
+			resumeLabel = resumeLabel,
+			deleteLabel = deleteLabel,
+			onEdit = onEdit,
+			onToggleSuspend = onToggleSuspend,
+			onDelete = onDelete
+		)
+	}
+
+	val desc = buildString {
+		append(
+			if (entry.caseSensitive) {
+				stringResource(R.string.dictionary_word_item_cs_desc, entry.key, entry.say)
+			} else {
+				stringResource(R.string.dictionary_word_item_desc, entry.key, entry.say)
+			}
+		)
+		if (entry.suspended) {
+			append(stringResource(R.string.dictionary_word_suspended_suffix))
+		}
+	}
+
+	Box(modifier = Modifier.fillMaxWidth()) {
+		Row(
+			modifier = Modifier
+				.fillMaxWidth()
+				.combinedClickable(
+					onClick = onEdit,
+					onLongClick = { showMenu = true }
+				)
+				.semantics(mergeDescendants = true) {
+					contentDescription = desc
+					customActions = actions.map { item ->
+						CustomAccessibilityAction(label = item.label) {
+							item.action()
+							true
+						}
+					}
+				}
+				.padding(horizontal = 8.dp, vertical = 10.dp),
+			horizontalArrangement = Arrangement.SpaceBetween,
+			verticalAlignment = Alignment.CenterVertically
+		) {
+			Column(modifier = Modifier.weight(1f)) {
+				Row(verticalAlignment = Alignment.CenterVertically) {
+					Text(
+						text = entry.key,
+						style = MaterialTheme.typography.bodyLarge,
+						textDecoration = if (entry.suspended) TextDecoration.LineThrough else null,
+						color = if (entry.suspended) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface
+					)
+					if (entry.caseSensitive) {
+						Text(
+							text = " (CS)",
+							style = MaterialTheme.typography.bodySmall,
+							color = MaterialTheme.colorScheme.primary,
+							modifier = Modifier.padding(start = 4.dp)
+						)
+					}
+					if (entry.suspended) {
+						Text(
+							text = " (" + stringResource(R.string.dictionary_action_suspend) + ")",
+							style = MaterialTheme.typography.bodySmall,
+							color = MaterialTheme.colorScheme.error,
+							modifier = Modifier.padding(start = 4.dp)
+						)
+					}
+				}
+				Text(
+					text = "→ " + entry.say,
+					style = MaterialTheme.typography.bodyMedium,
+					color = MaterialTheme.colorScheme.onSurfaceVariant
+				)
+			}
+
+			IconButton(
+				onClick = { showMenu = true },
+				modifier = Modifier.semantics {
+					contentDescription = moreOptionsDesc
+				}
+			) {
+				Text(
+					text = "⋮",
+					style = MaterialTheme.typography.titleLarge
+				)
+			}
+		}
+
+		DropdownMenu(
+			expanded = showMenu,
+			onDismissRequest = { showMenu = false }
+		) {
+			actions.forEach { item ->
+				DropdownMenuItem(
+					text = { Text(item.label) },
+					onClick = {
+						showMenu = false
+						item.action()
+					}
+				)
+			}
+		}
+	}
+}
+
+@Composable
+private fun AddEditWordDialog(
+	state: SettingsModel,
+	volume: Int,
+	entry: DictEntry?
+) {
+	var word by remember { mutableStateOf(entry?.key ?: "") }
+	var say by remember { mutableStateOf(entry?.say ?: "") }
+	var caseSensitive by remember { mutableStateOf(entry?.caseSensitive ?: false) }
+	val keyboardController = LocalSoftwareKeyboardController.current
+	val focusManager = LocalFocusManager.current
+	val view = LocalView.current
+
+	fun hideKeyboard() {
+		keyboardController?.hide()
+		focusManager.clearFocus()
+		(view.context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager)
+			?.hideSoftInputFromWindow(view.windowToken, 0)
+	}
+
+	fun closeDialog() {
+		hideKeyboard()
+		state.closeAddWordDialog()
+	}
+
+	AlertDialog(
+		onDismissRequest = ::closeDialog,
+		title = {
+			Text(
+				if (entry == null) stringResource(R.string.dictionary_add_word)
+				else stringResource(R.string.dictionary_edit_word)
+			)
+		},
+		text = {
+			Column(modifier = Modifier.fillMaxWidth()) {
+				OutlinedTextField(
+					value = word,
+					onValueChange = { word = it },
+					label = { Text(stringResource(R.string.dictionary_word_key)) },
+					singleLine = true,
+					keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+					modifier = Modifier
+						.fillMaxWidth()
+						.padding(bottom = 8.dp)
+				)
+
+				OutlinedTextField(
+					value = say,
+					onValueChange = { say = it },
+					label = { Text(stringResource(R.string.dictionary_word_say)) },
+					singleLine = true,
+					keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+					keyboardActions = KeyboardActions(onDone = { hideKeyboard() }),
+					modifier = Modifier
+						.fillMaxWidth()
+						.padding(bottom = 8.dp)
+				)
+
+				SwitchRow(
+					label = stringResource(R.string.dictionary_case_sensitive),
+					checked = caseSensitive,
+					onChange = { caseSensitive = it }
+				)
+			}
+		},
+		confirmButton = {
+			Button(
+				onClick = {
+					hideKeyboard()
+					if (word.isNotBlank() && say.isNotBlank()) {
+						if (entry != null && (entry.key != word || entry.caseSensitive != caseSensitive)) {
+							state.deleteWord(volume, entry.key, entry.caseSensitive)
+						}
+						state.addOrUpdateWord(
+							volume = volume,
+							key = word.trim(),
+							say = say.trim(),
+							caseSensitive = caseSensitive,
+							suspended = entry?.suspended ?: false
+						)
+					}
+				},
+				enabled = word.isNotBlank() && say.isNotBlank()
+			) {
+				Text(stringResource(R.string.dictionary_save))
+			}
+		},
+		dismissButton = {
+			TextButton(onClick = ::closeDialog) {
+				Text(stringResource(R.string.cancel))
+			}
+		}
+	)
+}
+
+private fun dictionaryLabelOf(volume: Int): Int = when (volume) {
+	Eci.DICT_MAIN -> R.string.dictionary_main
+	Eci.DICT_ROOT -> R.string.dictionary_root
+	Eci.DICT_ABBREVIATION -> R.string.dictionary_abbreviation
+	else -> R.string.dictionary_emoji
+}
+
+private fun labelOf(param: Int): Int = when (param) {
+	Eci.VOICE_SPEED -> R.string.speed_label
+	Eci.VOICE_PITCH_BASELINE -> R.string.pitch_label
+	Eci.VOICE_PITCH_FLUCTUATION -> R.string.inflection_label
+	Eci.VOICE_HEAD_SIZE -> R.string.head_size_label
+	Eci.VOICE_ROUGHNESS -> R.string.roughness_label
+	Eci.VOICE_BREATHINESS -> R.string.breathiness_label
+	else -> R.string.volume_label
+}
+
+@Composable
+private fun Gap() {
+	Spacer(modifier = Modifier.height(16.dp))
+}
+
+@Composable
+private fun SliderRow(
+	label: String,
+	percent: Int,
+	onPercent: (Int) -> Unit,
+	onStep: (Int) -> Unit
+) {
+	val spoken = stringResource(R.string.percent_spoken, percent)
+	Column(
+		modifier = Modifier
+			.fillMaxWidth()
+			.padding(horizontal = 16.dp, vertical = 8.dp)
+			.onKeyEvent { press ->
+				if (press.type != KeyEventType.KeyDown) return@onKeyEvent false
+				when (press.key) {
+					Key.DirectionLeft, Key.DirectionDown -> onStep(-1)
+					Key.DirectionRight, Key.DirectionUp -> onStep(1)
+					Key.MoveHome -> onPercent(0)
+					Key.MoveEnd -> onPercent(Eci.PERCENT_MAX)
+					else -> return@onKeyEvent false
+				}
+				true
+			}
+			.focusable()
+			.clearAndSetSemantics {
+				contentDescription = label
+				stateDescription = spoken
+				progressBarRangeInfo = ProgressBarRangeInfo(percent.toFloat(), 0f..100f, 99)
+				setProgress { want ->
+					val target = want.roundToInt()
+					if (target != percent) onStep(if (target > percent) 1 else -1)
+					true
+				}
+			}
+	) {
+		Text(
+			text = stringResource(
+				R.string.labelled_value,
+				label,
+				stringResource(R.string.percent, percent)
+			),
+			style = MaterialTheme.typography.labelLarge
+		)
+		Slider(
+			modifier = Modifier.focusProperties { canFocus = false },
+			value = percent.toFloat(),
+			onValueChange = { onPercent(it.roundToInt()) },
+			valueRange = 0f..100f,
+			steps = 0
+		)
+	}
+}
+
+@Composable
+private fun ChoiceRow(
+	label: String,
+	options: List<String>,
+	chosen: Int,
+	onChoose: (Int) -> Unit
+) {
+	var open by remember { mutableStateOf(false) }
+	val now = options.getOrElse(chosen) { "" }
+	Text(
+		text = stringResource(R.string.labelled_value, label, now),
+		style = MaterialTheme.typography.bodyLarge,
+		modifier = Modifier
+			.fillMaxWidth()
+			.clickable(
+				role = Role.Button,
+				onClick = { open = true }
+			)
+			.semantics {
+				contentDescription = label
+				stateDescription = now
+			}
+			.padding(horizontal = 16.dp, vertical = 14.dp)
+	)
+	if (open) {
+		AlertDialog(
+			onDismissRequest = { open = false },
+			title = { Text(label) },
+			text = {
+				Column(
+					modifier = Modifier
+						.selectableGroup()
+						.verticalScroll(rememberScrollState())
+				) {
+					options.forEachIndexed { at, option ->
+						Row(
+							modifier = Modifier
+								.fillMaxWidth()
+								.selectable(
+									selected = at == chosen,
+									onClick = {
+										onChoose(at)
+										open = false
+									},
+									role = Role.RadioButton
+								)
+								.padding(vertical = 12.dp),
+							verticalAlignment = Alignment.CenterVertically
+						) {
+							RadioButton(selected = at == chosen, onClick = null)
+							Text(
+								text = option,
+								modifier = Modifier.padding(start = 12.dp),
+								style = MaterialTheme.typography.bodyLarge
+							)
+						}
+					}
+				}
+			},
+			confirmButton = {
+				TextButton(onClick = { open = false }) {
+					Text(stringResource(R.string.cancel))
+				}
+			}
+		)
+	}
+}
+
+@Composable
+private fun SwitchRow(label: String, checked: Boolean, onChange: (Boolean) -> Unit) {
+	val on = stringResource(if (checked) R.string.switch_on else R.string.switch_off)
+	Row(
+		modifier = Modifier
+			.fillMaxWidth()
+			.clickable(
+				role = Role.Switch,
+				onClick = { onChange(!checked) }
+			)
+			.semantics(mergeDescendants = true) {
+				contentDescription = label
+				stateDescription = on
+			}
+			.padding(horizontal = 16.dp, vertical = 14.dp),
+		verticalAlignment = Alignment.CenterVertically
+	) {
+		Text(
+			text = label,
+			style = MaterialTheme.typography.bodyLarge,
+			modifier = Modifier.weight(1f)
+		)
+		Switch(checked = checked, onCheckedChange = null)
+	}
+}
+
+@Composable
+private fun ValueRow(label: String, value: String, onClick: () -> Unit) {
+	Text(
+		text = stringResource(R.string.labelled_value, label, value),
+		style = MaterialTheme.typography.bodyLarge,
+		modifier = Modifier
+			.fillMaxWidth()
+			.clickable(
+				role = Role.Button,
+				onClick = onClick
+			)
+			.semantics {
+				contentDescription = label
+				stateDescription = value
+			}
+			.padding(horizontal = 16.dp, vertical = 14.dp)
+	)
+}
+
+@Composable
+private fun ActionRow(label: String, onClick: () -> Unit) {
+	Text(
+		text = label,
+		style = MaterialTheme.typography.bodyLarge,
+		modifier = Modifier
+			.fillMaxWidth()
+			.clickable(
+				role = Role.Button,
+				onClick = onClick
+			)
+			.semantics {
+				contentDescription = label
+			}
+			.padding(horizontal = 16.dp, vertical = 14.dp)
+	)
+}
+
+/**
+ * Compose names every dialog window "Dialog", which is what TalkBack announces when it opens.
+ * Setting paneTitle on the content doesn't change that, so give the window itself a title.
+ */
+@Composable
+private fun DialogWindowTitle(title: String) {
+	val window = (LocalView.current.parent as? DialogWindowProvider)?.window
+	SideEffect { window?.setTitle(title) }
+}
