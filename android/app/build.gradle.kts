@@ -19,13 +19,21 @@ val abis = (findProperty("openevv.abis") as String? ?: "arm64-v8a,armeabi-v7a,x8
 val rulesForm = findProperty("openevv.rules") as String? ?: "c"
 val languages = findProperty("openevv.langs") as String?
 	?: ALL_LANGUAGES.joinToString(" ") { "lang/$it" }
-// The number the development workflow publishes as "build: <n>" in the dev release's notes, the commit
-// count, so that the updater can tell whether the dev build on GitHub is newer than this one. A
-// checkout without history gives 0, which counts as older than any published build.
+// The commit count, which is the version code, so that every build installs over every one before
+// it, and the number the development workflow publishes as "build: <n>" in its pre-release's notes,
+// so that the updater can tell whether the build on GitHub is newer than this one. A checkout
+// without history gives 0, which counts as older than any published build.
 val buildNumber = providers.exec {
 	commandLine("git", "rev-list", "--count", "HEAD")
 	isIgnoreExitValue = true
 }.standardOutput.asText.map { it.trim().toIntOrNull() ?: 0 }.orElse(0).get()
+
+// The release this build is, or is after: v0.7 for a build of the tag itself, and 0.7-12-g1a2b3c4
+// for one twelve commits after it. The updater compares it with a release's tag.
+val versionFromTag = providers.exec {
+	commandLine("git", "describe", "--tags", "--match", "v[0-9]*")
+	isIgnoreExitValue = true
+}.standardOutput.asText.map { it.trim().removePrefix("v").ifEmpty { "0" } }.orElse("0").get()
 val nativeOut = layout.buildDirectory.dir("native/jniLibs")
 
 // Release signing, from a keystore.properties the repo does not carry. Without
@@ -73,8 +81,8 @@ android {
 		applicationId = "com.mudb0y.openevv"
 		minSdk = 23
 		targetSdk = 36
-		versionCode = 2
-		versionName = "0.2.0"
+		versionCode = buildNumber.coerceAtLeast(1)
+		versionName = versionFromTag
 		buildConfigField("int", "BUILD_NUMBER", buildNumber.toString())
 		testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 		ndk {

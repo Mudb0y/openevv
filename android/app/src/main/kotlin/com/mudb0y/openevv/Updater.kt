@@ -62,13 +62,18 @@ sealed class UpdateStatus {
 
 object Updater {
 
-	private const val GITHUB_RELEASES_URL = "https://api.github.com/repos/trypsynth/evvdroid/releases"
-	private const val USER_AGENT = "evvdroid-updater"
+	private const val GITHUB_RELEASES_URL = "https://api.github.com/repos/Mudb0y/openevv/releases"
+	private const val USER_AGENT = "openevv-android-updater"
+
+	/** The pre-release every push to main replaces, which is what the
+	 *  development channel follows. Stable is the latest release proper, and a
+	 *  release carries the Android packages beside the Windows and Linux ones. */
+	const val DEVELOPMENT_TAG = "android-dev"
 	private const val MAX_REDIRECTS = 5
 
 	fun releaseEndpoint(channel: UpdateChannel): String = when (channel) {
 		UpdateChannel.STABLE -> "$GITHUB_RELEASES_URL/latest"
-		UpdateChannel.DEVELOPMENT -> "$GITHUB_RELEASES_URL/tags/dev"
+		UpdateChannel.DEVELOPMENT -> "$GITHUB_RELEASES_URL/tags/$DEVELOPMENT_TAG"
 	}
 
 	suspend fun fetchRelease(channel: UpdateChannel): Result<ReleaseInfo> = withContext(Dispatchers.IO) {
