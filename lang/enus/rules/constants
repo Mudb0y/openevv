@@ -137,7 +137,8 @@ bytes month_november   15 04 1b 02 14 0b 02 18
 bytes month_october    04 0c 1a 04 0b 02 18
 bytes month_september  19 02 16 1a 02 14 0b 02 18
 
-# The hyphen hyphen_chain in et_numbr.up looks for between numbers.
+# The hyphen hyphen_chain in et_numbr.up looks for between numbers, and
+# version_hyphen in ut_norm.up after a version.
 bytes hyphen_mark      3f
 
 # 6.1's own strings for money, which et_numbr.up names.
@@ -219,3 +220,7 @@ bytes read_after_widely      1c 03 0d 02 13 1e
 bytes read_after_previously  16 18 02 1b 03 04 05 19 13 1e
 bytes read_after_recently    18 02 0c 02 15 1a 13 1e
 bytes read_after_yet         1e 02 1a
+
+# The space version_hyphen in ut_norm.up puts either side of hyphen_mark,
+# behind the byte insert_r reads as the width.
+bytes eng_space        c7 48

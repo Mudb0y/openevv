@@ -4376,7 +4376,7 @@ rule normalize_text takes 3
   end
   place t2e0e0_15 on 15
   set h_rsi to addr c130
-  call tok_lookup h_rsi
+  call version_hyphen h_rsi
   set h_rax to answer
   if h_rax is 0
     go to p2e2e8
@@ -8913,4 +8913,130 @@ rule shortdash takes 3
   end
   place p3c3d4
   go to p3c0ab
+end
+
+# Ours. Whether from a point there are digits joined by two points or more --
+# 1.2.3, 6.6.30, 10.0.19045 -- which is a version or an address and never a
+# term of a sum. IBM's convert_eng_alg_expr took 1.2.3+1 for a sum whose first
+# term had a decimal point, and read the second point and what followed it as
+# dot and hundreds run together into one word, which the cut of unsayable
+# words then spelled; 1.2.3/1 went the same way, and 1.2.3-1 did until
+# version_hyphen spaced its hyphen. convert_eng_alg_expr stands aside for
+# such a number, and it is read a part at a time with each point said.
+rule dotted_number takes 2
+  afresh
+  local from bytes 8
+  local points
+  call get_parm addr from arg 1 -6
+  call fence 0 sym eti_null
+  set points to 0
+  call lpta_loadp addr from
+  call setscan_r 1
+  if answer is not 0
+    give up
+  end
+place part
+  call testFldeq 1 3 2
+  if answer is not 0
+    give up
+  end
+place digit
+  call advance_tok
+  if answer is not 0
+    go to ended
+  end
+  call testFldeq 1 3 2
+  if answer is 0
+    go to digit
+  end
+  call testFldeq 1 0 65
+  if answer is not 0
+    go to ended
+  end
+  increment points
+  call advance_tok
+  if answer is not 0
+    give up
+  end
+  go to part
+place ended
+  if points is less than 2
+    give up
+  end
+  match
+end
+
+# Ours, standing where tok_lookup stood in normalize_text. A version with a
+# hyphen after it -- 1.2.3-1, a package's revision, 5.15.0-1-amd64, 6.6.30-2
+# -- has the hyphen spaced, so that it is read as dash, as it is typed with
+# spaces, and the version a part at a time before it. IBM's rules read 1.2.3-1
+# as a sum and garbled it; 6.1 reads it as one point two point three one,
+# which is 1.2.31 as well. What counts is digits joined by two points or more
+# with a digit after the hyphen, so 2.0-1 and a range such as 1.5-2 are left
+# as they were, and so is 1.2.3-rc1: spaced, a hyphen before a word is said
+# as nothing and the accent moves off the word. The token is looked up whole
+# first, so an entry for it as written still wins.
+rule version_hyphen takes 2
+  afresh
+  local here bytes 8
+  local cut bytes 8
+  local after bytes 8
+  local points
+  call get_parm addr here arg 1 -6
+  call fence 0 sym eti_null
+  call tok_lookup arg 1
+  if answer is 0
+    match
+  end
+  set points to 0
+  call lpta_loadp addr here
+  call setscan_r 1
+  if answer is not 0
+    give up
+  end
+place part
+  call testFldeq 1 3 2
+  if answer is not 0
+    give up
+  end
+place digit
+  call advance_tok
+  if answer is not 0
+    give up
+  end
+  call testFldeq 1 3 2
+  if answer is 0
+    go to digit
+  end
+  call testFldeq 1 0 65
+  if answer is 0
+    increment points
+    call advance_tok
+    if answer is not 0
+      give up
+    end
+    go to part
+  end
+  if points is less than 2
+    give up
+  end
+  call savescptr 1 addr cut
+  call test_string_s 1 1 sym hyphen_mark
+  if answer is not 0
+    give up
+  end
+  call savescptr 2 addr after
+  call testFldeq 1 3 2
+  if answer is not 0
+    give up
+  end
+  call lpta_loadp addr after
+  call insert_r 1 2 sym eng_space 0
+  call lpta_loadp addr cut
+  call insert_r 1 2 sym eng_space 0
+  call tok_lookup arg 1
+  if answer is 0
+    match
+  end
+  give up
 end

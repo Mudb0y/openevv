@@ -114,6 +114,10 @@ uint8_t engb_evv_authored_data[] = {
     199,
     /* lts_enye, 2 bytes at 86 */
     21,30,
+    /* hyphen_mark, 1 bytes at 88 */
+    63,
+    /* eng_space, 2 bytes at 89 */
+    199,72,
 };
 
 const delta_store engb_delta_authored_store[] = {

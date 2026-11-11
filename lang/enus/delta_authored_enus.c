@@ -382,85 +382,87 @@ uint8_t enus_evv_authored_data[] = {
     24,2,12,2,21,26,19,30,
     /* read_after_yet, 3 bytes at 613 */
     30,2,26,
-    /* lts_b, 1 bytes at 616 */
+    /* eng_space, 2 bytes at 616 */
+    199,72,
+    /* lts_b, 1 bytes at 618 */
     11,
-    /* lts_c, 1 bytes at 617 */
+    /* lts_c, 1 bytes at 619 */
     12,
-    /* lts_d, 1 bytes at 618 */
+    /* lts_d, 1 bytes at 620 */
     13,
-    /* lts_f, 1 bytes at 619 */
+    /* lts_f, 1 bytes at 621 */
     14,
-    /* lts_j, 1 bytes at 620 */
+    /* lts_j, 1 bytes at 622 */
     17,
-    /* lts_k, 1 bytes at 621 */
+    /* lts_k, 1 bytes at 623 */
     18,
-    /* lts_m, 1 bytes at 622 */
+    /* lts_m, 1 bytes at 624 */
     20,
-    /* lts_p, 1 bytes at 623 */
+    /* lts_p, 1 bytes at 625 */
     22,
-    /* lts_q, 1 bytes at 624 */
+    /* lts_q, 1 bytes at 626 */
     23,
-    /* lts_s, 1 bytes at 625 */
+    /* lts_s, 1 bytes at 627 */
     25,
-    /* lts_t, 1 bytes at 626 */
+    /* lts_t, 1 bytes at 628 */
     26,
-    /* lts_v, 1 bytes at 627 */
+    /* lts_v, 1 bytes at 629 */
     27,
-    /* lts_x, 1 bytes at 628 */
+    /* lts_x, 1 bytes at 630 */
     29,
-    /* lts_z, 1 bytes at 629 */
+    /* lts_z, 1 bytes at 631 */
     31,
-    /* fence_03, 1 bytes at 630 */
+    /* fence_03, 1 bytes at 632 */
     3,
-    /* lts_bt, 2 bytes at 631 */
+    /* lts_bt, 2 bytes at 633 */
     11,26,
-    /* say_04, 1 bytes at 633 */
+    /* say_04, 1 bytes at 635 */
     4,
-    /* say_01, 1 bytes at 634 */
+    /* say_01, 1 bytes at 636 */
     1,
-    /* lts_wr, 2 bytes at 635 */
+    /* lts_wr, 2 bytes at 637 */
     28,24,
-    /* say_18, 1 bytes at 637 */
+    /* say_18, 1 bytes at 639 */
     24,
-    /* lts_dg, 2 bytes at 638 */
+    /* lts_dg, 2 bytes at 640 */
     13,15,
-    /* lts_dj, 2 bytes at 640 */
+    /* lts_dj, 2 bytes at 642 */
     13,17,
-    /* lts_dt, 2 bytes at 642 */
+    /* lts_dt, 2 bytes at 644 */
     13,26,
-    /* lts_mech, 4 bytes at 644 */
+    /* lts_mech, 4 bytes at 646 */
     20,2,12,16,
-    /* say_141f07, 3 bytes at 648 */
+    /* say_141f07, 3 bytes at 650 */
     20,31,7,
-    /* lts_mn, 2 bytes at 651 */
+    /* lts_mn, 2 bytes at 653 */
     20,21,
-    /* say_15, 1 bytes at 653 */
+    /* say_15, 1 bytes at 655 */
     21,
-    /* lts_mb, 2 bytes at 654 */
+    /* lts_mb, 2 bytes at 656 */
     20,11,
-    /* lts_ng, 2 bytes at 656 */
+    /* lts_ng, 2 bytes at 658 */
     21,15,
-    /* lts_then, 4 bytes at 658 */
+    /* lts_then, 4 bytes at 660 */
     26,16,2,21,
-    /* lts_ton, 3 bytes at 662 */
+    /* lts_ton, 3 bytes at 664 */
     26,4,21,
-    /* lts_th, 2 bytes at 665 */
+    /* lts_th, 2 bytes at 667 */
     26,16,
-    /* lts_ngh, 3 bytes at 667 */
+    /* lts_ngh, 3 bytes at 669 */
     21,15,16,
-    /* lts_am, 2 bytes at 670 */
+    /* lts_am, 2 bytes at 672 */
     1,20,
-    /* lts_qu, 2 bytes at 672 */
+    /* lts_qu, 2 bytes at 674 */
     23,5,
-    /* lts_et, 2 bytes at 674 */
+    /* lts_et, 2 bytes at 676 */
     2,26,
-    /* say_07, 1 bytes at 676 */
+    /* say_07, 1 bytes at 678 */
     7,
-    /* lts_ette, 4 bytes at 677 */
+    /* lts_ette, 4 bytes at 679 */
     2,26,26,2,
-    /* lts_e, 1 bytes at 681 */
+    /* lts_e, 1 bytes at 683 */
     2,
-    /* say_071b, 2 bytes at 682 */
+    /* say_071b, 2 bytes at 684 */
     7,27,
 };
 

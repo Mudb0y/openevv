@@ -5875,6 +5875,13 @@ label L0 was _convert_eng_alg_expr
   popn 3
   cmp testl reg r0 reg r0
   branch je to L105
+  load movl slotaddr -32 into r0
+  push slotaddr -32
+  push state 0
+  call dotted_number arity 2 depth 2
+  popn 2
+  cmp testl reg r0 reg r0
+  branch je to L105
   load movl slotaddr -76 into r0
   push slotaddr -76
   load movl slotaddr -84 into r0
