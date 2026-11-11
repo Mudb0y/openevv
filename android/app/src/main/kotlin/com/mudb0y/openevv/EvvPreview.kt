@@ -11,11 +11,11 @@ import android.util.Log
 /**
  * An engine of its own for the settings screen, and somewhere to hear it.
  *
- * Tuning a voice by writing a setting down, leaving, and waiting for the
+* Tuning a voice by writing a setting down, leaving, and waiting for the
  * screen reader to say something else in it is not tuning. So the settings
  * screen keeps an instance of its own and speaks into an AudioTrack, which is
  * the one place in this program that plays audio itself: the engine that
- * TalkBack drives hands its samples to Android and never sees a device.
+* TalkBack drives hands its samples to Android and never sees a device.
  *
  * Everything runs on one background thread, so a preview asked for while
  * another is speaking replaces it rather than overlapping.
@@ -23,7 +23,7 @@ import android.util.Log
 class EvvPreview(private var language: Int) {
 
 	private val thread = HandlerThread("evv-preview").apply { start() }
-	private val work = Handler(thread.looper)
+private val work = Handler(thread.looper)
 
 	@Volatile
 	private var engine: EvvEngine? = null
@@ -36,7 +36,7 @@ class EvvPreview(private var language: Int) {
 
 	/** How many bytes of audio have gone to the track. Nothing in the app reads
 	 *  it; it is what lets a test say the preview really played, which is worth
-	 *  having because a preview that quietly plays nothing looks exactly like
+*  having because a preview that quietly plays nothing looks exactly like
 	 *  one that works. */
 	@Volatile
 	var bytesPlayed: Long = 0L
@@ -44,7 +44,7 @@ class EvvPreview(private var language: Int) {
 
 	/** Whether a sample is still being spoken, and whether the last one was
 	 *  heard all the way out. Nothing in the app reads either; they are what
-	 *  lets a test say the tail was not cut off, which is invisible from
+*  lets a test say the tail was not cut off, which is invisible from
 	 *  outside because every byte was handed over either way. */
 	@Volatile
 	var playing: Boolean = false
@@ -55,7 +55,7 @@ class EvvPreview(private var language: Int) {
 		private set
 
 	/** Reads what a preset is set to. Answers an empty map until the engine has
-	 *  opened, which is the first thing the thread does. */
+*  opened, which is the first thing the thread does. */
 	fun presetShape(index: Int): Map<Int, Int> = engine?.presetShape(index) ?: emptyMap()
 
 	fun open(then: (() -> Unit)? = null) {
@@ -64,14 +64,13 @@ class EvvPreview(private var language: Int) {
 			then?.let { Handler(android.os.Looper.getMainLooper()).post(it) }
 		}
 	}
-
-	/** Speaks in [want] from now on.
+/** Speaks in [want] from now on.
 	 *
 	 *  An instance is made for one language and cannot be moved to another, so
 	 *  this puts the one in hand down and opens another. It happens on the work
 	 *  thread like everything else, and the new one is opened there and then
 	 *  rather than at the next sample: [presetShape] reads the engine, and the
-	 *  screen asks it as soon as the language changes. */
+*  screen asks it as soon as the language changes. */
 	fun useLanguage(want: Int, then: (() -> Unit)? = null) {
 		stopSpeaking()
 		work.post {
@@ -83,8 +82,7 @@ class EvvPreview(private var language: Int) {
 			then?.let { Handler(android.os.Looper.getMainLooper()).post(it) }
 		}
 	}
-
-	/** Says [text] in [voice] with [shape] on it, stopping whatever was being
+/** Says [text] in [voice] with [shape] on it, stopping whatever was being
 	 *  said. */
 	fun say(
 		text: String,
@@ -95,18 +93,26 @@ class EvvPreview(private var language: Int) {
 		pauses: Int = Eci.PAUSES_AT_END
 	) {
 		// Whatever is being said stops first, and the turn this utterance
-		// belongs to is taken after that -- stopping is what moves the count
+// belongs to is taken after that -- stopping is what moves the count
 		// on, so reading it first would leave this utterance holding a number
 		// that is already stale and it would never be spoken at all.
 		stopSpeaking()
 		val mine = generation
 		work.post {
 			if (mine != generation) return@post
-			val e = engine ?: EvvEngine.open(language)?.also { engine = it } ?: return@post
+			val e = engine ?:
+EvvEngine.open(language)?.also { engine = it } ?: return@post
 			e.setSampleRate(rateHz)
 			e.setWideband(wideband)
 			e.setPauseMode(pauses)
 			e.applyVoice(voice, shape)
+			// Single-source-rate proposal (cf. eloquence-tts-android): preview
+			// renders at 100% request rate so it matches the service at 100%.
+			// TalkBack/system rate multiplies on top at synthesis time via
+			// setRatePercent(requestRate) in EvvTtsService. Whether app base x
+			// request stacking is the agreed behaviour is up for interpretation.
+			e.setRatePercent(100)
+			e.setPitchPercent(100)
 			if (!e.speak(text)) {
 				Log.e(TAG, "the engine refused the sample")
 				return@post
@@ -118,7 +124,7 @@ class EvvPreview(private var language: Int) {
 	private fun play(e: EvvEngine, mine: Int) {
 		playing = true
 		drained = false
-		val rate = e.sampleRateHz
+val rate = e.sampleRateHz
 		val minimum = AudioTrack.getMinBufferSize(
 			rate, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT
 		)
@@ -126,7 +132,7 @@ class EvvPreview(private var language: Int) {
 		val t = AudioTrack.Builder()
 			.setAudioAttributes(
 				AudioAttributes.Builder()
-					.setUsage(AudioAttributes.USAGE_ASSISTANT)
+.setUsage(AudioAttributes.USAGE_ASSISTANT)
 					.setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
 					.build()
 			)
@@ -138,7 +144,7 @@ class EvvPreview(private var language: Int) {
 					.build()
 			)
 			.setBufferSizeInBytes(size)
-			.setTransferMode(AudioTrack.MODE_STREAM)
+.setTransferMode(AudioTrack.MODE_STREAM)
 			.build()
 		track = t
 		t.play()
@@ -153,14 +159,14 @@ class EvvPreview(private var language: Int) {
 				if (wrote <= 0) break
 				at += wrote
 				bytesPlayed += wrote
-				written += wrote / BYTES_PER_FRAME
+written += wrote / BYTES_PER_FRAME
 			}
 		}
 		if (mine == generation) {
 			// Waited out before stopping rather than after. The track holds
 			// most of a second, which is the last few words of a short sample,
 			// and release() cuts that off; stop() would let it play but also
-			// puts the playback head back to nought, so there would be nothing
+// puts the playback head back to nought, so there would be nothing
 			// left to watch. So this waits for the head to reach the end of
 			// what was written while the track is still running.
 			drained = waitToDrain(t, mine, written, rate)
@@ -168,7 +174,7 @@ class EvvPreview(private var language: Int) {
 		} else {
 			runCatching { t.pause(); t.flush(); t.stop() }
 		}
-		runCatching { t.release() }
+runCatching { t.release() }
 		if (track === t) track = null
 		playing = false
 	}
@@ -177,13 +183,13 @@ class EvvPreview(private var language: Int) {
 	private fun waitToDrain(t: AudioTrack, mine: Int, frames: Long, rate: Int): Boolean {
 		if (frames <= 0L) return true
 		// However long the audio is, plus a margin, so a track that stops
-		// reporting cannot hold this thread for ever.
+// reporting cannot hold this thread for ever.
 		val giveUp = System.currentTimeMillis() + frames * 1000L / rate + MARGIN_MS
 		while (mine == generation && System.currentTimeMillis() < giveUp) {
 			val head = runCatching { t.playbackHeadPosition.toLong() and 0xFFFFFFFFL }
 				.getOrElse { return false }
 			if (head >= frames) return true
-			try {
+try {
 				Thread.sleep(SIP_MS)
 			} catch (stopping: InterruptedException) {
 				Thread.currentThread().interrupt()
@@ -203,7 +209,7 @@ class EvvPreview(private var language: Int) {
 		stopSpeaking()
 		work.post {
 			engine?.close()
-			engine = null
+engine = null
 			thread.quitSafely()
 		}
 	}
