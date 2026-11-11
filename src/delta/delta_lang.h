@@ -272,6 +272,11 @@ const delta_language *delta_lang_of(const struct delta_state *d);
    the language in force is set, and put back afterwards. */
 int32_t delta_run_rule(void *state, const delta_rule *r,
                        const int32_t *args, int nargs);
+
+/* Saying that the run on this thread is being given up rather than
+   finished, and asking afterwards whether it was, answered once. */
+void delta_run_give_up(void);
+int  delta_run_abandoned(void);
 const delta_rule *delta_find_rule(const char *name);
 
 /* A machine of one language, and giving it back. The size is the language's,

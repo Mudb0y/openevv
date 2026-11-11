@@ -416,6 +416,23 @@ STDCALL int32_t es_engsynOutputPlaying(delta_state *d)
 
 /* ---- putting text in and taking answers out -------------------------- */
 
+/* A run the machine gave up on -- a walk that went round, a node of nought,
+   a stack run out, any of the checks that force an error backtrack --
+   leaves the error thrown, and often records on its stack for rules that
+   will never return. Every run after it then answered nothing: the instance
+   spoke no more until it was deleted, eciReset did not reach it, and nothing
+   said so. Restarting is what a flush does, and with the stack emptied
+   first it puts every part of that back. The text given up is lost, which was always the price of the
+   guards; the instance is not. A stop asked for from outside throws the
+   same error without giving up, and is left to the flush that follows it. */
+static void restartIfAbandoned(delta_state *d)
+{
+    if (delta_run_abandoned()) {
+        resetDeltaStack(d);
+        es_engsynRestart(d);
+    }
+}
+
 /* The two are the same but for which of the machine's doors they go
    through. Both refuse to run inside themselves, which is what the busy
    flag is for, and both clear it again on every way out. */
@@ -434,6 +451,7 @@ STDCALL int32_t es_engsynProcessSentences(delta_state *d, const char *text)
                 setEngsynError(d, ERR_ENGINE);
         }
         ELOQ_BUSY(d) = 0;
+        restartIfAbandoned(d);
     }
     return checkEngsynError(d);
 }
@@ -454,6 +472,7 @@ STDCALL int32_t es_engsynProcessRemaining(delta_state *d, const char *text)
             setEngsynError(d, ERR_ENGINE);
         }
         ELOQ_BUSY(d) = 0;
+        restartIfAbandoned(d);
     }
     flushDelayedSynthQueue(d);
     return checkEngsynError(d);

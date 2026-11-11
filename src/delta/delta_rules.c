@@ -1378,6 +1378,26 @@ static delta_rule_cfn delta_native_walk(const delta_language *lang, int n)
 /* How deep the rules are, so the outermost can be told from the rest. */
 static __thread int delta_rule_depth;
 
+/* Whether the last run was given up: a forced error backtrack, wherever it
+   landed, or the outermost landing taken. Nothing the machine holds is fit
+   to start another run from by then -- the error stays thrown, and every
+   backtrack after it answers at once -- and only the engine above it can put
+   the machine back, so it asks. */
+static __thread int delta_run_given_up;
+
+void delta_run_give_up(void)
+{
+    delta_run_given_up = 1;
+}
+
+int delta_run_abandoned(void)
+{
+    int was = delta_run_given_up;
+
+    delta_run_given_up = 0;
+    return was;
+}
+
 int32_t delta_run_rule(void *state, const delta_rule *r, const int32_t *args,
                        int nargs)
 {
@@ -1471,6 +1491,7 @@ int32_t delta_run_rule(void *state, const delta_rule *r, const int32_t *args,
         unsigned long long outer[EVV_LAND_WORDS];
 
         if (EVV_LAND_SAVE(outer) != 0) {
+            delta_run_given_up = 1;
             evv_land_no_outermost();
             evv_land_release(mark);
             delta_rule_depth = 0;

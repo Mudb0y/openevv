@@ -18,8 +18,12 @@
 /* The name stack: eight bytes an entry, and room for this many. */
 #define NAME_STACK_BYTES 0x28
 
-/* How big the stack and the heap start out. */
-#define STACK_BYTES 0x2000
+/* How big the stack and the heap start out. The heap grows a segment at a
+   time; the stack never does, so its size is how many alternatives a rule
+   can keep open at once. IBM's was 0x2000, which a run of a hundred and
+   thirty-one digits overran in English; this is 6.1's, which takes twenty
+   thousand, the long-sentence cut bounding what one stretch can push. */
+#define STACK_BYTES 0xfa00
 #define HEAP_BYTES  0x1000
 
 

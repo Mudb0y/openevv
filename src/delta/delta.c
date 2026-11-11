@@ -156,12 +156,30 @@ void lpta_rpta_loadp(delta_state *d, const delta_token *lp,
     d->lpta.offset = 0;
 }
 
+/* The stack is one segment, taken once when the machine is built, and
+   nothing grows it: IBM's machine and 6.1's both push without looking. A
+   rule that keeps an alternative open for every character of a token runs
+   off the bottom of it and over whatever the allocator put below -- English
+   reading a long run of digits as an algebraic expression keeps three a
+   digit, which took IBM's engine down at about two hundred digits and ours,
+   whose allocator puts a block's header there, at a hundred and thirty-one.
+   Running out is treated the way a runaway walk is: the rule backtracks, and
+   the utterance goes rather than the process. The limit is what is left
+   below the top plus one, so a record fits while the limit is larger. */
+static void bs_room(delta_state *d, const delta_stack *s, int32_t size)
+{
+    if (s->limit <= size)
+        forceErrorBacktrack(d);
+}
+
 /* The stack grows downward, and both pointers move together by whatever the
    record kind costs. */
-static delta_frame *bs_push(delta_stack *s, int32_t size)
+static delta_frame *bs_push(delta_state *d, int32_t size)
 {
+    delta_stack *s = EVV_AT(delta_stack *, d->stack);
     delta_frame *slot;
 
+    bs_room(d, s, size);
     s->top -= size;
     slot = (delta_frame *)EVV_AT(uint8_t *, s->top);
     s->limit -= size;
@@ -171,7 +189,7 @@ static delta_frame *bs_push(delta_stack *s, int32_t size)
 /* A context record, carrying the tag the rule is testing against. */
 void bspush_ca(delta_state *d, int16_t tag)
 {
-    delta_frame *slot = bs_push(EVV_AT(delta_stack *, d->stack), EVV_AT(delta_stack *, d->stack)->ca_size);
+    delta_frame *slot = bs_push(d, EVV_AT(delta_stack *, d->stack)->ca_size);
 
     slot->kind = 0;
     slot->value = tag;
@@ -187,7 +205,7 @@ void bsclr_pushca(delta_state *d, int16_t tag)
     clearDeltaStackBack(d);
 
     s = EVV_AT(delta_stack *, d->stack);
-    slot = bs_push(s, s->ca_size);
+    slot = bs_push(d, s->ca_size);
     slot->kind = 0;
     slot->value = tag;
 }
@@ -197,7 +215,7 @@ void bsclr_pushca(delta_state *d, int16_t tag)
 void bspush_vbot(delta_state *d)
 {
     delta_stack *s = EVV_AT(delta_stack *, d->stack);
-    delta_frame *slot = bs_push(s, s->size_b8);
+    delta_frame *slot = bs_push(d, s->size_b8);
 
     slot->kind = 5;
     slot->value = EVV_REF(getDeltaStackVBot(d));
@@ -218,12 +236,12 @@ void bspop_vbot(delta_state *d)
 /* The two markers a rule leaves where an alternative begins. */
 void bspush_boa(delta_state *d)
 {
-    bs_push(EVV_AT(delta_stack *, d->stack), EVV_AT(delta_stack *, d->stack)->boa_size)->kind = 4;
+    bs_push(d, EVV_AT(delta_stack *, d->stack)->boa_size)->kind = 4;
 }
 
 void bspush_nboa(delta_state *d)
 {
-    bs_push(EVV_AT(delta_stack *, d->stack), EVV_AT(delta_stack *, d->stack)->boa_size)->kind = 6;
+    bs_push(d, EVV_AT(delta_stack *, d->stack)->boa_size)->kind = 6;
 }
 
 int testeq(delta_state *d)
@@ -305,11 +323,11 @@ int test_time(delta_state *d, int16_t tag)
 
     s = EVV_AT(delta_stack *, d->stack);
 
-    slot = bs_push(s, s->ca_size);
+    slot = bs_push(d, s->ca_size);
     slot->kind = 3;
     slot->value = tag;
 
-    slot = bs_push(s, s->size_b0);
+    slot = bs_push(d, s->size_b0);
     slot->kind = 1;
     EVV_COPY8((uint8_t *)slot + 4, &v->scan_ptr);
 
@@ -381,11 +399,11 @@ int test_fence(delta_state *d, int16_t tag, uint8_t n, const uint8_t *chars)
 
     s = EVV_AT(delta_stack *, d->stack);
 
-    slot = bs_push(s, s->ca_size);
+    slot = bs_push(d, s->ca_size);
     slot->kind = 3;
     slot->value = tag;
 
-    slot = bs_push(s, s->size_b0);
+    slot = bs_push(d, s->size_b0);
     slot->kind = 1;
     EVV_COPY8((uint8_t *)slot + 4, &v->scan_ptr);
 
@@ -443,13 +461,13 @@ AT_VARS(gen_dst, 0x1074);
    pushes when it is about to try a match it may need to unwind. */
 void bspush_ca_scan(delta_state *d, int16_t tag)
 {
-    delta_frame *ca = bs_push(EVV_AT(delta_stack *, d->stack), EVV_AT(delta_stack *, d->stack)->ca_size);
+    delta_frame *ca = bs_push(d, EVV_AT(delta_stack *, d->stack)->ca_size);
     delta_frame *save;
 
     ca->kind = 0;
     ca->value = tag;
 
-    save = bs_push(EVV_AT(delta_stack *, d->stack), EVV_AT(delta_stack *, d->stack)->size_b0);
+    save = bs_push(d, EVV_AT(delta_stack *, d->stack)->size_b0);
     save->kind = 1;
     /* A frame is only as aligned as the machine's own frame sizes make it,
        which on this layout is often two bytes. The field says four, so a
@@ -664,7 +682,7 @@ void starttest(delta_state *d, int16_t tag)
     EVV_AT(delta_vars *, d->vars)->test_tag = tag;
     clearDeltaStackBack(d);
 
-    slot = bs_push(EVV_AT(delta_stack *, d->stack), EVV_AT(delta_stack *, d->stack)->ca_size);
+    slot = bs_push(d, EVV_AT(delta_stack *, d->stack)->ca_size);
     slot->kind = 0;
     slot->value = EVV_AT(delta_vars *, d->vars)->test_tag;
 
@@ -1979,6 +1997,7 @@ void vpush_var(delta_state *d, const delta_operand *v)
     pad = ((size - 1) & ~1) | 1;
     step = s->size_ac + pad + 1;
 
+    bs_room(d, s, step);
     s->top -= step;
     slot = EVV_AT(uint8_t *, s->top);
     s->limit -= step;
@@ -2145,6 +2164,7 @@ void bspush_ca_scan_boa(delta_state *d, int16_t tag)
 
 void forceErrorBacktrack(delta_state *d)
 {
+    delta_run_give_up();
     throwDeltaErrorNow(d);
     EVV_LAND_JUMP(EVV_AT(void *, EVV_AT(delta_vars *, d->vars)->err_jmp), 1);
 }
@@ -2840,6 +2860,7 @@ static void push_ca_and_scan(delta_state *d, int16_t tag)
     uint8_t *ca;
     uint8_t *save;
 
+    bs_room(d, s, s->ca_size + s->size_b0);
     s->top -= s->ca_size;
     ca = EVV_AT(uint8_t *, s->top);
     s->limit -= s->ca_size;
@@ -5783,6 +5804,7 @@ int ventproc(delta_state *d, delta_actrec *rec, uint8_t *index,
     rec->compared_equal = (uint8_t)v->compared_equal;
     rec->names_depth = (uint8_t)s->names_depth;
 
+    bs_room(d, s, s->size_a8);
     s->top -= s->size_a8;
     slot = EVV_AT(uint8_t *, s->top);
     s->limit -= s->size_a8;
@@ -7145,6 +7167,7 @@ int chstream(delta_state *d, int16_t v, uint8_t f)
             return 1;
     }
 
+    bs_room(d, s, s->ca_size + s->size_b0);
     s->top -= s->ca_size;
     ctx = EVV_AT(uint8_t *, s->top);
     s->limit -= s->ca_size;

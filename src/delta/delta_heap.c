@@ -300,15 +300,25 @@ int32_t peekDeltaStackStart(delta_state *d)
     return s->walk;
 }
 
-/* Give the stack's own segment back and take a fresh one of the size it was
-   built with. */
+/* Empty the stack where it is: both ends back where initializeDeltaStack
+   put them, the floor marker written again, and an unwind with nothing to
+   unwind to landing on it, as vmeminit arranges. IBM's gave the segment back
+   and took another of the size the stack was built with, which nothing
+   called; taking another can be handed a heap segment off the free list,
+   a sixteenth of the size, so this keeps the one it has. */
 void resetDeltaStack(delta_state *d)
 {
     delta_stack *s = EVV_AT(delta_stack *, d->stack);
 
-    freeDynaMem(s->seg);
-    s->seg = 0;
-    initializeDeltaStack(d, s->base);
+    s->top = SEG(s->seg)->end - SEG(s->seg)->used;
+    s->limit = s->base - SEG(s->seg)->used;
+
+    s->top -= s->boa_size;
+    s->limit -= s->boa_size;
+
+    *EVV_AT(uint8_t *, s->top) = 8;
+    setDeltaStackVBot(d, EVV_AT(uint8_t *, s->top));
+    EVV_AT(delta_vars *, d->vars)->back = s->top;
 }
 
 int32_t getDeltaHeapSegNumber(delta_state *d, uint8_t *p, int32_t unit)
