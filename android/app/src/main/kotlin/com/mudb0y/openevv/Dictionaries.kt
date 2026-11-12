@@ -52,8 +52,10 @@ object Dictionaries {
 		var taught = 0
 		var refused = 0
 		try {
+			var firstLine = true
 			file.forEachLine(BYTES) { rawLine ->
-				val line = rawLine.trim()
+				val line = stripBom(rawLine, firstLine).trim()
+				firstLine = false
 				if (line.isEmpty() || line.startsWith("#") || line.startsWith("//")) return@forEachLine
 				val split = line.indexOf('\t')
 				if (split > 0) {
@@ -110,8 +112,10 @@ object Dictionaries {
 		if (!file.exists()) return emptyList()
 		val entries = mutableListOf<DictEntry>()
 		try {
+			var firstLine = true
 			file.forEachLine(BYTES) { rawLine ->
-				val trimmed = rawLine.trim()
+				val trimmed = stripBom(rawLine, firstLine).trim()
+				firstLine = false
 				if (trimmed.isEmpty() || trimmed.startsWith("//")) return@forEachLine
 				val isSuspended = trimmed.startsWith("#")
 				val content = if (isSuspended) trimmed.substring(1).trim() else trimmed
@@ -227,6 +231,21 @@ object Dictionaries {
 		}
 	} catch (unreadable: Exception) {
 		0
+	}
+
+	/**
+	 * Strips a leading byte-order mark from the first line only. Files are read
+	 * as Latin-1, so a UTF-8 BOM arrives as three mojibake characters rather than
+	 * U+FEFF; either form is removed. Without this the first key is taught with
+	 * junk prefixed, so it never matches and the engine carries a phantom word.
+	 */
+	private fun stripBom(line: String, first: Boolean): String {
+		if (!first) return line
+		return when {
+			line.startsWith("\u00EF\u00BB\u00BF") -> line.substring(3)
+			line.startsWith("\uFEFF") -> line.substring(1)
+			else -> line
+		}
 	}
 
 	/** A byte a character, both ways, which is what the files are. */
