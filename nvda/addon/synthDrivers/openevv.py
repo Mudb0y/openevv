@@ -129,6 +129,9 @@ class SynthDriver(SynthDriver):
 	description = "OpenEVV"
 
 	supportedSettings = (
+		# Language before voice: NVDA applies settings in this order, and a
+		# language change replaces the voice in force.
+		SynthDriver.LanguageSetting(),
 		SynthDriver.VoiceSetting(),
 		SynthDriver.RateSetting(),
 		SynthDriver.RateBoostSetting(),
@@ -193,7 +196,12 @@ class SynthDriver(SynthDriver):
 		self._personalDictionary = True
 		self._engine = _openevv.Engine(self._onIndexReached)
 		self._engine.open()
-		self._voice = self._voiceId(self._engine.language, _openevv.VOICE_FIRST)
+		#: The language and the preset the reader chose, kept apart as the
+		#: two settings they are. The engine's own language is not it: a
+		#: language change inside a sequence moves the engine for a stretch
+		#: and puts it back.
+		self._language = self._engine.language
+		self._voice = str(_openevv.VOICE_FIRST)
 		self._applyDictionaries()
 		log.debug("openevv: engine version %s" % self._engine.version)
 
@@ -626,25 +634,64 @@ class SynthDriver(SynthDriver):
 			return
 		self._engine.control([(self._engine.setDictionaryFolders, (folders,))])
 
-	def _get_availableVoices(self):
-		"""One voice per language and preset.
+	def _get_availableLanguages(self):
+		"""The languages the library has, keyed by locale.
 
-		A library may have several languages in it, and each has eight
-		presets of its own, so what the reader is offered is the pairs: the
-		language is what a document's own language is matched against and
-		the preset is what it sounds like. A build with one language in it
-		offers the eight it always did, under the same identifiers as
-		before, so nothing a reader had chosen is lost.
+		Not the set of locales NVDA's own base class answers: the Language
+		box is built from these, so each needs a name, and the name is the
+		one this project has always used. The keys are locales because
+		that is what NVDA matches a document's language against.
+		"""
+		languages = OrderedDict()
+		for language in self._engine.languages:
+			identifier = self._languageId(language)
+			languages[identifier] = StringParameterInfo(
+				identifier, _openevv.nameOf(language)
+			)
+		return languages
+
+	def _languageId(self, language):
+		"""What a language is called to NVDA and in its configuration: its
+		locale, or its number where the library has one we have no locale
+		for, so that it can still be chosen and saved."""
+		return _openevv.localeOf(language) or "0x%x" % language
+
+	def _languageFromId(self, identifier):
+		for language in self._engine.languages:
+			if self._languageId(language) == identifier:
+				return language
+		return None
+
+	def _get_language(self):
+		return self._languageId(self._language)
+
+	def _set_language(self, identifier):
+		language = self._languageFromId(identifier)
+		if language is None:
+			return
+		self._language = language
+		# Not setLanguage and copyVoice by hand. A language change replaces
+		# the voice in force, settings and all, and NVDA does not set them
+		# again after a language as it does after a voice, so what the
+		# reader had chosen has to be put back here. selectLanguage keeps the
+		# preset, does that, and does nothing if the language is already in
+		# force.
+		self._engine.control(
+			[(self._engine.selectLanguage, (language, self._presetNow()))]
+		)
+
+	def _get_availableVoices(self):
+		"""The eight presets of the language in force.
+
+		Language is its own setting, so a voice is only a preset and the
+		list is the same eight whichever language is chosen. That matters
+		for more than tidiness: NVDA's dialog repopulates the other boxes
+		when the voice changes and not when the language does, so a voice
+		list that depended on the language would go stale.
 		"""
 		voices = OrderedDict()
-		for language in self._engine.languages:
-			names = self._engine.voiceNamesFor(language)
-			for number, name in names.items():
-				voices[self._voiceId(language, number)] = VoiceInfo(
-					self._voiceId(language, number),
-					"%s - %s" % (_openevv.nameOf(language), name),
-					_openevv.localeOf(language),
-				)
+		for number, name in self._engine.voiceNamesFor(self._language).items():
+			voices[str(number)] = VoiceInfo(str(number), name)
 		return voices
 
 	def _languageFor(self, locale):
@@ -673,42 +720,30 @@ class SynthDriver(SynthDriver):
 	def _home(self):
 		"""The language the reader chose, which a document's own changes of
 		language are made from and go back to."""
-		try:
-			return self._splitVoiceId(self._voice)[0]
-		except (TypeError, ValueError):
-			return self._engine.language
+		return self._language
 
 	def _presetNow(self):
 		"""Which of the eight the reader has chosen, whatever language it was
 		chosen in. A language change keeps the preset and changes what it
 		sounds like, which is what a person expects of a voice."""
 		try:
-			return self._splitVoiceId(self._voice)[1]
+			return int(self._voice)
 		except (TypeError, ValueError):
 			return _openevv.VOICE_FIRST
 
-	def _voiceId(self, language, number):
-		"""What a voice is called.
-
-		Where the library has one language the name is the preset's number
-		and nothing else, which is what it has always been and what a
-		reader's saved choice holds. Where it has several the language goes
-		in front, because the same eight numbers mean eight different
-		voices in each.
-		"""
-		if len(self._engine.languages) < 2:
-			return str(number)
-		return "%d:%d" % (language, number)
-
 	def _splitVoiceId(self, value):
-		"""(language, preset) for a voice, however it is written. A bare
-		number is the language in force, which is what a configuration
-		written before there was more than one holds."""
+		"""(language, preset) for a voice, however it is written.
+
+		A voice used to be a language and a preset together, written
+		`language:preset`, and a configuration saved then holds one. The
+		language is None for the plain preset number a voice is now, which
+		means the language in force.
+		"""
 		text = str(value)
 		if ":" in text:
 			language, number = text.split(":", 1)
 			return int(language), int(number)
-		return self._engine.language, int(text)
+		return None, int(text)
 
 	def _get_voice(self):
 		return self._voice
@@ -718,25 +753,26 @@ class SynthDriver(SynthDriver):
 			language, number = self._splitVoiceId(value)
 		except ValueError:
 			return
+		if language is None:
+			language = self._language
 		if language not in self._engine.languages:
 			return
 		if number not in self._engine.voiceNamesFor(language):
 			return
 
-		self._voice = self._voiceId(language, number)
+		self._voice = str(number)
+		self._language = language
 		# Copying a preset over the voice in force replaces every one of its
 		# eight settings, so whatever the reader had chosen is gone; NVDA sets
 		# rate, pitch and the rest again after a voice change, which is what
-		# puts them back. A language change does the same thing for the same
-		# reason, which is why the preset is copied after it and not before.
+		# puts them back. A saved voice that names a language changes that
+		# too, for the same reason, which is why the preset is copied after
+		# it and not before.
 		batch = []
 		if language != self._engine.language:
 			batch.append((self._engine.setLanguage, (language,)))
 		batch.append((self._engine.copyVoice, (number,)))
 		self._engine.control(batch)
-
-	def _get_language(self):
-		return _openevv.localeOf(self._engine.language)
 
 	def _post(self, which, value):
 		# As a control step, not as speech: a setting asked for while speech is

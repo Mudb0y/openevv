@@ -123,6 +123,10 @@ class _SynthDriver:
         object.__setattr__(self, name, value)
 
     @classmethod
+    def LanguageSetting(cls):
+        return _Setting("language")
+
+    @classmethod
     def VoiceSetting(cls):
         return _Setting("voice")
 
@@ -926,37 +930,100 @@ def main():
     try:
         d = driver()
 
+        # ---- language and voice are two settings -----------------------
+        #
+        # NVDA's own Language box beside its Voice box, rather than every
+        # language's presets run together in the one list. The base class of
+        # a driver answers availableLanguages with a plain set, which the
+        # dialog cannot build a box from: each needs an id and a name.
+        languages = d.availableLanguages
+        check("each language the library has is offered, by locale",
+              list(languages), ["en_US", "de_DE"])
+        check("under the name this project gives it",
+              [languages[k].displayName for k in languages],
+              ["US English", "German"])
+        check("and the id and the name are what the dialog reads",
+              [(languages[k].id, languages[k].displayName) for k in languages],
+              [("en_US", "US English"), ("de_DE", "German")])
+        order = [s.id for s in d.supportedSettings]
+        check("the language box comes before the voice box",
+              order.index("language") < order.index("voice"), True)
+
         voices = d.availableVoices
-        check("every language and preset is offered as a voice",
-              len(voices), 16)
-        check("and each says which language it is",
-              [voices["65536:1"].language, voices["262144:1"].language],
-              ["en_US", "de_DE"])
-        check("under a name with the language in it",
-              voices["262144:3"].name, "German - Voice 3")
-        check("the driver starts in the first language",
-              (d.voice, d.language), ("65536:1", "en_US"))
+        check("a voice is only a preset, the same eight in every language",
+              sorted(voices), [str(n) for n in range(1, 9)])
+        check("and says no language of its own, the language being separate",
+              {v.language for v in voices.values()}, {None})
+        check("under the engine's own name for it",
+              voices["3"].name, "Voice 3")
+        check("the driver starts in the first language and the first preset",
+              (d.language, d.voice), ("en_US", "1"))
 
         d._engine.calls = []
-        d.voice = "262144:5"
-        check("choosing a voice of another language changes both",
-              d._engine.calls,
-              [("setLanguage", 0x40000), ("copyVoice", 5)])
+        d.language = "de_DE"
+        check("choosing a language switches to it in the preset in force,"
+              " which puts the reader's settings back",
+              d._engine.calls, [("selectLanguage", 0x40000, 1)])
+        check("and as a control step, which a cancel keeps",
+              d._engine.kinds[-1], ("control", 1))
+        check("the language reads back", d.language, "de_DE")
+        check("and the preset is the one it was", d.voice, "1")
+        check("the voices offered are still the same eight",
+              sorted(d.availableVoices), [str(n) for n in range(1, 9)])
+
+        d._engine.calls = []
+        d.voice = "5"
+        check("choosing a voice copies the preset and leaves the language",
+              d._engine.calls, [("copyVoice", 5)])
+        check("and the language is as it was", d.language, "de_DE")
+
+        d._engine.calls = []
+        d.language = "en_US"
+        check("another language keeps the preset chosen",
+              d._engine.calls, [("selectLanguage", 0x10000, 5)])
+
+        d._engine.calls = []
+        d.language = "fr_FR"
+        check("a language the library has not is refused and leaves the one"
+              " in force alone",
+              (d._engine.calls, d.language), ([], "en_US"))
+
+        # A configuration saved before language was a setting of its own
+        # holds a voice that names the language too.
+        d._engine.calls = []
+        d.voice = "262144:3"
+        check("a saved voice naming a language still takes both",
+              (d._engine.calls, d.language, d.voice),
+              ([("setLanguage", 0x40000), ("copyVoice", 3)], "de_DE", "3"))
 
         d._engine.calls = []
         d.voice = "262144:2"
         check("and staying in that language changes only the preset",
               d._engine.calls, [("copyVoice", 2)])
 
-        check("a voice of a language the library has not is refused",
-              (d.voice, spoken(d, [])) and d.voice, "262144:2")
+        d._engine.calls = []
         d.voice = "196608:1"
-        check("and leaves the one in force alone", d.voice, "262144:2")
+        check("a saved voice of a language the library has not is refused",
+              (d._engine.calls, d.language, d.voice), ([], "de_DE", "2"))
+
+        # Settings are applied in the order the reader lists them: language
+        # first, then voice. A configuration from before this holds only a
+        # voice, which brings its language with it.
+        d = driver()
+        d._engine.calls = []
+        d.language = "de_DE"
+        d.voice = "4"
+        check("a language and then a voice, as a saved configuration applies"
+              " them",
+              (d._engine.calls, d.language, d.voice),
+              ([("selectLanguage", 0x40000, 1), ("copyVoice", 4)],
+               "de_DE", "4"))
 
         # The engine is stood in for, so its language does not really move;
         # what is being checked is what the driver asks for and in what
         # order, which is what a document with two languages in it needs.
-        d.voice = "65536:2"
+        d.language = "en_US"
+        d.voice = "2"
         d._engine.language = 0x10000
         check(
             "a language change in a sequence switches in the same voice,"
