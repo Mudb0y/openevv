@@ -17,8 +17,15 @@ class GetSampleTextActivity : Activity() {
 		val found = Languages.match(
 			intent.getStringExtra("language"), intent.getStringExtra("country")
 		)
+		if (found == null) {
+			// Unsupported language: answer that rather than labelling the
+			// English fallback sample as the language that was asked for.
+			setResult(TextToSpeech.LANG_NOT_SUPPORTED)
+			finish()
+			return
+		}
 		val result = Intent().apply {
-			putExtra(TextToSpeech.Engine.EXTRA_SAMPLE_TEXT, getString(Sentences.sample(found?.first)))
+			putExtra(TextToSpeech.Engine.EXTRA_SAMPLE_TEXT, getString(Sentences.sample(found.first)))
 		}
 		setResult(TextToSpeech.LANG_AVAILABLE, result)
 		finish()
