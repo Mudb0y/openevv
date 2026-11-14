@@ -210,6 +210,8 @@ The map fault is the interesting one. `DictMan::InitSupplementDictionary` sets t
 
 The eighteenth deliberate divergence came out of the same corner and `docs/quirks.md` has it: a mark that reaches the engine with no note behind it is a read of address four in IBM's, and ours gives up instead. It is reachable only through an index annotation whose quote is never closed, which IBM's own Japanese engine hangs on before it arrives.
 
+**Japanese is retuned toward ProTALKER.** Its pitch shape, its consonants (the stops, nasals, voiced /z/, /s/, /sh/, /f/ and H) and its pauses were moved toward IBM's later Japanese synthesiser on 13 and 14 November 2026, measured against its audio and none of its code, and all 105 Japanese cases were recorded again. `docs/japanese.md` has what changed and why.
+
 ## What the lifting cost, across all nine
 
 All nine lift their rules cleanly, which was the part expected to be hard, and the holes that remained were smaller than the headline suggested. Every one of them turned out to be a gap in our machine rather than something not understood about the language: two primitives no English rule reaches, one alignment rule, one signed number that should not have been signed, and a little floating point nobody expected a fixed-point engine to contain. The sections above say which was which. What is left is Japanese, and what is left of Japanese is a transcription rather than a question: it has an oracle, the engine below its romanizer is proved, and the romanizer is measured.

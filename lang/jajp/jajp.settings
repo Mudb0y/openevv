@@ -1,0 +1,62 @@
+# The engine's settings for jajp, as text.
+#
+# One line to a record, which in the blob is a run of bytes with a
+# nought after it. A newline inside a record is `\n' and a
+# backslash is doubled; the three bytes the blob ends with are the
+# writer's and are not in here. Under the section that names the
+# language -- the family and the dialect, which is where the number
+# comes from -- are the eight voice presets and every phoneme the
+# language declares.
+#
+# Written by tools/module/settings.py.
+
+library Static Engine JPN
+
+[LanguageIndependent]
+Desc_Filter0=IBM SSML Filter
+Path_Filter0=ecissml.dll
+Path_Cat31=ecictts.dll
+LogPath=\\release
+LogLevel=4
+\n\n\n\n[8.0]
+Path=ecijajp.syn
+Path_Rom=romjajp.dll
+Concatenative=1.0
+CallbackFlag=0x0000033f
+Version=6.0
+Voice1=0 50 65 30 0 0 55 92
+Voice2=1 50 81 30 0 50 50 100
+Voice3=1 22 93 35 0 0 50 90
+Voice4=0 86 52 43 0 0 50 93
+Voice5=0 50 69 34 0 0 70 92
+Voice6=1 56 89 35 0 40 70 95
+Voice7=1 45 68 30 3 40 50 90
+Voice8=0 30 61 44 18 20 50 90
+Phoneme0=78 0 0 0 0 0 0 50 100 128 75 130 130 0 0
+Phoneme1=83 0 0 0 0 0 0 75 125 128 100 130 130 0 200
+Phoneme2=90 0 0 0 0 0 0 75 125 128 100 130 130 0 200
+Phoneme3=97 0 0 0 0 0 0 100 125 128 200 150 130 150 150
+Phoneme4=98 0 0 0 0 0 0 0 100 128 0 0 0 0 200
+Phoneme5=100 0 0 0 0 0 0 75 150 128 50 130 130 255 0
+Phoneme6=101 0 0 0 0 0 0 50 100 128 75 130 175 0 255
+Phoneme7=102 0 0 0 0 0 0 10 100 128 25 130 0 0 200
+Phoneme8=103 0 0 0 0 0 0 50 100 128 75 130 130 0 0
+Phoneme9=104 0 0 0 0 0 0 50 100 128 75 130 130 0 0
+Phoneme10=105 0 0 0 0 0 0 25 150 128 50 130 130 0 255
+Phoneme11=107 0 0 0 0 0 0 50 100 128 75 130 130 0 0
+Phoneme12=109 0 0 0 0 0 0 0 100 128 0 0 0 0 200
+Phoneme13=110 0 0 0 0 0 0 75 150 128 50 130 130 255 0
+Phoneme14=111 0 0 0 0 0 0 25 0 130 130 60 60 0 255
+Phoneme15=112 0 0 0 0 0 0 0 100 128 0 0 0 0 200
+Phoneme16=114 0 0 0 0 0 0 75 150 128 50 130 130 255 0
+Phoneme17=115 0 0 0 0 0 0 50 100 128 75 130 130 150 0
+Phoneme18=116 0 0 0 0 0 0 75 150 128 50 130 130 255 0
+Phoneme19=117 0 0 0 0 0 0 25 0 130 90 60 60 0 255
+Phoneme20=119 0 0 0 0 0 0 25 0 130 90 60 60 0 255
+Phoneme21=121 0 0 0 0 0 0 25 150 128 50 130 130 0 255
+Phoneme22=122 0 0 0 0 0 0 50 100 128 75 130 130 150 0
+Phoneme23=164 0 0 0 0 0 0 0 170 128 0 0 0 0 0
+Voice1Dataset8.0.11025=0 50 60 30 0 0 55 92 Voices\\ja_jp\\1at11KHz_1_0
+Voice2Dataset8.0.11025=1 50 89 39 0 0 46 100 Voices\\ja_jp\\2at11KHz_1_0
+Voice1Dataset8.0.22050=0 50 60 40 0 0 50 92 Voices\\ja_jp\\1at22KHz_1_0
+Voice2Dataset8.0.22050=1 50 81 30 0 50 50 95 Voices\\ja_jp\\2at22KHz_1_0
