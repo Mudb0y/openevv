@@ -181,8 +181,7 @@ rule size_filter takes 3
   set h_rcx to global signed half 3246
   multiply h_rax into h_rcx
   set h_xmm0 to h_rcx
-  multiply 10000 into h_xmm0
-  scale h_xmm0 by 10000 over 1000000
+  multiply 100 into h_xmm0
   set h_rax to h_xmm0
   add 1 to h_rax
   if h_rax is less than 1

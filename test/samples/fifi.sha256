@@ -57,7 +57,7 @@ anno3 5 36e9d266bd470869 93b7f3d6926b45cf Tauko `0 lyhyt ja `4 pitka sanojen val
 anno3 6 4cc90611517bedfe 275d2f9cc19abdd9 Karheus `vr40 ja hengitys `vf60 muutettu.
 anno3 7 10b89f748aa00110 c7ed5b1cef4424ac Kirjaimellinen \`takahipsu luetaan tekstina.
 anno3 8 360d78952f0cf406 302d5c158ac355c0 Nopeus nimella `vsfast ja sitten `vsslow takaisin.
-anno3 9 e00a922cee13f60e 47480530c8d2dd7f Paan koko `vh30 sitten `vh70 samalla rivilla.
+anno3 9 1b235ca6a1cea105 47480530c8d2dd7f Paan koko `vh30 sitten `vh70 samalla rivilla.
 anno3 10 fece901646dcc2c7 683d92b8d4708c2f Sukupuoli `vg1 ja `vg0 vuorotellen.
 anno3 11 04a7464fb9e1e5d7 8c0ffb4bfa8524ae Ennen `ui"merkki yksi" ja jalkeen indeksimerkin.
 anno3 12 d79170d6efe534e0 ccce74ea812b9e64 Merkki `aud"piip" aanellinen keskella rivia.
@@ -67,7 +67,7 @@ anno3 15 b1637c15f778b8e3 af68097c72f19956 Virheelliset `vzz ja `q ja `v999 kaik
 anno3 16 da49127e1c1073ca 949f9ea27e578d03 Kaksi `vs30`vv40 merkintaa ilman mitaan valissa.
 anno3 17 0a3b8db47a33caa8 3de2220c47bf5efd `ui"a"`ui"b" kaksi merkkia ilman mitaan valissa.
 anno3 18 54cd6e8f405a9087 0ff374db0550d978 Sulkematon `ui"merkki joka ei koskaan paaty
-anno3 19 b6d7e69f0315271c f5a01434dff3ac8a Yhdessa `v3 aani `vs70 nopeus `vv50 voimakkuus kerralla.
+anno3 19 902400b30dd3d07a f5a01434dff3ac8a Yhdessa `v3 aani `vs70 nopeus `vv50 voimakkuus kerralla.
 anno3 20 66a09d0f97144abf 5b9d605626ce903e Sarkain	ja rivin rivitys `vb40 muutoksella.
 realworld 1 94e4485211916fc5 b30ab4faefacc920 Normaali puhe `vs50 nyt paljon hitaampaa kuin ennen.
 realworld 2 8c9622697a61d0bd d9234f7cf2d64658 Aanenvoimakkuus `vv30 hiljempaa, sitten `vv90 taas kovempaa.
@@ -77,7 +77,7 @@ realworld 5 36e9d266bd470869 f630412c07128626 Tauko `0 lyhyt ja `4 pitka sanojen
 realworld 6 4cc90611517bedfe 23b9b0210956cf8c Karheus `vr40 ja hengitys `vf60 muutettu.
 realworld 7 10b89f748aa00110 033bd6b9c5920202 Kirjaimellinen \`takahipsu luetaan tekstina.
 realworld 8 360d78952f0cf406 329fa965cb1035fb Nopeus nimella `vsfast ja sitten `vsslow takaisin.
-realworld 9 e00a922cee13f60e 13043886b3844942 Paan koko `vh30 sitten `vh70 samalla rivilla.
+realworld 9 1b235ca6a1cea105 13043886b3844942 Paan koko `vh30 sitten `vh70 samalla rivilla.
 realworld 10 fece901646dcc2c7 f53fd0b1aaf1ae0e Sukupuoli `vg1 ja `vg0 vuorotellen.
 realworld 11 04a7464fb9e1e5d7 937f7e0f19723e85 Ennen `ui"merkki yksi" ja jalkeen indeksimerkin.
 realworld 12 d79170d6efe534e0 3be84adc5988c082 Merkki `aud"piip" aanellinen keskella rivia.
@@ -87,7 +87,7 @@ realworld 15 b1637c15f778b8e3 afaa2df776e7f566 Virheelliset `vzz ja `q ja `v999 
 realworld 16 a0d5b78ccfc3d59a 62913ea1cae6c49d Kaksi `vs30`vv40 merkintaa ilman mitaan valissa.
 realworld 17 0a3b8db47a33caa8 01f7d0ad48aef411 `ui"a"`ui"b" kaksi merkkia ilman mitaan valissa.
 realworld 18 54cd6e8f405a9087 946f573bc8f90bb4 Sulkematon `ui"merkki joka ei koskaan paaty
-realworld 19 49a426bb829692c6 1f7f17b45240cdde Yhdessa `v3 aani `vs70 nopeus `vv50 voimakkuus kerralla.
+realworld 19 8de1129a47be3099 1f7f17b45240cdde Yhdessa `v3 aani `vs70 nopeus `vv50 voimakkuus kerralla.
 realworld 20 c9299497a8e36d8b 05415df3fa456bdd Sarkain	ja rivin rivitys `vb40 muutoksella.
 dict 1 387bf8d103abc610 d5fa4f2600f57d99 Kello on kolme ja ulkona sataa lunta.
 dict 2 075e0fdcb494a1d0 c824fd6afab09baf Tohtori Virtanen maksoi 1234,56 euroa 3. toukokuuta 2026 kello 19.45.
