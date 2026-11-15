@@ -4,7 +4,7 @@
  * of 0xff on the end. Lines are separated by a nought rather than a newline,
  * which is why the reader in eci_iniread.c stops on either.
  *
- * Lifted byte for byte out of the original by tools/lift-ini.py rather than
+ * Lifted byte for byte out of the original by tools/module/settings.py rather than
  * retyped, because the reader's arithmetic depends on the exact separators.
  */
 
@@ -28,12 +28,12 @@ const char jajp_eciIni[1983] = {
     0, 67, 97, 108, 108, 98, 97, 99, 107, 70, 108, 97, 103, 61, 48, 120,
     48, 48, 48, 48, 48, 51, 51, 102, 0, 86, 101, 114, 115, 105, 111, 110,
     61, 54, 46, 48, 0, 86, 111, 105, 99, 101, 49, 61, 48, 32, 53, 48,
-    32, 55, 52, 32, 50, 48, 32, 48, 32, 48, 32, 53, 53, 32, 57, 50,
+    32, 54, 53, 32, 51, 48, 32, 48, 32, 48, 32, 53, 53, 32, 57, 50,
     0, 86, 111, 105, 99, 101, 50, 61, 49, 32, 53, 48, 32, 56, 49, 32,
     51, 48, 32, 48, 32, 53, 48, 32, 53, 48, 32, 49, 48, 48, 0, 86,
     111, 105, 99, 101, 51, 61, 49, 32, 50, 50, 32, 57, 51, 32, 51, 53,
     32, 48, 32, 48, 32, 53, 48, 32, 57, 48, 0, 86, 111, 105, 99, 101,
-    52, 61, 48, 32, 56, 54, 32, 53, 54, 32, 52, 55, 32, 48, 32, 48,
+    52, 61, 48, 32, 56, 54, 32, 53, 50, 32, 52, 51, 32, 48, 32, 48,
     32, 53, 48, 32, 57, 51, 0, 86, 111, 105, 99, 101, 53, 61, 48, 32,
     53, 48, 32, 54, 57, 32, 51, 52, 32, 48, 32, 48, 32, 55, 48, 32,
     57, 50, 0, 86, 111, 105, 99, 101, 54, 61, 49, 32, 53, 54, 32, 56,
@@ -145,7 +145,7 @@ const int32_t jajp_eciIniSize = 1983;
    array calls the copy linked into the image. The original
    spells both into getLibraryName, which answers with the
    name only when it is asked about this language; here they
-   are data, so that src/eci_engarray.c is the same code
+   are data, so that src/eci/api/eci_engarray.c is the same code
    whichever language is built beside it. */
 const int32_t jajp_eci_library_lang = 0x80000;
 const char jajp_eci_library_name[] = "Static Engine JPN";

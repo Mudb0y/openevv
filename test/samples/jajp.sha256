@@ -15,108 +15,120 @@
 # the samples' hash, the same of the reported answers', and
 # the sentence.
 
-plain 1 cfe6253a513eca80 02a66a820ac76017 ‚±‚ñ‚É‚¿‚ÍB‚¨Œ³‹C‚Å‚·‚©B
-plain 2 a002aabe149f65a9 a8d779a4a09dd6a4 “ú–{Œê‚Ì‰¹º‡¬‚ğƒeƒXƒg‚µ‚Ä‚¢‚Ü‚·B
-plain 3 0090d3d30e97cc0c 065fbf1bb44f6512 ¡“ú‚Í1999”N8Œ27“úAŒßŒã745•ª‚Å‚·B
-plain 4 7d2bf1c828c8ee41 9fba2a4dcd88ed4b ƒRƒ“ƒsƒ…[ƒ^‚ÆƒCƒ“ƒ^[ƒlƒbƒg‚Ì‹ZpB
-plain 5 0a788352a2551b1a 3abff26f5def5278 IBM ViaVoice ‚Í‰pŒê‚Ì–¼‘O‚Å‚·B
-plain 6 39662006c6ba1bc5 91a198758b95af15 R“c‚³‚ñ‚Í“Œ‹“sVh‹æ‚ÉZ‚ñ‚Å‚¢‚Ü‚·B
-plain 7 f0712e8f90752b17 52cd5b0360ba0c2c konnichiwa. kore wa roomaji desu.
-utf8 1 c8b7ca04df8effc6 e3b1dbfabd60e94a ã“ã‚“ã«ã¡ã¯ã€‚ãŠå…ƒæ°—ã§ã™ã‹ã€‚
-utf8 2 8a5a77bf3061c97f 295bb639bf787964 æ—¥æœ¬èªã®éŸ³å£°åˆæˆã‚’ãƒ†ã‚¹ãƒˆã—ã¦ã„ã¾ã™ã€‚
-utf8 3 e585ad6ac924636e c9ecbb870d855c2c ä»Šæ—¥ã¯1999å¹´8æœˆ27æ—¥ã€åˆå¾Œ7æ™‚45åˆ†ã§ã™ã€‚
-utf8 4 5de793effeb8f809 db391198408d716c ã‚³ãƒ³ãƒ”ãƒ¥ãƒ¼ã‚¿ã¨ã‚¤ãƒ³ã‚¿ãƒ¼ãƒãƒƒãƒˆã®æŠ€è¡“ã€‚
-utf8 5 9412b7497856b452 9e208f4f12e20eb7 IBM ViaVoice ã¯è‹±èªã®åå‰ã§ã™ã€‚
-utf8 6 75139d6679088615 1102d6fe34b0614f å±±ç”°ã•ã‚“ã¯æ±äº¬éƒ½æ–°å®¿åŒºã«ä½ã‚“ã§ã„ã¾ã™ã€‚
-utf8 7 f0712e8f90752b17 52cd5b0360ba0c2c konnichiwa. kore wa roomaji desu.
-anno 1 f9efcb03f66d3455 b3ac7fb3e80b7d6a ’Êí‚Ì‰¹º `vs50 ¡‚Í‚¸‚Á‚Æ’x‚­‚È‚è‚Ü‚µ‚½B
-anno 2 bddd13d9124d31aa c2d19ae62f1fa178 ‰¹—Ê `vv30 ¬‚³‚­A‚»‚ê‚©‚ç `vv90 ‚Ü‚½‘å‚«‚­B
-anno 3 e5c6041653374022 fd625f9b05e80454 ‚‚³ `vb20 ’á‚­A`vb80 ‚‚­Aˆê‚Â‚Ì•¶‚Ì’†‚ÅB
-anno 4 f6a7b7b63206369c c2032476bb56e46a º `v2 “ñ”ÔA`v5 ŒÜ”ÔA‚»‚µ‚Ä `v1 ˆê”Ô‚É–ß‚éB
-anno 5 0f04d238f694bd5e 56cc07726587e971 ’Z‚¢‹x~ `0 ‚Æ’·‚¢‹x~ `4 ‚ªŒ¾—t‚ÌŠÔ‚ÉB
-anno 6 0df86a3624254cb4 4077ac81478e3a7a ‚©‚·‚ê `vr40 ‚Æ‘§ `vf60 ‚ğ•Ï‚¦‚Ü‚µ‚½B
-anno 7 a1e261ea987ddfa6 d27532aa8da8ea16 •¶š‚Æ‚µ‚Ä‚Ì \`‹tˆø—p•„‚Í“Ç‚İã‚°‚ç‚ê‚Ü‚·B
-anno 8 58faadf478e61c9a f5ef6dc0b4adbfb7 ‘¬‚³‚ğ–¼‘O‚Å `vsfast ‚»‚µ‚Ä‚Ü‚½ `vsslowB
-anno 9 8ecb5995a411aaae e7bfe23d6188bd92 “ª‚Ì‘å‚«‚³ `vh30 ‚»‚ê‚©‚ç `vh70 “¯‚¶s‚ÅB
-anno 10 744de6376cfd5319 2548d8bdab284cd1 «•Ê `vg1 ‚Æ `vg0 ‚ªŒğŒİ‚ÉB
-anno 11 ba25d91af4965361 0b3266758d09c952 ˆó‚Ì‘O `ui"mark one" ‚Æˆó‚ÌŒã‚ëB
-anno 12 5fad3e1342570fc0 3639aa727008d137 ‰¹‚Ìˆó `aud"beep" ‚ªs‚Ì“r’†‚ÉB
-anno 13 30ba73b479d16f52 add156bd9a1919ce `vs40 ‚¢‚¿‚Î‚ñ‰‚ß‚É’u‚¢‚½’ß‚Å‚·B
-anno 14 0d275862683531b2 923b4a0d7b10ca62 s‚ÌI‚í‚è‚ÅI‚í‚é’ß `vs60
-anno 15 76b97ef18cb39b2e 5e27aed88c3a22f4 ‰ó‚ê‚½ `vzz ‚Æ `q ‚Æ `v999 ‚ªˆês‚ÉB
-anno 16 8540af8da266a9a8 3872b3971fa0ba7e “ñ‚Â‚Ì `vs30`vv40 ’ß‚ªŠÔ‚ğ’u‚©‚¸‚ÉB
-anno 17 4e722cabb998fc3f 7b25ebd359296ca0 `ui"a"`ui"b" “ñ‚Â‚Ìˆó‚ªŠÔ‚ğ’u‚©‚¸‚ÉB
-anno 18 4df44fe051a4ff99 a72358fd5f11db14 ˆó‚Ì‚·‚®Œã‚É‹å“_ `ui"mark two"B
-anno 19 ffe21c47b9e36f10 a90e9de310279f22 ˆê‚É `v3 º `vs70 ‘¬‚³ `vv50 ‰¹—ÊB
-anno 20 206606b7b1ee8de5 a505e5a2eefd8a48 ƒ^ƒu	‚Æ‰üs‚ª `vb40 •Ï‰»‚Æ‚Æ‚à‚ÉB
-anno3 1 581013a15995515f a9726e8fe7c428a6 ’Êí‚Ì‰¹º `vs50 ¡‚Í‚¸‚Á‚Æ’x‚­‚È‚è‚Ü‚µ‚½B
-anno3 2 d92517b42878be98 dc9b1e7cbefd59e9 ‰¹—Ê `vv30 ¬‚³‚­A‚»‚ê‚©‚ç `vv90 ‚Ü‚½‘å‚«‚­B
-anno3 3 79912815aeaa9188 e9e528a50b1bd175 ‚‚³ `vb20 ’á‚­A`vb80 ‚‚­Aˆê‚Â‚Ì•¶‚Ì’†‚ÅB
-anno3 4 9b2925a07dbe12db 07ae20390c222ea4 º `v2 “ñ”ÔA`v5 ŒÜ”ÔA‚»‚µ‚Ä `v1 ˆê”Ô‚É–ß‚éB
-anno3 5 0f04d238f694bd5e 9948b86c90f2a899 ’Z‚¢‹x~ `0 ‚Æ’·‚¢‹x~ `4 ‚ªŒ¾—t‚ÌŠÔ‚ÉB
-anno3 6 10dc38771769571c 35c8dc78bd4a09a1 ‚©‚·‚ê `vr40 ‚Æ‘§ `vf60 ‚ğ•Ï‚¦‚Ü‚µ‚½B
-anno3 7 a1e261ea987ddfa6 3bedd4da75b297f0 •¶š‚Æ‚µ‚Ä‚Ì \`‹tˆø—p•„‚Í“Ç‚İã‚°‚ç‚ê‚Ü‚·B
-anno3 8 e3adc828b450e62a 10408f49a27da986 ‘¬‚³‚ğ–¼‘O‚Å `vsfast ‚»‚µ‚Ä‚Ü‚½ `vsslowB
-anno3 9 ef7f646a57a380a7 cc271735d5a16556 “ª‚Ì‘å‚«‚³ `vh30 ‚»‚ê‚©‚ç `vh70 “¯‚¶s‚ÅB
-anno3 10 032955e97a0f61e0 335edb1423d23a15 «•Ê `vg1 ‚Æ `vg0 ‚ªŒğŒİ‚ÉB
-anno3 11 ea0281ec6184a5b9 5731a6b5d275b19e ˆó‚Ì‘O `ui"mark one" ‚Æˆó‚ÌŒã‚ëB
-anno3 12 0fdbc3cb62b373ed 4fe62cc85f91d577 ‰¹‚Ìˆó `aud"beep" ‚ªs‚Ì“r’†‚ÉB
-anno3 13 05228c3398da9a7c 7b0b2a6499d89e31 `vs40 ‚¢‚¿‚Î‚ñ‰‚ß‚É’u‚¢‚½’ß‚Å‚·B
-anno3 14 aece26c0d6d056ae c22b9397a2c7dcec s‚ÌI‚í‚è‚ÅI‚í‚é’ß `vs60
-anno3 15 9ab0eb7944c5131e 8178633e8abd2828 ‰ó‚ê‚½ `vzz ‚Æ `q ‚Æ `v999 ‚ªˆês‚ÉB
-anno3 16 6788dc568a02a7dc c362bc71be8ba55a “ñ‚Â‚Ì `vs30`vv40 ’ß‚ªŠÔ‚ğ’u‚©‚¸‚ÉB
-anno3 17 e1409c94c401b5d3 7106125b8a5a8a1c `ui"a"`ui"b" “ñ‚Â‚Ìˆó‚ªŠÔ‚ğ’u‚©‚¸‚ÉB
-anno3 18 0e2ce21468844ad9 5f6f519981732425 ˆó‚Ì‚·‚®Œã‚É‹å“_ `ui"mark two"B
-anno3 19 8e081c8078457dad 41836ddc9c59645e ˆê‚É `v3 º `vs70 ‘¬‚³ `vv50 ‰¹—ÊB
-anno3 20 4850098fa1d01b7d 9b8966ab30d321c1 ƒ^ƒu	‚Æ‰üs‚ª `vb40 •Ï‰»‚Æ‚Æ‚à‚ÉB
-realworld 1 5a55e65a53ad38a4 17a4368b9cb70290 ’Êí‚Ì‰¹º `vs50 ¡‚Í‚¸‚Á‚Æ’x‚­‚È‚è‚Ü‚µ‚½B
-realworld 2 50d80484dea1cde7 090010c1d335dcb6 ‰¹—Ê `vv30 ¬‚³‚­A‚»‚ê‚©‚ç `vv90 ‚Ü‚½‘å‚«‚­B
-realworld 3 8fc47f47b30f2b6b fd610ea7cba8d065 ‚‚³ `vb20 ’á‚­A`vb80 ‚‚­Aˆê‚Â‚Ì•¶‚Ì’†‚ÅB
-realworld 4 9b2925a07dbe12db 3c5ee3994c3f332f º `v2 “ñ”ÔA`v5 ŒÜ”ÔA‚»‚µ‚Ä `v1 ˆê”Ô‚É–ß‚éB
-realworld 5 0f04d238f694bd5e 8465bf31f08001dd ’Z‚¢‹x~ `0 ‚Æ’·‚¢‹x~ `4 ‚ªŒ¾—t‚ÌŠÔ‚ÉB
-realworld 6 10dc38771769571c b4bb267b432d3fa3 ‚©‚·‚ê `vr40 ‚Æ‘§ `vf60 ‚ğ•Ï‚¦‚Ü‚µ‚½B
-realworld 7 a1e261ea987ddfa6 990265914cd9e8e9 •¶š‚Æ‚µ‚Ä‚Ì \`‹tˆø—p•„‚Í“Ç‚İã‚°‚ç‚ê‚Ü‚·B
-realworld 8 e3adc828b450e62a aae0f10deba2c03f ‘¬‚³‚ğ–¼‘O‚Å `vsfast ‚»‚µ‚Ä‚Ü‚½ `vsslowB
-realworld 9 ef7f646a57a380a7 c265049efdc87b80 “ª‚Ì‘å‚«‚³ `vh30 ‚»‚ê‚©‚ç `vh70 “¯‚¶s‚ÅB
-realworld 10 032955e97a0f61e0 e419460f7fe9141f «•Ê `vg1 ‚Æ `vg0 ‚ªŒğŒİ‚ÉB
-realworld 11 ea0281ec6184a5b9 83dfc50dd3a1ac8f ˆó‚Ì‘O `ui"mark one" ‚Æˆó‚ÌŒã‚ëB
-realworld 12 0fdbc3cb62b373ed 3a45c19bf5207905 ‰¹‚Ìˆó `aud"beep" ‚ªs‚Ì“r’†‚ÉB
-realworld 13 7cadab6d7aa7bdb7 faa4003f450f66b8 `vs40 ‚¢‚¿‚Î‚ñ‰‚ß‚É’u‚¢‚½’ß‚Å‚·B
-realworld 14 aece26c0d6d056ae 33d26ed15357f1b5 s‚ÌI‚í‚è‚ÅI‚í‚é’ß `vs60
-realworld 15 9ab0eb7944c5131e 12bf78c0ebfd10d4 ‰ó‚ê‚½ `vzz ‚Æ `q ‚Æ `v999 ‚ªˆês‚ÉB
-realworld 16 b63a9ea1861d3759 89b58a86742bee2a “ñ‚Â‚Ì `vs30`vv40 ’ß‚ªŠÔ‚ğ’u‚©‚¸‚ÉB
-realworld 17 e1409c94c401b5d3 d632bf19557a3f51 `ui"a"`ui"b" “ñ‚Â‚Ìˆó‚ªŠÔ‚ğ’u‚©‚¸‚ÉB
-realworld 18 0e2ce21468844ad9 328fff1103dc702b ˆó‚Ì‚·‚®Œã‚É‹å“_ `ui"mark two"B
-realworld 19 4edfd964fa701e5e 22346e680246757d ˆê‚É `v3 º `vs70 ‘¬‚³ `vv50 ‰¹—ÊB
-realworld 20 8cbbf24c67804f4a 4941f357c0789c58 ƒ^ƒu	‚Æ‰üs‚ª `vb40 •Ï‰»‚Æ‚Æ‚à‚ÉB
-dict 1 cfe6253a513eca80 59450fd11869fe18 ‚±‚ñ‚É‚¿‚ÍB‚¨Œ³‹C‚Å‚·‚©B
-dict 2 a002aabe149f65a9 5b5ac7daea1db051 “ú–{Œê‚Ì‰¹º‡¬‚ğƒeƒXƒg‚µ‚Ä‚¢‚Ü‚·B
-dict 3 0090d3d30e97cc0c 9b2910871880e4b4 ¡“ú‚Í1999”N8Œ27“úAŒßŒã745•ª‚Å‚·B
-dict 4 7d2bf1c828c8ee41 ff028794de6284bd ƒRƒ“ƒsƒ…[ƒ^‚ÆƒCƒ“ƒ^[ƒlƒbƒg‚Ì‹ZpB
-dict 5 0a788352a2551b1a 16ac1d1fc3c9c35a IBM ViaVoice ‚Í‰pŒê‚Ì–¼‘O‚Å‚·B
-dict 6 39662006c6ba1bc5 d0578d1acfcd96fe R“c‚³‚ñ‚Í“Œ‹“sVh‹æ‚ÉZ‚ñ‚Å‚¢‚Ü‚·B
-dict 7 f0712e8f90752b17 d19b6a8c53c0a640 konnichiwa. kore wa roomaji desu.
-second 1 1659a461252c9ce5 8f5d7c15e478bedd ‚±‚ñ‚É‚¿‚ÍB‚¨Œ³‹C‚Å‚·‚©B
-second 2 3d38b5a8c5da9f10 4be1f5535fdc3e36 “ú–{Œê‚Ì‰¹º‡¬‚ğƒeƒXƒg‚µ‚Ä‚¢‚Ü‚·B
-second 3 90f56695deda29a5 cc167ce98a58f276 ¡“ú‚Í1999”N8Œ27“úAŒßŒã745•ª‚Å‚·B
-second 4 3b02752cebeabea1 c53afc7a41bd4c92 ƒRƒ“ƒsƒ…[ƒ^‚ÆƒCƒ“ƒ^[ƒlƒbƒg‚Ì‹ZpB
-second 5 874e904b86b8e2b9 07a67a483606e088 IBM ViaVoice ‚Í‰pŒê‚Ì–¼‘O‚Å‚·B
-second 6 d3fbb2b0fd41ea10 7d8c2c9d2f8da1ed R“c‚³‚ñ‚Í“Œ‹“sVh‹æ‚ÉZ‚ñ‚Å‚¢‚Ü‚·B
-second 7 89b0dbe41aa73c41 5c60e76fd10f007d konnichiwa. kore wa roomaji desu.
-ssml 1 73606e272c7fd521 1194243198bb8eaa <speak version="1.0" xml:lang="ja-JP">ãŠã¯ã‚ˆã†ã”ã–ã„ã¾ã™ã€‚</speak>
-ssml 2 e910a6dcacbbee00 cd6ac8720cdedd24 <speak version="1.0" xml:lang="ja-JP"><prosody rate="slow">ä»Šã¯ã‚†ã£ãã‚Šã¨ã€‚</prosody> ã¾ãŸæ™®é€šã«ã€‚</speak>
-ssml 3 57f96a42302e28a1 abae6a1130de43b3 <speak version="1.0" xml:lang="ja-JP"><prosody pitch="high" range="x-high" volume="loud">å››ã¤ã¨ã‚‚ä¸€ç·’ã«ã€‚</prosody></speak>
-ssml 4 dda66d464bf328b1 89fd489d2a9b1cc9 <speak version="1.0" xml:lang="ja-JP"><emphasis level="strong">ã“ã‚Œ</emphasis>ã§ã‚ã£ã¦ã€ãã‚Œã§ã¯ãªã„ã€‚</speak>
-ssml 5 3cf31ce7f1a9c207 7736c546338a14ef <speak version="1.0" xml:lang="ja-JP"><voice gender="female">å½¼å¥³ãŒãã†è¨€ã£ãŸã€‚</voice> å½¼ã¯è¨€ã‚ãªã‹ã£ãŸã€‚</speak>
-ssml 6 bf8fb23a3e413d8e a81b67794d9efe55 <speak version="1.0" xml:lang="ja-JP">å€¤æ®µã¯ <say-as interpret-as="cardinal">1234</say-as> å††ã€<say-as interpret-as="ordinal">3</say-as> ç•ªç›®ã§ã™ã€‚</speak>
-ssml 7 78f5ce1483ebf414 bdac94a563a85a71 <speak version="1.0" xml:lang="ja-JP">ç¶´ã‚Šã¯ <say-as interpret-as="letters">abc</say-as>ã€é›»è©±ã¯ <say-as interpret-as="number" format="telephone">5551234</say-as>ã€‚</speak>
-ssml 8 d8de1f9f8b3f5854 a81f721cf80ac802 <speak version="1.0" xml:lang="ja-JP">å°‘ã—<break time="500ms"/>å¾…ã£ã¦ãã ã•ã„ã€‚<mark name="ã“ã“"/> ãã“ã€‚</speak>
-ssml 9 3bf54be0137aee17 2da23819aad567cf <speak version="1.0" xml:lang="ja-JP"><sub alias="ä¸–ç•Œè¦æ¨¡ã®ç¶²">WWW</sub> ã¨ <phoneme ph="h.E.l.oU">ã“ã‚“ã«ã¡ã¯</phoneme>ã€‚</speak>
-ssml 10 1da799c48cd80ea2 df5db849005cd179 <speak version="1.0" xml:lang="ja-JP">æ±äº¬éƒ½æ–°å®¿åŒºã€a &amp; b &lt; c ã®è¨˜å·ã¤ãã€‚</speak>
-wide 1 98bb5845c504f068 f9354ee794ed688f ‚±‚ñ‚É‚¿‚ÍB‚¨Œ³‹C‚Å‚·‚©B
-wide 2 ff54f0b8afa7b3c1 01a5c1a425f4f916 “ú–{Œê‚Ì‰¹º‡¬‚ğƒeƒXƒg‚µ‚Ä‚¢‚Ü‚·B
-wide 3 efca1d4b536216a6 d0d0e43c909eaefc ¡“ú‚Í1999”N8Œ27“úAŒßŒã745•ª‚Å‚·B
-wide 4 13268346f77e7fcd eb65d7007c850752 ƒRƒ“ƒsƒ…[ƒ^‚ÆƒCƒ“ƒ^[ƒlƒbƒg‚Ì‹ZpB
-wide 5 e78e747a72472490 658523f33bd6040d IBM ViaVoice ‚Í‰pŒê‚Ì–¼‘O‚Å‚·B
-wide 6 e3634454b9a8da0f 254493bf295107cb R“c‚³‚ñ‚Í“Œ‹“sVh‹æ‚ÉZ‚ñ‚Å‚¢‚Ü‚·B
-wide 7 549aefbb144a9d8f 27ca2d22b0e44a6d konnichiwa. kore wa roomaji desu.
+plain 1 b44e745688fae404 d421666fbd2e0e2c ‚±‚ñ‚É‚¿‚ÍB‚¨Œ³‹C‚Å‚·‚©B
+plain 2 630a996b055df965 6829d0af18833ff4 “ú–{Œê‚Ì‰¹º‡¬‚ğƒeƒXƒg‚µ‚Ä‚¢‚Ü‚·B
+plain 3 613c4c7d45d433ac 2bc90eb2e430f26f ¡“ú‚Í1999”N8Œ27“úAŒßŒã745•ª‚Å‚·B
+plain 4 083b42f9117b66cd 80f68000e259720b ƒRƒ“ƒsƒ…[ƒ^‚ÆƒCƒ“ƒ^[ƒlƒbƒg‚Ì‹ZpB
+plain 5 54ee0d75db03faf2 91adc89fd37af8db IBM ViaVoice ‚Í‰pŒê‚Ì–¼‘O‚Å‚·B
+plain 6 6cd0af1225cb153d 0a008cf1784a83a9 R“c‚³‚ñ‚Í“Œ‹“sVh‹æ‚ÉZ‚ñ‚Å‚¢‚Ü‚·B
+plain 7 28c2f764da06ab72 27dcd33ff5652bf8 konnichiwa. kore wa roomaji desu.
+plain 8 bcb24322628b0fc7 9648d0ecaedaa618 ’N‚Å‚·‚©H
+plain 9 b989da755bfd4898 9bea9a3cecfd5e8d –{“–H
+plain 10 2efcbffc2302f83f 1c64c345a06ec8bf “V‹C‚ª‚¢‚¢‚Å‚·‚ËH
+utf8 1 8d954f2429abdfc4 a5084fa0a243c66a ã“ã‚“ã«ã¡ã¯ã€‚ãŠå…ƒæ°—ã§ã™ã‹ã€‚
+utf8 2 c3117a181fb53106 e2eecfabaa78132e æ—¥æœ¬èªã®éŸ³å£°åˆæˆã‚’ãƒ†ã‚¹ãƒˆã—ã¦ã„ã¾ã™ã€‚
+utf8 3 333b2409e972dd26 4e5844e55013d5f5 ä»Šæ—¥ã¯1999å¹´8æœˆ27æ—¥ã€åˆå¾Œ7æ™‚45åˆ†ã§ã™ã€‚
+utf8 4 3539183cd8a2e136 df98412bec235bd1 ã‚³ãƒ³ãƒ”ãƒ¥ãƒ¼ã‚¿ã¨ã‚¤ãƒ³ã‚¿ãƒ¼ãƒãƒƒãƒˆã®æŠ€è¡“ã€‚
+utf8 5 0dd2730e4642c6a7 3146025394f02fd1 IBM ViaVoice ã¯è‹±èªã®åå‰ã§ã™ã€‚
+utf8 6 102eda724b852f7e 15a0f253e6f92490 å±±ç”°ã•ã‚“ã¯æ±äº¬éƒ½æ–°å®¿åŒºã«ä½ã‚“ã§ã„ã¾ã™ã€‚
+utf8 7 28c2f764da06ab72 27dcd33ff5652bf8 konnichiwa. kore wa roomaji desu.
+anno 1 11b7844518ad5537 d3299a39445b28c5 ’Êí‚Ì‰¹º `vs50 ¡‚Í‚¸‚Á‚Æ’x‚­‚È‚è‚Ü‚µ‚½B
+anno 2 f8da1a7b94cc733f 599418d4b289daf8 ‰¹—Ê `vv30 ¬‚³‚­A‚»‚ê‚©‚ç `vv90 ‚Ü‚½‘å‚«‚­B
+anno 3 1730e9c13da0e3f0 e2db079cd5af9466 ‚‚³ `vb20 ’á‚­A`vb80 ‚‚­Aˆê‚Â‚Ì•¶‚Ì’†‚ÅB
+anno 4 8479d03de306630f d2d825f01a64b8c0 º `v2 “ñ”ÔA`v5 ŒÜ”ÔA‚»‚µ‚Ä `v1 ˆê”Ô‚É–ß‚éB
+anno 5 5ff527e04d5bdf9b 2f6f4897505a0b41 ’Z‚¢‹x~ `0 ‚Æ’·‚¢‹x~ `4 ‚ªŒ¾—t‚ÌŠÔ‚ÉB
+anno 6 3bc502c97f67fed3 b34c0d0f7488e69a ‚©‚·‚ê `vr40 ‚Æ‘§ `vf60 ‚ğ•Ï‚¦‚Ü‚µ‚½B
+anno 7 6e88b37d03f3ec8c 100205776b5b5cfd •¶š‚Æ‚µ‚Ä‚Ì \`‹tˆø—p•„‚Í“Ç‚İã‚°‚ç‚ê‚Ü‚·B
+anno 8 5566c6d542d57533 7edd6eb7402423ab ‘¬‚³‚ğ–¼‘O‚Å `vsfast ‚»‚µ‚Ä‚Ü‚½ `vsslowB
+anno 9 08961eed3799d053 74f1ab0ba992a8ad “ª‚Ì‘å‚«‚³ `vh30 ‚»‚ê‚©‚ç `vh70 “¯‚¶s‚ÅB
+anno 10 ec622c4af71423e2 7fc2e54bdf660a16 «•Ê `vg1 ‚Æ `vg0 ‚ªŒğŒİ‚ÉB
+anno 11 ba08f916f9fc077c 235fc39a2d44607c ˆó‚Ì‘O `ui"mark one" ‚Æˆó‚ÌŒã‚ëB
+anno 12 14a1bcf19ac757a3 6702f589bae88357 ‰¹‚Ìˆó `aud"beep" ‚ªs‚Ì“r’†‚ÉB
+anno 13 92a47230fa8f7888 e2407a4628142399 `vs40 ‚¢‚¿‚Î‚ñ‰‚ß‚É’u‚¢‚½’ß‚Å‚·B
+anno 14 12175c3f38ad4fef 72084b47590407b6 s‚ÌI‚í‚è‚ÅI‚í‚é’ß `vs60
+anno 15 b51c3b74efb44177 a3f9c0c493da6174 ‰ó‚ê‚½ `vzz ‚Æ `q ‚Æ `v999 ‚ªˆês‚ÉB
+anno 16 96e7ee4e377d62dd a79e415614be4948 “ñ‚Â‚Ì `vs30`vv40 ’ß‚ªŠÔ‚ğ’u‚©‚¸‚ÉB
+anno 17 7413e74068b0213e 5179428fb50d9118 `ui"a"`ui"b" “ñ‚Â‚Ìˆó‚ªŠÔ‚ğ’u‚©‚¸‚ÉB
+anno 18 7b60faa4a4bc964e fd179979b9ebc810 ˆó‚Ì‚·‚®Œã‚É‹å“_ `ui"mark two"B
+anno 19 fc71691b4dd27ab3 382024a6cca889f2 ˆê‚É `v3 º `vs70 ‘¬‚³ `vv50 ‰¹—ÊB
+anno 20 27d08e55d5808f2c 55a06d2a7fe9a21a ƒ^ƒu	‚Æ‰üs‚ª `vb40 •Ï‰»‚Æ‚Æ‚à‚ÉB
+anno3 1 a5b01a7f1561a56a 24116fd0a8efdac5 ’Êí‚Ì‰¹º `vs50 ¡‚Í‚¸‚Á‚Æ’x‚­‚È‚è‚Ü‚µ‚½B
+anno3 2 eb39bd799193da45 a9523a546942dae0 ‰¹—Ê `vv30 ¬‚³‚­A‚»‚ê‚©‚ç `vv90 ‚Ü‚½‘å‚«‚­B
+anno3 3 353340ee47d07b51 b2cf57450bb6d5c6 ‚‚³ `vb20 ’á‚­A`vb80 ‚‚­Aˆê‚Â‚Ì•¶‚Ì’†‚ÅB
+anno3 4 60915ef786934ec0 972b4d89a3d45421 º `v2 “ñ”ÔA`v5 ŒÜ”ÔA‚»‚µ‚Ä `v1 ˆê”Ô‚É–ß‚éB
+anno3 5 5ff527e04d5bdf9b 4237a9446a7b2a52 ’Z‚¢‹x~ `0 ‚Æ’·‚¢‹x~ `4 ‚ªŒ¾—t‚ÌŠÔ‚ÉB
+anno3 6 3ab9df635a220450 37932352f1b4dc32 ‚©‚·‚ê `vr40 ‚Æ‘§ `vf60 ‚ğ•Ï‚¦‚Ü‚µ‚½B
+anno3 7 6e88b37d03f3ec8c 09172022fb9a4045 •¶š‚Æ‚µ‚Ä‚Ì \`‹tˆø—p•„‚Í“Ç‚İã‚°‚ç‚ê‚Ü‚·B
+anno3 8 12c070d57599501c 715ac28583699717 ‘¬‚³‚ğ–¼‘O‚Å `vsfast ‚»‚µ‚Ä‚Ü‚½ `vsslowB
+anno3 9 962e5ca93f5a83f7 ed2e84321335dfa5 “ª‚Ì‘å‚«‚³ `vh30 ‚»‚ê‚©‚ç `vh70 “¯‚¶s‚ÅB
+anno3 10 f574ae14d1b513b8 f2c1f6ed0d8ab819 «•Ê `vg1 ‚Æ `vg0 ‚ªŒğŒİ‚ÉB
+anno3 11 6015446ff944b016 a65bf46588ffcdaa ˆó‚Ì‘O `ui"mark one" ‚Æˆó‚ÌŒã‚ëB
+anno3 12 e2c7d00fc0a7f018 0e5692c323cd2b0c ‰¹‚Ìˆó `aud"beep" ‚ªs‚Ì“r’†‚ÉB
+anno3 13 8da7851982fc6e57 32e1c636ece551d2 `vs40 ‚¢‚¿‚Î‚ñ‰‚ß‚É’u‚¢‚½’ß‚Å‚·B
+anno3 14 31468ff22e2dd7e8 5f29d25c8f8768c9 s‚ÌI‚í‚è‚ÅI‚í‚é’ß `vs60
+anno3 15 7d235602c01ccfc3 c69f1fe885b7f59d ‰ó‚ê‚½ `vzz ‚Æ `q ‚Æ `v999 ‚ªˆês‚ÉB
+anno3 16 be1c18c5b96ce7ce d14112a10b6e1183 “ñ‚Â‚Ì `vs30`vv40 ’ß‚ªŠÔ‚ğ’u‚©‚¸‚ÉB
+anno3 17 7784663e6ca12769 93dc7a2d43e4dc11 `ui"a"`ui"b" “ñ‚Â‚Ìˆó‚ªŠÔ‚ğ’u‚©‚¸‚ÉB
+anno3 18 899a6eb48af4d085 2a084807d0a0ff7d ˆó‚Ì‚·‚®Œã‚É‹å“_ `ui"mark two"B
+anno3 19 1e37f6a219ba0355 a309a62acd394358 ˆê‚É `v3 º `vs70 ‘¬‚³ `vv50 ‰¹—ÊB
+anno3 20 89c5beb784b6f518 079150170458ba2e ƒ^ƒu	‚Æ‰üs‚ª `vb40 •Ï‰»‚Æ‚Æ‚à‚ÉB
+realworld 1 63f5cfffddc498ed b94ad0d5ad4d6a35 ’Êí‚Ì‰¹º `vs50 ¡‚Í‚¸‚Á‚Æ’x‚­‚È‚è‚Ü‚µ‚½B
+realworld 2 9e8be356f56f6fd8 488712eeb8b20d08 ‰¹—Ê `vv30 ¬‚³‚­A‚»‚ê‚©‚ç `vv90 ‚Ü‚½‘å‚«‚­B
+realworld 3 bc9372d31f312b22 3ba030293381f6b4 ‚‚³ `vb20 ’á‚­A`vb80 ‚‚­Aˆê‚Â‚Ì•¶‚Ì’†‚ÅB
+realworld 4 60915ef786934ec0 ad73936219c3f862 º `v2 “ñ”ÔA`v5 ŒÜ”ÔA‚»‚µ‚Ä `v1 ˆê”Ô‚É–ß‚éB
+realworld 5 5ff527e04d5bdf9b 9ab93d2181d01089 ’Z‚¢‹x~ `0 ‚Æ’·‚¢‹x~ `4 ‚ªŒ¾—t‚ÌŠÔ‚ÉB
+realworld 6 3ab9df635a220450 0ab9149f3597befc ‚©‚·‚ê `vr40 ‚Æ‘§ `vf60 ‚ğ•Ï‚¦‚Ü‚µ‚½B
+realworld 7 6e88b37d03f3ec8c fa92ef45a00d5172 •¶š‚Æ‚µ‚Ä‚Ì \`‹tˆø—p•„‚Í“Ç‚İã‚°‚ç‚ê‚Ü‚·B
+realworld 8 12c070d57599501c 3882329b664486d3 ‘¬‚³‚ğ–¼‘O‚Å `vsfast ‚»‚µ‚Ä‚Ü‚½ `vsslowB
+realworld 9 962e5ca93f5a83f7 1da7130724ff8600 “ª‚Ì‘å‚«‚³ `vh30 ‚»‚ê‚©‚ç `vh70 “¯‚¶s‚ÅB
+realworld 10 f574ae14d1b513b8 7d2ac46aa920ca49 «•Ê `vg1 ‚Æ `vg0 ‚ªŒğŒİ‚ÉB
+realworld 11 6015446ff944b016 52946724d550b90b ˆó‚Ì‘O `ui"mark one" ‚Æˆó‚ÌŒã‚ëB
+realworld 12 e2c7d00fc0a7f018 28e6c1c079daec65 ‰¹‚Ìˆó `aud"beep" ‚ªs‚Ì“r’†‚ÉB
+realworld 13 bc6ad12aefbfb258 6272c7e3aa86946c `vs40 ‚¢‚¿‚Î‚ñ‰‚ß‚É’u‚¢‚½’ß‚Å‚·B
+realworld 14 31468ff22e2dd7e8 1b93d03ad23910d0 s‚ÌI‚í‚è‚ÅI‚í‚é’ß `vs60
+realworld 15 7d235602c01ccfc3 c7dc331ebfa485cc ‰ó‚ê‚½ `vzz ‚Æ `q ‚Æ `v999 ‚ªˆês‚ÉB
+realworld 16 9a0b89d82650a78a b0da15d148495255 “ñ‚Â‚Ì `vs30`vv40 ’ß‚ªŠÔ‚ğ’u‚©‚¸‚ÉB
+realworld 17 7784663e6ca12769 caa46faef998c631 `ui"a"`ui"b" “ñ‚Â‚Ìˆó‚ªŠÔ‚ğ’u‚©‚¸‚ÉB
+realworld 18 899a6eb48af4d085 513d5df643c19e26 ˆó‚Ì‚·‚®Œã‚É‹å“_ `ui"mark two"B
+realworld 19 40ac74a95f78d134 838cbd3f5e3cbc35 ˆê‚É `v3 º `vs70 ‘¬‚³ `vv50 ‰¹—ÊB
+realworld 20 21933b01d4142aa2 974e2e5bb27aeb0b ƒ^ƒu	‚Æ‰üs‚ª `vb40 •Ï‰»‚Æ‚Æ‚à‚ÉB
+dict 1 b44e745688fae404 6ca6b6c68faf168b ‚±‚ñ‚É‚¿‚ÍB‚¨Œ³‹C‚Å‚·‚©B
+dict 2 630a996b055df965 5d79f1ab1ec57aa3 “ú–{Œê‚Ì‰¹º‡¬‚ğƒeƒXƒg‚µ‚Ä‚¢‚Ü‚·B
+dict 3 613c4c7d45d433ac 65fd4ec0108ea072 ¡“ú‚Í1999”N8Œ27“úAŒßŒã745•ª‚Å‚·B
+dict 4 083b42f9117b66cd a6bccf9b7f4522c4 ƒRƒ“ƒsƒ…[ƒ^‚ÆƒCƒ“ƒ^[ƒlƒbƒg‚Ì‹ZpB
+dict 5 54ee0d75db03faf2 b7845e5f45b757d7 IBM ViaVoice ‚Í‰pŒê‚Ì–¼‘O‚Å‚·B
+dict 6 6cd0af1225cb153d 483e1b4758832d8c R“c‚³‚ñ‚Í“Œ‹“sVh‹æ‚ÉZ‚ñ‚Å‚¢‚Ü‚·B
+dict 7 28c2f764da06ab72 30c51be1c7e44607 konnichiwa. kore wa roomaji desu.
+dict 8 bcb24322628b0fc7 53366efa7e26f0e1 ’N‚Å‚·‚©H
+dict 9 b989da755bfd4898 384e162a16dc3b10 –{“–H
+dict 10 2efcbffc2302f83f 7527ce5cfff90de5 “V‹C‚ª‚¢‚¢‚Å‚·‚ËH
+second 1 0e1fd9eaf8db1cfc 4408709bccb3a416 ‚±‚ñ‚É‚¿‚ÍB‚¨Œ³‹C‚Å‚·‚©B
+second 2 55af0e83ccbb7e40 7b5b06f4c0afa490 “ú–{Œê‚Ì‰¹º‡¬‚ğƒeƒXƒg‚µ‚Ä‚¢‚Ü‚·B
+second 3 51cd6c0176e9bec5 bdd3a251399810fd ¡“ú‚Í1999”N8Œ27“úAŒßŒã745•ª‚Å‚·B
+second 4 01b5d3434ed0725b 3f2143e69f59c1de ƒRƒ“ƒsƒ…[ƒ^‚ÆƒCƒ“ƒ^[ƒlƒbƒg‚Ì‹ZpB
+second 5 9730467201eee2da f6af02fb7be57bf7 IBM ViaVoice ‚Í‰pŒê‚Ì–¼‘O‚Å‚·B
+second 6 94c399f1d76a8f6e 7daf5297d988b806 R“c‚³‚ñ‚Í“Œ‹“sVh‹æ‚ÉZ‚ñ‚Å‚¢‚Ü‚·B
+second 7 238be356eb52fe80 f2b0e9a47f917ac7 konnichiwa. kore wa roomaji desu.
+second 8 dd99805f15ecb3b8 bcf06bda89c3479b ’N‚Å‚·‚©H
+second 9 3e0ee53630028ad6 33817bc8b28d6b38 –{“–H
+second 10 d01eb6d8fd2505c6 dfbf2ca03e819309 “V‹C‚ª‚¢‚¢‚Å‚·‚ËH
+ssml 1 df757af8b26e6da9 8155d84789aefd0e <speak version="1.0" xml:lang="ja-JP">ãŠã¯ã‚ˆã†ã”ã–ã„ã¾ã™ã€‚</speak>
+ssml 2 ae20d5faf3b45815 518b72cb20d0508c <speak version="1.0" xml:lang="ja-JP"><prosody rate="slow">ä»Šã¯ã‚†ã£ãã‚Šã¨ã€‚</prosody> ã¾ãŸæ™®é€šã«ã€‚</speak>
+ssml 3 411d7dddacb319b6 ee4f48415c212a05 <speak version="1.0" xml:lang="ja-JP"><prosody pitch="high" range="x-high" volume="loud">å››ã¤ã¨ã‚‚ä¸€ç·’ã«ã€‚</prosody></speak>
+ssml 4 fa927801a32ad48c e4bb434b9d05ea84 <speak version="1.0" xml:lang="ja-JP"><emphasis level="strong">ã“ã‚Œ</emphasis>ã§ã‚ã£ã¦ã€ãã‚Œã§ã¯ãªã„ã€‚</speak>
+ssml 5 8ae65807ac387420 d66246ea26282387 <speak version="1.0" xml:lang="ja-JP"><voice gender="female">å½¼å¥³ãŒãã†è¨€ã£ãŸã€‚</voice> å½¼ã¯è¨€ã‚ãªã‹ã£ãŸã€‚</speak>
+ssml 6 bf127829b6fc3125 94c3e17e4564678b <speak version="1.0" xml:lang="ja-JP">å€¤æ®µã¯ <say-as interpret-as="cardinal">1234</say-as> å††ã€<say-as interpret-as="ordinal">3</say-as> ç•ªç›®ã§ã™ã€‚</speak>
+ssml 7 da399102d783e846 716b1ab9d1e68686 <speak version="1.0" xml:lang="ja-JP">ç¶´ã‚Šã¯ <say-as interpret-as="letters">abc</say-as>ã€é›»è©±ã¯ <say-as interpret-as="number" format="telephone">5551234</say-as>ã€‚</speak>
+ssml 8 3a7e46a5eb3fcae4 3bdbd58d9aa442cf <speak version="1.0" xml:lang="ja-JP">å°‘ã—<break time="500ms"/>å¾…ã£ã¦ãã ã•ã„ã€‚<mark name="ã“ã“"/> ãã“ã€‚</speak>
+ssml 9 338ca98847c767ae 85e93316cfb271de <speak version="1.0" xml:lang="ja-JP"><sub alias="ä¸–ç•Œè¦æ¨¡ã®ç¶²">WWW</sub> ã¨ <phoneme ph="h.E.l.oU">ã“ã‚“ã«ã¡ã¯</phoneme>ã€‚</speak>
+ssml 10 dc0f2baf963ea9f1 efc7687746beba3b <speak version="1.0" xml:lang="ja-JP">æ±äº¬éƒ½æ–°å®¿åŒºã€a &amp; b &lt; c ã®è¨˜å·ã¤ãã€‚</speak>
+wide 1 045744dd8cfac9c4 8bc7254ffdf0a88e ‚±‚ñ‚É‚¿‚ÍB‚¨Œ³‹C‚Å‚·‚©B
+wide 2 9241cf5d3e8db2c7 ab8ece95dbb9eaa5 “ú–{Œê‚Ì‰¹º‡¬‚ğƒeƒXƒg‚µ‚Ä‚¢‚Ü‚·B
+wide 3 245fa66f2a8a29c9 43e469cf4227a6cf ¡“ú‚Í1999”N8Œ27“úAŒßŒã745•ª‚Å‚·B
+wide 4 b30fb6ab729c70b9 38db2765a7990746 ƒRƒ“ƒsƒ…[ƒ^‚ÆƒCƒ“ƒ^[ƒlƒbƒg‚Ì‹ZpB
+wide 5 c6681d62d6f7e0e7 6bb023f9b1b09bca IBM ViaVoice ‚Í‰pŒê‚Ì–¼‘O‚Å‚·B
+wide 6 514c485420b6ea10 527983177eff68f7 R“c‚³‚ñ‚Í“Œ‹“sVh‹æ‚ÉZ‚ñ‚Å‚¢‚Ü‚·B
+wide 7 4f4103cccd9f9195 b2e1a3d7d29ee0a7 konnichiwa. kore wa roomaji desu.
+wide 8 7cbb60c021b26c3a adb681a531fce3bf ’N‚Å‚·‚©H
+wide 9 7a31b58327019549 038fac74a361b90a –{“–H
+wide 10 c645a9482330c4fe 2e75876241f264d7 “V‹C‚ª‚¢‚¢‚Å‚·‚ËH
