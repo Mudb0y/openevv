@@ -642,7 +642,7 @@ def word_follows_rule(tag, cls, members, known, lcode, letters_at, fence_at,
 
 def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
              letters_at, phones_at, fence_at, params, piece, pfields, lists,
-             wordrange=None, header=None, through=False):
+             wordrange=None, header=None, through=False, measure=False):
     """One letter's rule, as the upper form.
 
     The shape is IBM's own and the tags are its numbering: the arm to fall to
@@ -715,7 +715,7 @@ def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
     if params == 1:
         w("  variable leftpoint word %d" % LEFT)
         w("  variable rightpoint word %d" % RIGHT)
-    if piece is not None:
+    if piece is not None and not measure:
         w("  variable piecestart word %d" % piece[0])
         w("  variable pieceend word %d" % piece[1])
     if any((a.listed and a.listed[2] == "word")
@@ -729,6 +729,20 @@ def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
     # difference between the two families of letter rule.
     left = "addr leftpoint" if params == 1 else "arg 1"
     right = "addr rightpoint" if params == 1 else "arg 2"
+    piece_start = "arg 3" if measure else "addr piecestart"
+    piece_end = "arg 4" if measure else "addr pieceend"
+
+    def render(arm):
+        if not measure:
+            return spell(arm, known, phones_of, phones_at, left, right, pfields)
+        # The Russian reader measures its legacy SPR window without laying
+        # phones on the spine. The low bits are the number of phone bytes,
+        # followed by the number of vowels and the kind of initial glide.
+        phones = arm.phones or ()
+        vowels = sum(p in ("a", "o", "u", "X", "E", "i") for p in phones)
+        soft = 16 if tuple(phones) in (("y", "E"), ("y", "a")) else 0
+        return "  put %d into arg 5 at 0\n  go to done" % (
+            len(phones) + 8 * vowels + soft)
     w("")
     # The fence is one statement type, and the wrapper IBM's own rule calls
     # is named for a string of that language's own. Ours is minted instead,
@@ -866,8 +880,8 @@ def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
                 w("  if answer is not 0")
                 w("    go to %s" % nxt)
                 w("  end")
-                w("  call lpta_loadp addr %s" % ("wordstart" if "word" in a.when
-                                                  else "piecestart"))
+                w("  call lpta_loadp %s" % ("addr wordstart" if "word" in a.when
+                                            else piece_start))
                 w("  call test_ptr")
                 w("  if answer is not 0")
                 w("    go to %s" % nxt)
@@ -1019,8 +1033,8 @@ def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
                     w("  if answer is not 0")
                     w("    backtrack")
                     w("  end")
-                w("  call lpta_loadp addr %s" % ("wordend" if "word" in a.when
-                                                  else "pieceend"))
+                w("  call lpta_loadp %s" % ("addr wordend" if "word" in a.when
+                                            else piece_end))
                 w("  call test_ptr")
                 w("  if answer is not 0")
                 w("    backtrack")
@@ -1131,7 +1145,7 @@ def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
                     w("place %s" % miss)
                 w("  backtrack")
                 w("place sofar%d" % i)
-            w(spell(a, known, phones_of, phones_at, left, right, pfields))
+            w(render(a))
             w("  go to laid")
         else:
             w("")
@@ -1139,7 +1153,7 @@ def rule_for(tag, letter, name, obj, arms, known, lcode, pcode,
                 w("# %s" % a.note)
             if i:
                 w("place arm%d on %d" % (i, tag_of[("fall", i)]))
-            w(spell(a, known, phones_of, phones_at, left, right, pfields))
+            w(render(a))
 
     if through:
         w("")
@@ -1442,6 +1456,14 @@ def compile_tag(tag):
                             letters_at, phones_at, fence_at,
                             takes(tag, stem, name), ranges[0], pfields,
                             lists, ranges[1], header, through=True))
+        if tag == "ruru":
+            out.append("")
+            russian_arms = [arm for block in mine for arm in block[3]]
+            out.append(rule_for(
+                tag, via, "ru_measure_letter", obj, russian_arms, known,
+                lcode, pcode, letters_at, phones_at, fence_at, 6,
+                ranges[0], pfields, lists, ranges[1], header,
+                through=True, measure=True))
     return "\n".join(out) + "\n", known.text(tag), stem
 
 

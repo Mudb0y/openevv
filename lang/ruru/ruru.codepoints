@@ -98,3 +98,6 @@
 2116 a6   # №, the numero sign, as the broken bar
 20bd a4   # ₽, the rouble sign, as the currency sign
 
+# Unicode spaces used as digit-group separators share the nonbreaking byte.
+2009 a0   # thin space
+202f a0   # narrow nonbreaking space

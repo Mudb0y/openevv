@@ -125,3 +125,10 @@ name long 39 hyphen_chain_next
 # the first eleven alike, and six kinds of dollar. set_global_constants sets
 # them to 6.1's values.
 short 7
+
+# Bytes in the Russian pronunciation window and the preceding word's start.
+long 1
+word 1
+
+# A forced window continues after the reader's opening annotation prefix.
+short 1

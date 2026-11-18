@@ -165,9 +165,30 @@ static void put16(FILE *f, unsigned v)
     fputc((int)((v >> 8) & 0xff), f);
 }
 
+static FILE *open_path(const char *path, const char *mode)
+{
+#if defined(_WIN32)
+    int n = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, path, -1, NULL, 0);
+    wchar_t *wide;
+    FILE *file = NULL;
+
+    if (n <= 0)
+        return NULL;
+    wide = malloc((size_t)n * sizeof *wide);
+    if (wide != NULL) {
+        if (MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, path, -1, wide, n))
+            file = _wfopen(wide, mode[0] == 'r' ? L"rb" : L"wb");
+        free(wide);
+    }
+    return file;
+#else
+    return fopen(path, mode);
+#endif
+}
+
 static void write_wav(const char *path, unsigned long rate)
 {
-    FILE         *f = fopen(path, "wb");
+    FILE         *f = open_path(path, "wb");
     unsigned long bytes = (unsigned long)nsamples * 2;
 
     if (f == NULL) {
@@ -237,7 +258,7 @@ static void drain(OldInst *h)
    and both builds then see exactly the same bytes. */
 static char *slurp(const char *path)
 {
-    FILE  *f = fopen(path, "rb");
+    FILE  *f = open_path(path, "rb");
     char  *buf;
     long   n;
 
@@ -245,9 +266,11 @@ static char *slurp(const char *path)
         fprintf(stderr, "speak: cannot read %s\n", path);
         exit(1);
     }
-    fseek(f, 0, SEEK_END);
-    n = ftell(f);
-    fseek(f, 0, SEEK_SET);
+    if (fseek(f, 0, SEEK_END) != 0 || (n = ftell(f)) < 0
+        || fseek(f, 0, SEEK_SET) != 0) {
+        fprintf(stderr, "speak: cannot size %s\n", path);
+        exit(1);
+    }
     buf = malloc((size_t)n + 1);
     if (buf == NULL || fread(buf, 1, (size_t)n, f) != (size_t)n) {
         fprintf(stderr, "speak: cannot read %s\n", path);
@@ -279,8 +302,13 @@ static char **utf8_args(int *argc, char **argv)
         int m = WideCharToMultiByte(CP_UTF8, 0, wide[i], -1, NULL, 0, NULL, NULL);
 
         out[i] = m > 0 ? malloc((size_t)m) : NULL;
-        if (out[i] == NULL)
+        if (out[i] == NULL) {
+            while (i > 0)
+                free(out[--i]);
+            free(out);
+            LocalFree(wide);
             return argv;
+        }
         WideCharToMultiByte(CP_UTF8, 0, wide[i], -1, out[i], m, NULL, NULL);
     }
     LocalFree(wide);
@@ -328,6 +356,7 @@ int main(int argc, char **argv)
         {
             const char *want = getenv("EVV_LANGUAGE");
             const char *ibm = getenv("EVV_IBM_DEFAULTS");
+            const char *no_builtin = getenv("EVV_NO_BUILTIN_DICT");
 
             /* The abbreviation dictionary and phrase prediction are off here
                and on in IBM's engine, the pause at an unpunctuated end is
@@ -341,6 +370,10 @@ int main(int argc, char **argv)
                 es_setDefaultParam(11, 1);
                 es_setDefaultParam(33, 0);
                 es_setDefaultParam(34, 0);
+            }
+            if (no_builtin != NULL && *no_builtin != 0) {
+                es_setDefaultParam(34, 0);
+                printf("speak: built-in dictionary off\n");
             }
             if (want != NULL && *want != 0)
                 h = eo_newEx((uint32_t)strtoul(want, NULL, 0));

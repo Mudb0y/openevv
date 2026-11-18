@@ -22,6 +22,7 @@ import re
 import struct
 import subprocess
 import sys
+import tempfile
 import zipfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -30,8 +31,8 @@ ADDON = os.path.join(HERE, "addon")
 
 #: Where the built libraries are, and what they are called inside the add-on.
 LIBRARIES = [
-    (os.path.join(ROOT, "build", "eci.dll"), "eci.dll"),
-    (os.path.join(ROOT, "build", "eci32.dll"), "eci32.dll"),
+    (os.path.join(ROOT, "build", "eci.dll"), "eci.dll", 0x8664),
+    (os.path.join(ROOT, "build", "eci32.dll"), "eci32.dll", 0x014C),
 ]
 
 #: Where the libraries go inside the add-on. Not "openevv", because that is
@@ -61,7 +62,7 @@ def _rva_to_offset(sections, rva):
     return None
 
 
-def exported_names(path):
+def exported_names(path, machine):
     """Every name a PE exports, read out of the file itself.
 
     Done here rather than with objdump so that packaging needs nothing but
@@ -70,11 +71,14 @@ def exported_names(path):
     with open(path, "rb") as f:
         image = f.read()
 
-    if image[:2] != b"MZ":
+    if len(image) < 64 or image[:2] != b"MZ":
         die("%s is not a PE file at all" % path)
     pe = struct.unpack_from("<I", image, 0x3C)[0]
-    if image[pe : pe + 4] != b"PE\0\0":
+    if pe + 26 > len(image) or image[pe : pe + 4] != b"PE\0\0":
         die("%s has no PE header" % path)
+    actual = struct.unpack_from("<H", image, pe + 4)[0]
+    if actual != machine:
+        die("%s has PE machine %#x, expected %#x" % (path, actual, machine))
 
     sections_count = struct.unpack_from("<H", image, pe + 6)[0]
     optional_size = struct.unpack_from("<H", image, pe + 20)[0]
@@ -239,7 +243,7 @@ def main():
 
     version = args.version or described()
 
-    for path, _name in LIBRARIES:
+    for path, _name, _machine in LIBRARIES:
         if not os.path.isfile(path):
             die(
                 "there is no %s; `make win' and `make win32' build both"
@@ -249,8 +253,8 @@ def main():
     wants = wanted_names()
     if not wants:
         die("the engine layer names no entry points, which cannot be right")
-    for path, name in LIBRARIES:
-        has = exported_names(path)
+    for path, name, machine in LIBRARIES:
+        has = exported_names(path, machine)
         missing = sorted(wants - has)
         if missing:
             die(
@@ -265,14 +269,19 @@ def main():
     os.makedirs(args.out, exist_ok=True)
     target = os.path.join(args.out, "openevv-%s.nvda-addon" % version)
 
-    with zipfile.ZipFile(target, "w", zipfile.ZIP_DEFLATED) as z:
-        z.writestr("manifest.ini", manifest)
-        for leaf in ("openevv.py", "_openevv.py", "_openevv_dictionaries.py"):
-            z.write(os.path.join(ADDON, "synthDrivers", leaf), "synthDrivers/" + leaf)
-        for path, name in LIBRARIES:
-            z.write(path, ENGINE_DIR + "/" + name)
-        for name, data in translations():
-            z.writestr(name, data)
+    with tempfile.TemporaryDirectory(dir=args.out) as directory:
+        staged = os.path.join(directory, "addon.zip")
+        with zipfile.ZipFile(staged, "w", zipfile.ZIP_DEFLATED) as z:
+            z.writestr("manifest.ini", manifest)
+            for leaf in ("LICENSE", "NOTICE"):
+                z.write(os.path.join(ROOT, leaf), leaf)
+            for leaf in ("openevv.py", "_openevv.py", "_openevv_dictionaries.py"):
+                z.write(os.path.join(ADDON, "synthDrivers", leaf), "synthDrivers/" + leaf)
+            for path, name, _machine in LIBRARIES:
+                z.write(path, ENGINE_DIR + "/" + name)
+            for name, data in translations():
+                z.writestr(name, data)
+        os.replace(staged, target)
 
     say("wrote %s, %d bytes" % (target, os.path.getsize(target)))
     return 0

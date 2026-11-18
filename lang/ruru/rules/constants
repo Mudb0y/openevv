@@ -244,6 +244,8 @@ bytes ru_lt_75 75   # в
 bytes ru_lt_7f 7f   # г
 bytes ru_lt_83 83   # д
 bytes ru_lt_8d 8d   # е
+bytes ru_end_6f8d6d 6d 8d 6f   # чем backwards
+bytes ru_end_day a0 77 8d 83   # день backwards
 bytes ru_lt_8f 8f   # ё
 bytes ru_lt_97 97   # ж
 bytes ru_lt_62 62   # з
@@ -563,7 +565,7 @@ bytes ru_w_9991789576                          48 99 91 78 95 76 48             
 bytes ru_w_999178956d6c                        48 99 91 78 95 6d 6c 48                          # пятыми
 bytes ru_w_9991789593                          48 99 91 78 95 93 48                             # пятых
 bytes ru_w_999178a0                            48 99 91 78 a0 48                                # пять
-bytes ru_w_999178a0838d6e9178                  48 99 91 78 a0 83 8d 6e 91 78 48                 # пятьдесят
+bytes ru_w_999178a0838d6e9178                  48 99 91 83 8d 6e 91 9d 78 48                    # пятьдесят, пядеся́т
 bytes ru_w_999178a06e8578                      48 99 91 78 a0 6e 85 78 48                       # пятьсот
 bytes ru_w_6e8d83a06d6191                      48 6e 8d 83 a0 6d 61 91 48                       # седьмая
 bytes ru_w_6e8d83a06d857f85                    48 6e 8d 83 a0 6d 85 7f 85 48                    # седьмого
@@ -668,15 +670,15 @@ bytes ru_w_78648f936e85789593                  48 78 64 8f 93 6e 85 78 95 93 48 
 bytes ru_w_78956e916f                          48 78 95 6e 91 6f 48                             # тысяч
 bytes ru_w_78956e916f61                        48 78 95 6e 91 6f 61 48                          # тысяча
 bytes ru_w_78956e916f6c                        48 78 95 6e 91 6f 6c 48                          # тысячи
-bytes ru_w_78956e916f776191                    48 78 95 6e 91 6f 77 61 91 48                    # тысячная
-bytes ru_w_78956e916f77857f85                  48 78 95 6e 91 6f 77 85 7f 85 48                 # тысячного
-bytes ru_w_78956e916f77858d                    48 78 95 6e 91 6f 77 85 8d 48                    # тысячное
-bytes ru_w_78956e916f77856d                    48 78 95 6e 91 6f 77 85 6d 48                    # тысячном
-bytes ru_w_78956e916f77856d80                  48 78 95 6e 91 6f 77 85 6d 80 48                 # тысячному
-bytes ru_w_78956e916f77809f                    48 78 95 6e 91 6f 77 80 9f 48                    # тысячную
-bytes ru_w_78956e916f779576                    48 78 95 6e 91 6f 77 95 76 48                    # тысячный
-bytes ru_w_78956e916f77956d6c                  48 78 95 6e 91 6f 77 95 6d 6c 48                 # тысячными
-bytes ru_w_78956e916f779593                    48 78 95 6e 91 6f 77 95 93 48                    # тысячных
+bytes ru_w_78956e916f776191                    48 78 95 9d 6e 91 6f 77 61 91 48                    # тысячная
+bytes ru_w_78956e916f77857f85                  48 78 95 9d 6e 91 6f 77 85 7f 85 48                 # тысячного
+bytes ru_w_78956e916f77858d                    48 78 95 9d 6e 91 6f 77 85 8d 48                    # тысячное
+bytes ru_w_78956e916f77856d                    48 78 95 9d 6e 91 6f 77 85 6d 48                    # тысячном
+bytes ru_w_78956e916f77856d80                  48 78 95 9d 6e 91 6f 77 85 6d 80 48                 # тысячному
+bytes ru_w_78956e916f77809f                    48 78 95 9d 6e 91 6f 77 80 9f 48                    # тысячную
+bytes ru_w_78956e916f779576                    48 78 95 9d 6e 91 6f 77 95 76 48                    # тысячный
+bytes ru_w_78956e916f77956d6c                  48 78 95 9d 6e 91 6f 77 95 6d 6c 48                 # тысячными
+bytes ru_w_78956e916f779593                    48 78 95 9d 6e 91 6f 77 95 93 48                    # тысячных
 bytes ru_w_6f8d78758f64786191                  48 6f 8d 78 75 8f 64 78 61 91 48                 # четвёртая
 bytes ru_w_6f8d78758f6478857f85                48 6f 8d 78 75 8f 64 78 85 7f 85 48              # четвёртого
 bytes ru_w_6f8d78758f6478858d                  48 6f 8d 78 75 8f 64 78 85 8d 48                 # четвёртое
@@ -745,7 +747,7 @@ bytes ru_w_798d6e78809f                        48 79 8d 6e 78 80 9f 48          
 bytes ru_w_798d6e78956d6c                      48 79 8d 6e 78 95 6d 6c 48                       # шестыми
 bytes ru_w_798d6e789593                        48 79 8d 6e 78 95 93 48                          # шестых
 bytes ru_w_798d6e78a0                          48 79 8d 6e 78 a0 48                             # шесть
-bytes ru_w_798d6e78a0838d6e9178                48 79 8d 6e 78 a0 83 8d 6e 91 78 48              # шестьдесят
+bytes ru_w_798d6e78a0838d6e9178                48 79 8d 62 83 8d 6e 91 9d 78 48                 # шестьдесят, шездеся́т
 bytes ru_w_798d6e78a06e8578                    48 79 8d 6e 78 a0 6e 85 78 48                    # шестьсот
 
 # The symbols ru_char_name names in Russian, and their names.
@@ -947,3 +949,8 @@ bytes ru_ph_I  1d   # an unstressed е, и or я
 bytes ru_ph_X  21   # an unstressed е after ж or ш
 bytes ru_ph_U  2e   # an unstressed у
 bytes ru_dollar_prefix_text 83 85 63 63 61 64 48   # доллар and a space
+bytes ru_end_6e85648584 84 85 64 85 6e   # сорок backwards
+bytes ru_chto_backwards 85 78 6f   # что
+
+bytes ru_decimal_point 48 78 85 6f 84 61 48   # точка
+bytes ru_dom_backwards 6d 85 83   # дом

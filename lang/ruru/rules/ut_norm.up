@@ -1527,7 +1527,7 @@ rule end_of_sentence takes 2
   place p3a6c9
   set h_rcx to 1
   set h_rsi to 1
-  call testFldeq h_rsi 1 h_rcx
+  call ru_sentence_lower
   set s3a6d3 to answer
   set h_rax to s3a6d3
   set h_rsi to h_r12
@@ -4185,6 +4185,7 @@ rule normalize_text takes 3
   local c140 bytes 8
   local c150 bytes 8
   local c160 bytes 8
+  local pending_prefix
   local v108 word
   local v110 word
   local h_rax
@@ -4196,6 +4197,7 @@ rule normalize_text takes 3
   place p2e144
   place p2e17f
   place p2e1df
+  set pending_prefix to 0
   set h_rsi to addr c140
   call get_parm h_rsi arg 1 -6
   set h_rax to answer
@@ -4347,6 +4349,10 @@ rule normalize_text takes 3
   if h_rax is 0
     go to p2e596
   end
+  call ru_joined_period addr c130
+  if answer is 0
+    go to p2e684
+  end
   place p2e453
   place t2e453_12 on 12
   set h_rsi to addr c130
@@ -4375,6 +4381,10 @@ rule normalize_text takes 3
     go to p2e596
   end
   place t2e47c_15 on 15
+  call ru_hold_number_prefix addr c130 addr pending_prefix
+  if answer is 0
+    go to p2e684
+  end
   set h_rsi to addr c130
   call ru_dollar_prefix h_rsi
   if answer is 0
@@ -4447,6 +4457,10 @@ rule normalize_text takes 3
   call convert_digits_to_words h_rsi addr c100
   set h_rax to answer
   if h_rax is 0
+    if pending_prefix is not 0
+      call ru_apply_number_prefix addr c130 pending_prefix
+      set pending_prefix to 0
+    end
     go to p2e596
   end
   place p2e52e
@@ -4514,6 +4528,10 @@ rule normalize_text takes 3
   set h_rax to answer
   place p2e5c2
   place t2e5c2_31 on 31
+  call ru_pronunciation_window addr c130 addr c100
+  if answer is 0
+    match
+  end
   set h_rax to cell c100 value
   set global word 1480 to h_rax
   set h_rsi to addr c100
@@ -8919,6 +8937,56 @@ rule shortdash takes 3
   go to p3c447
 end
 
+# Cyrillic letters share a byte with their uppercase forms. Allow the
+# sentence break after ? or ! without using the next letter's case.
+rule ru_sentence_lower takes 1 from ut_norm.obj
+  bare
+  afresh
+  call ru_is_russian
+  if answer is 0
+    answer 1
+  end
+  call ZZtestFldeq1_1_1
+  answer answer
+end
+
+# A period inside adjoining Russian words separates them without a pause.
+# A period followed by whitespace continues through normal punctuation.
+rule ru_joined_period takes 2 from ut_norm.obj
+  afresh
+  local right bytes 8
+  call ZZfence_null
+  call lpta_loadp arg 1
+  call setscan_r 1
+  if answer is not 0
+    give up
+  end
+  call test_string_s 1 1 sym ru_dot
+  if answer is not 0
+    give up
+  end
+  call savescptr 1 addr right
+  call ru_is_russian
+  if answer is not 0
+    give up
+  end
+  call lpta_loadp arg 1
+  call setscan_l 1
+  if answer is not 0
+    give up
+  end
+  call ru_is_russian
+  if answer is not 0
+    give up
+  end
+  call lpta_rpta_loadp arg 1 addr right
+  call insert_2pt_s 1 1 sym ru_space 0
+  if answer is 0
+    match
+  end
+  give up
+end
+
 # в, к and с are the three Russian prepositions with no vowel, and Russian
 # says each as part of the word after it: в доме is one word stressed where
 # доме is, and в парке is ф парке, since a consonant takes its voice from the
@@ -8947,25 +9015,8 @@ rule ru_tok_lookup takes 2 from ut_norm.obj
   if answer is not 0
     go to lookup
   end
-  set letter to 0
-  if letter is 0
-    call test_string_s 1 1 sym ru_lt_75           # в
-    if answer is 0
-      set letter to sym ru_lt_75
-    end
-  end
-  if letter is 0
-    call test_string_s 1 1 sym ru_lt_84           # к
-    if answer is 0
-      set letter to sym ru_lt_84
-    end
-  end
-  if letter is 0
-    call test_string_s 1 1 sym ru_lt_6e           # с
-    if answer is 0
-      set letter to sym ru_lt_6e
-    end
-  end
+  call ru_scan_preposition
+  set letter to answer
   if letter is 0
     go to lookup
   end
@@ -8996,8 +9047,99 @@ rule ru_tok_lookup takes 2 from ut_norm.obj
   call tok_lookup addr right
   call lpta_rpta_loadp addr here addr right
   call insert_2pt_s 1 1 letter 0
+  if answer is 0
+    # A joined form can also be a dictionary headword, as in в одной.
+    # Its pronunciation belongs to the word the preposition was joined to.
+    give up
+  end
 place lookup
   call tok_lookup arg 1
+  if answer is 0
+    match
+  end
+  give up
+end
+
+# Read a one-letter preposition and advance the scan past it.
+rule ru_scan_preposition takes 1 from ut_norm.obj
+  bare
+  call test_string_s 1 1 sym ru_lt_75           # в
+  if answer is 0
+    answer sym ru_lt_75
+  end
+  call test_string_s 1 1 sym ru_lt_84           # к
+  if answer is 0
+    answer sym ru_lt_84
+  end
+  call test_string_s 1 1 sym ru_lt_6e           # с
+  if answer is 0
+    answer sym ru_lt_6e
+  end
+  answer 0
+end
+
+# A following number will become a word in the ordinary number pass. Keep
+# the preposition until that pass has produced its first word.
+rule ru_hold_number_prefix takes 3 from ut_norm.obj
+  afresh
+  local end bytes 8
+  local letter
+  call ZZfence_null
+  call push_ptr_init addr end
+  call ZZlpta_load__setscan_r__1 arg 1
+  if answer is not 0
+    give up
+  end
+  call ru_scan_preposition
+  set letter to answer
+  if letter is 0
+    give up
+  end
+  call savescptr 1 addr end
+  call test_string_s 1 1 sym ru_space
+  if answer is not 0
+    give up
+  end
+  while 1
+    call test_string_s 1 1 sym ru_space
+    if answer is not 0
+      leave
+    end
+  end
+  call ru_scan_digit
+  if answer is 10
+    give up
+  end
+  call lpta_rpta_loadp arg 1 addr end
+  call insert_2pt_s 1 1 sym ru_space 0
+  if answer is 0
+    put letter into arg 2 at 0
+    match
+  end
+  give up
+end
+
+# The number pass leaves one space ahead of its first word. Replace that
+# space with the consonant so the word's ordinary letter rules voice it.
+rule ru_apply_number_prefix takes 3 from ut_norm.obj
+  afresh
+  local end bytes 8
+  call ZZfence_null
+  call ZZlpta_load__setscan_r__1 arg 1
+  if answer is not 0
+    give up
+  end
+  call test_string_s 1 1 sym ru_space
+  if answer is not 0
+    give up
+  end
+  call savescptr 1 addr end
+  call ru_is_russian
+  if answer is not 0
+    give up
+  end
+  call lpta_rpta_loadp arg 1 addr end
+  call insert_2pt_s 1 1 arg 2 0
   if answer is 0
     match
   end
@@ -10518,7 +10660,7 @@ end
 # пятьдесят
 rule ru_say_999178a0838d6e9178 takes 2 from ut_norm.obj
   afresh
-  call ru_say arg 1 sym ru_w_999178a0838d6e9178 11
+  call ru_say arg 1 sym ru_w_999178a0838d6e9178 10
   match
 end
 
@@ -11253,63 +11395,63 @@ end
 # тысячная
 rule ru_say_78956e916f776191 takes 2 from ut_norm.obj
   afresh
-  call ru_say arg 1 sym ru_w_78956e916f776191 10
+  call ru_say arg 1 sym ru_w_78956e916f776191 11
   match
 end
 
 # тысячного
 rule ru_say_78956e916f77857f85 takes 2 from ut_norm.obj
   afresh
-  call ru_say arg 1 sym ru_w_78956e916f77857f85 11
+  call ru_say arg 1 sym ru_w_78956e916f77857f85 12
   match
 end
 
 # тысячное
 rule ru_say_78956e916f77858d takes 2 from ut_norm.obj
   afresh
-  call ru_say arg 1 sym ru_w_78956e916f77858d 10
+  call ru_say arg 1 sym ru_w_78956e916f77858d 11
   match
 end
 
 # тысячном
 rule ru_say_78956e916f77856d takes 2 from ut_norm.obj
   afresh
-  call ru_say arg 1 sym ru_w_78956e916f77856d 10
+  call ru_say arg 1 sym ru_w_78956e916f77856d 11
   match
 end
 
 # тысячному
 rule ru_say_78956e916f77856d80 takes 2 from ut_norm.obj
   afresh
-  call ru_say arg 1 sym ru_w_78956e916f77856d80 11
+  call ru_say arg 1 sym ru_w_78956e916f77856d80 12
   match
 end
 
 # тысячную
 rule ru_say_78956e916f77809f takes 2 from ut_norm.obj
   afresh
-  call ru_say arg 1 sym ru_w_78956e916f77809f 10
+  call ru_say arg 1 sym ru_w_78956e916f77809f 11
   match
 end
 
 # тысячный
 rule ru_say_78956e916f779576 takes 2 from ut_norm.obj
   afresh
-  call ru_say arg 1 sym ru_w_78956e916f779576 10
+  call ru_say arg 1 sym ru_w_78956e916f779576 11
   match
 end
 
 # тысячными
 rule ru_say_78956e916f77956d6c takes 2 from ut_norm.obj
   afresh
-  call ru_say arg 1 sym ru_w_78956e916f77956d6c 11
+  call ru_say arg 1 sym ru_w_78956e916f77956d6c 12
   match
 end
 
 # тысячных
 rule ru_say_78956e916f779593 takes 2 from ut_norm.obj
   afresh
-  call ru_say arg 1 sym ru_w_78956e916f779593 10
+  call ru_say arg 1 sym ru_w_78956e916f779593 11
   match
 end
 
@@ -11792,7 +11934,7 @@ end
 # шестьдесят
 rule ru_say_798d6e78a0838d6e9178 takes 2 from ut_norm.obj
   afresh
-  call ru_say arg 1 sym ru_w_798d6e78a0838d6e9178 12
+  call ru_say arg 1 sym ru_w_798d6e78a0838d6e9178 11
   match
 end
 
@@ -12119,11 +12261,268 @@ rule ru_scan_digit takes 0 from ut_norm.obj
   answer v
 end
 
+# A complete group is exactly three digits after a single space. A
+# nonbreaking space can also join a group to an unseparated run of digits.
+rule ru_numeric_group takes 2 from ut_norm.obj
+  afresh
+  local k
+  call testFldeq 1 0 196                       # nonbreaking space
+  if answer is not 0
+    if arg 1 is more than 3
+      give up
+    end
+    call testFldeq 1 0 72                     # ordinary space
+    if answer is not 0
+      give up
+    end
+  end
+  call advance_tok
+  if answer is not 0
+    give up
+  end
+  set k to 0
+  while k is less than 3
+    call ru_scan_digit
+    if answer is 10
+      give up
+    end
+    increment k
+  end
+  call ru_scan_digit
+  if answer is 10
+    match
+  end
+  give up
+end
+
+rule ru_scan_numeric_separator takes 1 from ut_norm.obj
+  bare
+  call test_string_s 1 1 sym ru_dot
+  if answer is 0
+    answer 0
+  end
+  call test_string_s 1 1 sym eti_s_1b90f6      # slash
+  answer answer
+end
+
+# Two-digit fields next to a date separator lose a leading zero.
+rule ru_date_field takes 3 from ut_norm.obj
+  afresh
+  call ZZlpta_load__setscan_r__1 arg 2
+  if answer is 0
+    call ru_scan_numeric_separator
+    if answer is 0
+      match
+    end
+  end
+  call lpta_loadp arg 1
+  call setscan_l 1
+  if answer is 0
+    call ru_scan_numeric_separator
+    if answer is 0
+      match
+    end
+  end
+  give up
+end
+
+# Leave token boundaries in place when blanking the rest of a group
+# or its suffix. Replacing a range spanning several words loses those
+# boundaries, so speech after the group would be skipped.
+rule ru_number_space takes 3 from ut_norm.obj
+  afresh
+  call lpta_rpta_loadp arg 1 arg 2
+  call mark_s 1 0 72 0
+  call lpta_rpta_loadp arg 1 arg 2
+  call mark_s 1 1 0 0
+  call lpta_rpta_loadp arg 1 arg 2
+  call mark_s 1 3 5 0
+  call lpta_rpta_loadp arg 1 arg 2
+  call mark_s 1 4 0 0
+  match
+end
+
+# A separator is still visible while we are converting the preceding number.
+rule ru_strip_next_date_zero takes 1 from ut_norm.obj
+  afresh
+  local left bytes 8
+  local right bytes 8
+  call savescptr 1 addr left
+  call test_string_s 1 1 sym ru_d0
+  if answer is not 0
+    give up
+  end
+  call savescptr 2 addr right
+  call ru_scan_digit
+  if answer is 10
+    give up
+  end
+  call ru_scan_digit
+  if answer is not 10
+    give up
+  end
+  call ru_scan_numeric_separator
+  if answer is 0
+    give up                            # its own trailing separator marks the field
+  end
+  call ru_number_space addr left addr right
+  match
+end
+
+# A decimal has one fractional field. A second separator of the same
+# kind followed by a digit leaves the current field to the date/version pass.
+rule ru_decimal_fraction takes 5 from ut_norm.obj
+  afresh
+  local start bytes 8
+  local end bytes 8
+  local cursor bytes 8
+  local comma
+  local n
+  local first
+  local d1
+  local d2
+  local d3
+  local digit
+  call ZZfence_null
+  if arg 3 is 0
+    if arg 4 is more than 1
+      give up
+    end
+  end
+  call ZZlpta_load__setscan_r__1 arg 2
+  if answer is not 0
+    give up
+  end
+  set comma to 0
+  call test_string_s 1 1 sym ru_dot
+  if answer is not 0
+    call test_string_s 1 1 sym ru_comma
+    if answer is not 0
+      give up
+    end
+    set comma to 1
+  end
+  call savescptr 1 addr start
+  set n to 0
+  set d1 to 0
+  set d2 to 0
+  set d3 to 0
+  while 1
+    call savescptr 2 addr end
+    call ru_scan_digit
+    if answer is 10
+      leave
+    end
+    if n is 0
+      set first to answer
+    end
+    set d3 to d2
+    set d2 to d1
+    set d1 to answer
+    increment n
+  end
+  if n is 0
+    give up
+  end
+  if comma is 0
+    call test_string_s 1 1 sym ru_dot
+  else
+    call test_string_s 1 1 sym ru_comma
+  end
+  if answer is 0
+    call ru_scan_digit
+    if answer is not 10
+      give up
+    end
+  end
+  if comma is 0
+    call ru_say arg 1 sym ru_decimal_point 7
+  else
+    call ru_say_62619991786191 arg 1
+  end
+  if n is less than 4
+    if first is not 0
+      call ru_group arg 1 d3 d2 d1 0
+      call ru_number_space arg 2 addr end
+      match
+    end
+  end
+  call ZZlpta_load__setscan_r__1 addr start
+  while n is more than 0
+    call ru_scan_digit
+    set digit to answer
+    call savescptr 3 addr cursor
+    call ru_digit arg 1 digit
+    decrement n
+    if n is more than 0
+      call ZZlpta_load__setscan_r__1 addr cursor
+    end
+  end
+  call ru_number_space arg 2 addr end
+  match
+end
+
+# A number larger than the cardinal table is read digit by digit. Keep
+# one boundary for the text being written and another for the digits still
+# to read. The span was already checked for valid grouping.
+rule ru_long_number takes 6 from ut_norm.obj
+  afresh
+  local written bytes 8
+  local cursor bytes 8
+  local left
+  local digit
+  call ZZfence_null
+  call ZZlpta_load__setscan_r__1 arg 1
+  if answer is not 0
+    give up
+  end
+  call advance_tok
+  if answer is not 0
+    give up
+  end
+  call savescptr 1 addr written
+  call lpta_rpta_loadp arg 1 addr written
+  call insert_2pt_s 1 1 sym ru_space 0
+  if answer is not 0
+    give up
+  end
+  call ru_digit addr written arg 4
+  set left to arg 3
+  decrement left
+  call ZZlpta_load__setscan_r__1 addr written
+  while left is more than 0
+    call ru_scan_digit
+    set digit to answer
+    if digit is 10
+      call advance_tok
+      if answer is not 0
+        give up
+      end
+      again
+    end
+    call savescptr 2 addr cursor
+    call ru_digit addr written digit
+    decrement left
+    if left is more than 0
+      call ZZlpta_load__setscan_r__1 addr cursor
+    end
+  end
+  call ru_number_space addr written arg 2
+  put cell written value into arg 5 at 4
+  match
+end
+
 rule ru_digits_to_words takes 3 from ut_norm.obj
   afresh
   local p bytes 8
   local end bytes 8
+  local source_end bytes 8
+  local cut bytes 8
+  local grouped
   local n
+  local width
+  local group_width
+  local first
   local k
   local form
   local ord
@@ -12150,6 +12549,10 @@ rule ru_digits_to_words takes 3 from ut_norm.obj
     go to english
   end
   set n to 0
+  set width to 0
+  set group_width to 0
+  set first to 10
+  set grouped to 0
   set d1 to 0
   set d2 to 0
   set d3 to 0
@@ -12163,69 +12566,30 @@ rule ru_digits_to_words takes 3 from ut_norm.obj
   set d11 to 0
   set d12 to 0
   while 1
-    set v to 10
+    call ru_scan_digit
+    set v to answer
     if v is 10
-      call test_string_s 1 1 sym ru_d0
-      if answer is 0
-        set v to 0
+      if n is 0
+        leave
       end
-    end
-    if v is 10
-      call test_string_s 1 1 sym ru_d1
-      if answer is 0
-        set v to 1
+      if first is 0
+        leave
       end
-    end
-    if v is 10
-      call test_string_s 1 1 sym ru_d2
-      if answer is 0
-        set v to 2
+      call ru_numeric_group group_width
+      if answer is not 0
+        leave
       end
-    end
-    if v is 10
-      call test_string_s 1 1 sym ru_d3
-      if answer is 0
-        set v to 3
+      if grouped is 0
+        call savescptr 1 addr cut
+        set grouped to 1
       end
+      call advance_tok
+      increment width
+      set group_width to 0
+      again
     end
-    if v is 10
-      call test_string_s 1 1 sym ru_d4
-      if answer is 0
-        set v to 4
-      end
-    end
-    if v is 10
-      call test_string_s 1 1 sym ru_d5
-      if answer is 0
-        set v to 5
-      end
-    end
-    if v is 10
-      call test_string_s 1 1 sym ru_d6
-      if answer is 0
-        set v to 6
-      end
-    end
-    if v is 10
-      call test_string_s 1 1 sym ru_d7
-      if answer is 0
-        set v to 7
-      end
-    end
-    if v is 10
-      call test_string_s 1 1 sym ru_d8
-      if answer is 0
-        set v to 8
-      end
-    end
-    if v is 10
-      call test_string_s 1 1 sym ru_d9
-      if answer is 0
-        set v to 9
-      end
-    end
-    if v is 10
-      leave
+    if n is 0
+      set first to v
     end
     set d12 to d11
     set d11 to d10
@@ -12240,25 +12604,47 @@ rule ru_digits_to_words takes 3 from ut_norm.obj
     set d2 to d1
     set d1 to v
     increment n
+    increment width
+    increment group_width
   end
   if n is 0
-    go to english
-  end
-  if n is more than 12
     go to english
   end
   # The end of the digits, walked to from the first of them a digit at a
   # time. It is not the caller's right point, which stands after the first
   # digit only, and not the place the scan stopped at, which at the end of
-  # the text is nowhere.
+  # the text is nowhere. Return the surviving boundary to the caller
+  # once the digits have been replaced, so it can continue the utterance.
   call lpta_loadp arg 1
   call setscan_r 1
-  set k to n
+  set k to width
   while k is more than 0
     call advance_tok
     decrement k
   end
   call savescptr 1 addr end
+  if n is more than 12
+    call ru_long_number arg 1 addr end n first arg 2
+    if answer is 0
+      match
+    end
+    give up
+  end
+  if n is 2
+    if d2 is 0
+      call ru_date_field arg 1 addr end
+      if answer is 0
+        set n to 1
+      end
+    end
+  end
+  call ZZget_parmPTR addr source_end addr end
+  if grouped is 1
+    call ru_number_space addr cut addr source_end
+    call lpta_loadp addr cut
+    call setscan_r 1
+    call savescptr 9 addr end
+  end
   call lpta_rpta_loadp arg 1 addr end
   call insert_2pt_s 1 1 sym ru_space 0
   # An ordinal: a hyphen and an ending straight after the digits, 1-го, 2-й,
@@ -12266,12 +12652,12 @@ rule ru_digits_to_words takes 3 from ut_norm.obj
   # ordinal, in the ending the text wrote; a round thousand is тысячный.
   set ord to 0
   set olen to 0
-  call lpta_loadp addr end
+  call lpta_loadp addr source_end
   call setscan_r 1
   if answer is 0
     call test_string_s 1 1 sym ru_hyphen
     if answer is 0
-      call lpta_loadp addr end
+      call lpta_loadp addr source_end
       call setscan_r 1
       call advance_tok
       call savescptr 4 addr q
@@ -13760,7 +14146,7 @@ rule ru_digits_to_words takes 3 from ut_norm.obj
       end
     end
     # And the hyphen and the ending, made spaces where they stand.
-    call lpta_loadp addr end
+    call lpta_loadp addr source_end
     call setscan_r 1
     set k to olen
     increment k
@@ -13769,14 +14155,8 @@ rule ru_digits_to_words takes 3 from ut_norm.obj
       decrement k
     end
     call savescptr 5 addr p
-    call lpta_rpta_loadp addr end addr p
-    call mark_s 1 0 72 0
-    call lpta_rpta_loadp addr end addr p
-    call mark_s 1 1 0 0
-    call lpta_rpta_loadp addr end addr p
-    call mark_s 1 3 5 0
-    call lpta_rpta_loadp addr end addr p
-    call mark_s 1 4 0 0
+    call ru_number_space addr source_end addr p
+    put cell end value into arg 2 at 4
     match
   end
   # A number that begins with a nought, 007, is said a digit at a time.
@@ -13885,12 +14265,12 @@ rule ru_digits_to_words takes 3 from ut_norm.obj
     call ru_group addr end d3 d2 d1 0
   end
   # A percent sign is said, in the form the last two digits ask for.
-  call lpta_loadp addr end
+  call lpta_loadp addr source_end
   call setscan_r 1
   if answer is 0
     call test_string_s 1 1 sym ru_percent
     if answer is 0
-      call lpta_loadp addr end
+      call lpta_loadp addr source_end
       call setscan_r 1
       call advance_tok
       call savescptr 2 addr p
@@ -13918,28 +14298,24 @@ rule ru_digits_to_words takes 3 from ut_norm.obj
       if form is 3
         call ru_say_996485658d77788575 addr end
       end
-      call lpta_rpta_loadp addr end addr p
-      call mark_s 1 0 72 0
-      call lpta_rpta_loadp addr end addr p
-      call mark_s 1 1 0 0
-      call lpta_rpta_loadp addr end addr p
-      call mark_s 1 3 5 0
-      call lpta_rpta_loadp addr end addr p
-      call mark_s 1 4 0 0
+      call ru_number_space addr source_end addr p
     end
   end
-  # A colon or a comma between two numbers is made a space, so that what
-  # follows is a number of its own, and the comma is said: 3,5 is три запятая
-  # пять and 19:45 is девятнадцать сорок пять. English's time and decimal
-  # rules are left nothing to read.
-  call lpta_loadp addr end
+  call ru_decimal_fraction addr end addr source_end first width
+  if answer is 0
+    put cell end value into arg 2 at 4
+    match
+  end
+  # A colon, slash or a date's period separates the numbers without being
+  # read aloud. For example, 19:45 is девятнадцать сорок пять.
+  call lpta_loadp addr source_end
   call setscan_r 1
   if answer is 0
     call test_string_s 1 1 sym ru_colon
     if answer is 0
       call testFldeq 1 3 2
       if answer is 0
-        call lpta_loadp addr end
+        call lpta_loadp addr source_end
         call setscan_r 1
         call advance_tok
         call savescptr 2 addr p
@@ -13954,14 +14330,15 @@ rule ru_digits_to_words takes 3 from ut_norm.obj
       end
     end
   end
-  call lpta_loadp addr end
+  call lpta_loadp addr source_end
   call setscan_r 1
   if answer is 0
-    call test_string_s 1 1 sym ru_dot
+    call ru_scan_numeric_separator
     if answer is 0
       call testFldeq 1 3 2
       if answer is 0
-        call lpta_loadp addr end
+        call ru_strip_next_date_zero
+        call lpta_loadp addr source_end
         call setscan_r 1
         call advance_tok
         call savescptr 2 addr p
@@ -13976,7 +14353,7 @@ rule ru_digits_to_words takes 3 from ut_norm.obj
       end
     end
   end
-  call lpta_loadp addr end
+  call lpta_loadp addr source_end
   call setscan_r 1
   if answer is 0
     call test_string_s 1 1 sym ru_comma
@@ -13984,7 +14361,7 @@ rule ru_digits_to_words takes 3 from ut_norm.obj
       call testFldeq 1 3 2
       if answer is 0
         call ru_say_62619991786191 addr end
-        call lpta_loadp addr end
+        call lpta_loadp addr source_end
         call setscan_r 1
         call advance_tok
         call savescptr 2 addr p
@@ -13999,6 +14376,7 @@ rule ru_digits_to_words takes 3 from ut_norm.obj
       end
     end
   end
+  put cell end value into arg 2 at 4
   match
 place english
   call convert_eng_digits_to_words arg 1 arg 2

@@ -182,7 +182,9 @@ def main():
                           % mod.nameOf(language), len(engine.voiceNames), 8)
                 player.chunks = []
                 del marks[:]
-                engine.addText(KNOWN_SENTENCE.encode("utf-8"))
+                sentence = ("Двадцать две тысячи рублей."
+                            if language == 0x120000 else KNOWN_SENTENCE)
+                engine.addText(sentence.encode("utf-8"))
                 engine.synthesize()
                 said[language] = player.samples()
             passes.append(said)
@@ -290,9 +292,9 @@ def main():
 
     plain = None
     for what, texts in (
-        ("plain", (b"abc",)),
-        ("spelled", (b"`ts1 ", b"abc", b"`ts0 ")),
-        ("plain again", (b"abc",)),
+        ("plain", (b"apple",)),
+        ("spelled", (b"`ts1 ", b"apple", b"`ts0 ")),
+        ("plain again", (b"apple",)),
     ):
         player.chunks = []
         engine.post(batch(*texts))
@@ -314,11 +316,11 @@ def main():
     # simpler; while it is true, relying on the trailing form leaves the engine
     # spelling everything out afterwards.
     player.chunks = []
-    engine.post(batch(b"`ts1 abc`ts0 "))
+    engine.post(batch(b"`ts1 apple`ts0 "))
     engine._work.join()
     trailing = player.samples()
     player.chunks = []
-    engine.post(batch(b"abc"))
+    engine.post(batch(b"apple"))
     engine._work.join()
     check("a trailing annotation is not acted on, so spelling would leak",
           player.samples() != plain, True)
@@ -333,7 +335,7 @@ def main():
     # The same with the spelled one cancelled part way, and with rapid fire
     # mixing the two, which is how it was found.
     engine.cancel()
-    engine.post(batch(b"`ts1 ", b"abc", b"`ts0 "))
+    engine.post(batch(b"`ts1 ", b"apple", b"`ts0 "))
     engine.cancel()
     for i in range(10):
         engine.cancel()
@@ -343,7 +345,7 @@ def main():
     engine.cancel()
     engine._work.join()
     player.chunks = []
-    engine.post(batch(b"abc"))
+    engine.post(batch(b"apple"))
     engine._work.join()
     check("nor after ten cancelled ones with spelling mixed in",
           player.samples(), plain)

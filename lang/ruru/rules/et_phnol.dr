@@ -6127,7 +6127,15 @@ label L17 was $X14$102515
   cmp testl reg r0 reg r0
   popreg r1
   popreg r1
+  branch je to L24
+  push slotaddr 100
+  push slotaddr 92
+  push reg r6
+  call ru_creak_after_written_vowel arity 3 depth 3
+  popn 3
+  cmp testl reg r0 reg r0
   branch jne to L2
+label L24 was ru_continue_initial_creak
   push reg r6
   call advance_tok arity 1 depth 1
   cmp testl reg r0 reg r0

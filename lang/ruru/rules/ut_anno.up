@@ -1,0 +1,92 @@
+# Invalid tags are spelled with the annotation alphabet. Cyrillic inside
+# one is a payload for the tag, so spell the tag syntax and skip the payload.
+rule ru_skip_invalid_annotation_payload takes 2 from ut_anno.obj
+  afresh
+  call ZZfence_null
+  call lpta_loadp arg 1
+  call setscan_r 1
+  if answer is not 0
+    give up
+  end
+  call ZZtest_string_s_1_1_ZZstring512          # backquote
+  if answer is not 0
+    give up
+  end
+  while 1
+    call test_string_s 1 1 sym ru_space
+    if answer is 0
+      give up
+    end
+    call ru_is_russian
+    if answer is 0
+      leave
+    end
+    call advance_tok
+    if answer is not 0
+      give up
+    end
+  end
+  call ru_skip_cyrillic_payload_at_scan
+  if answer is 0
+    match
+  end
+  give up
+end
+
+# In Russian the legacy pause annotation consumes text glued to its numeric
+# argument. A space after the duration starts a new word as usual.
+rule ru_skip_glued_pause_payload takes 2 from ut_anno.obj
+  afresh
+  call ZZfence_null
+  call ZZlpta_load__setscan_r__1 arg 1
+  if answer is not 0
+    give up
+  end
+  call ZZtest_string_s_1_1_ZZstring259         # p
+  if answer is not 0
+    give up
+  end
+  call ru_scan_digit
+  if answer is 10
+    give up
+  end
+  while 1
+    call ru_scan_digit
+    if answer is 10
+      leave
+    end
+  end
+  call ru_skip_cyrillic_payload_at_scan
+  if answer is 0
+    match
+  end
+  give up
+end
+
+rule ru_skip_cyrillic_payload_at_scan takes 1 from ut_anno.obj
+  afresh
+  local left bytes 8
+  local right bytes 8
+  call ru_is_russian
+  if answer is not 0
+    give up
+  end
+  call savescptr 1 addr left
+  while 1
+    call advance_tok
+    if answer is not 0
+      give up
+    end
+    call ru_is_russian
+    if answer is not 0
+      leave
+    end
+  end
+  call savescptr 2 addr right
+  call lpta_rpta_loadp addr left addr right
+  call insert_2pt_s 1 1 sym ru_space 0
+  if answer is not 0
+    give up
+  end
+  match
+end

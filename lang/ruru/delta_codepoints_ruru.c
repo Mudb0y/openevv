@@ -82,6 +82,8 @@ const delta_codepoint ruru_delta_codepoints[] = {
     { 0x0301, 0x9a },
     { 0x2116, 0xa6 },
     { 0x20bd, 0xa4 },
+    { 0x2009, 0xa0 },
+    { 0x202f, 0xa0 },
 };
 
-const int32_t ruru_delta_codepoints_n = 69;
+const int32_t ruru_delta_codepoints_n = 71;

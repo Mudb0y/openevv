@@ -285,18 +285,20 @@ it is IBM's US English, with what ETI's 6.1 and this project have changed in
 `lang/enus`, until something written for Russian has replaced it, and what is
 said of `lang/enus` above is said of it. What is written for Russian is ours:
 the Russian half of `lang/ruru/letters`, the classes and the blocks alike,
-`ruru.codepoints`, the rules of `rules/et_strss.up` and the one added to
-`rules/et_norm.up`, and `dictionary/words` with the `main.dic` made of it,
-which is a list written here and taken from no dictionary. The edits those
+`ruru.codepoints`, the Russian normalization, stress and syllabification rules,
+and the curated entries in `dictionary/words` and `dictionary/main.hand`,
+which are made into `main.dic`. The edits those
 needed in IBM's rules -- the calls that reach them in `rules/et_symb.dr`,
 `rules/u_integ.dr` and `rules/et_phone.dr`, and the records
 `ruru.statements` gives Russian's letters -- are edits to IBM's text, and
 the rest of that text is IBM's as it was. What Russian's rules name is IBM's
-numbering, as it is for Polish.
+numbering, as it is for Polish. The acoustic rules in `rules/ru_val.up` and
+`rules/ru_spr.up` are adapted from IBM rules and are covered by the same
+terms as the other adapted IBM data.
 
 `lang/ruru/dictionary/openrussian.tsv.gz` is derived from the OpenRussian
 dictionary (https://github.com/Badestrand/russian-dictionary). It retains
-written forms and stress positions. The derived entries in
+written forms and stress positions. That file, the derived entries in
 `lang/ruru/dictionary/main.dic.gz` and their compiled copies are distributed
 under CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/).
 Those entries are included in builds that select `lang/ruru`.

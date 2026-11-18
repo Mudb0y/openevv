@@ -188,6 +188,8 @@ letter м
 
 letter г
   г after о before о at end  says v      # нового
+  г after е before о́ at end says v       # ничего́
+  г after е́ before о at end says v       # explicit stress before г
   г after е before о at end  says v      # его, моего
   г after е before од  says v            # сегодня
   гк                   says Q k    # лёгкий, мягкий, легко
@@ -225,7 +227,9 @@ letter з
   з    says z
 
 letter с
-  сч                   says S C    # счастье
+  стьс after е before от says s      # шестьсот
+  сч before vowel      says S y    # счастье
+  сч                   says S C    # исчислить
   стн                  says s n    # честный, известно
   с before voiced      says z      # сделать
   с    says s

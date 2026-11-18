@@ -1,24 +1,50 @@
-# Written by hand, and copied onto the end of main.dic as it stands by
-# tools/module/stresswords.py. Abbreviations Russian writes with a dot, said
-# in full; the dot stays where it was, so it is read as it would be after
-# the full word.
+# Copied from main.hand by tools/module/stresswords.py.
+# Dotted forms absorb the dot when the scanner includes it in the key.
+# Bare forms also cover a stop already separated by the sentence scanner.
+руб.	рубле́й
 руб	рубле́й
+коп.	копе́ек
 коп	копе́ек
+тыс.	ты́сяч
 тыс	ты́сяч
+млн.	миллио́нов
 млн	миллио́нов
+млрд.	миллиа́рдов
 млрд	миллиа́рдов
+ул.	у́лица
 ул	у́лица
+стр.	страни́ца
 стр	страни́ца
+напр.	наприме́р
 напр	наприме́р
+гг.	го́ды
 гг	го́ды
+вв.	века́
 вв	века́
+кв.	кварти́ра
 кв	кварти́ра
+обл.	о́бласть
 обл	о́бласть
+т.е.	то е́сть
 т.е	то е́сть
+т.к.	так как
 т.к	так как
+т.д.	так да́лее
 т.д	так да́лее
+т.п.	тому́ подо́бное
 т.п	тому́ подо́бное
+т.н.	так называ́емый
 т.н	так называ́емый
+т.ч.	том числе́
 т.ч	том числе́
+н.э.	на́шей э́ры
 н.э	на́шей э́ры
 ленина	ле́нина
+# Keep these readings explicit in phrases even when the rules place their
+# stress correctly in isolation.
+слова	сло́ва
+сорок	со́рок
+# Preserve the audible glide after a separator when the vowel reduces to и.
+счастье	ща́стьи
+объявление	объивле́ние
+деревьев	дере́вьиф

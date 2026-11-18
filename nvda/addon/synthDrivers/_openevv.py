@@ -697,12 +697,14 @@ class Engine:
 		return self._dll.eciSetParam(self._instance, which, value)
 
 	def _newPlayer(self, hz):
-		return nvwave.WavePlayer(
-			channels=1,
-			samplesPerSec=hz,
-			bitsPerSample=16,
-			outputDevice=config.conf["audio"]["outputDevice"],
-		)
+		options = {"channels": 1, "samplesPerSec": hz, "bitsPerSample": 16}
+		for section in ("audio", "speech"):
+			try:
+				options["outputDevice"] = config.conf[section]["outputDevice"]
+			except KeyError:
+				continue
+			break
+		return nvwave.WavePlayer(**options)
 
 	def setWideband(self, enable):
 		"""Turn the wideband voice on or off, between utterances.

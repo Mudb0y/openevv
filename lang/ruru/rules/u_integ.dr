@@ -3230,7 +3230,7 @@ label L2 was at_0x56
   load movl slotaddr -4 into r0
   push slotaddr -4
   push reg r6
-  call estimate_eng_nsylls arity 4 depth 5
+  call ru_estimate_nsylls arity 4 depth 5
   popn 5
 label L3 was at_0xb2
   push reg r6

@@ -42,6 +42,7 @@ rule ru_assign_stress takes 3 from et_strss.obj
   local target
   local togo
   local said
+  local marked
   call ZZfence_null
   call lpta_loadp arg 1
   call setscan_r 1
@@ -72,6 +73,7 @@ rule ru_assign_stress takes 3 from et_strss.obj
   # The letters: which vowel, counted from one, the writing says.
   set vowels to 0
   set target to 0
+  set marked to 0
   call lpta_loadp addr left
   call setscan_r 1
   if answer is 0
@@ -89,6 +91,7 @@ rule ru_assign_stress takes 3 from et_strss.obj
         call testFldeq 1 0 157                   # the stress mark
         if answer is 0
           set target to vowels
+          set marked to 1
         else
           call ru_is_letter
           if answer is not 0
@@ -104,47 +107,8 @@ rule ru_assign_stress takes 3 from et_strss.obj
   end
   # A number word, and then the ending, where the writing says nothing.
   if target is 0
-    call ru_word_first arg 1 arg 2
-    if answer is 0
-      set target to 1
-    end
-  end
-  if target is 0
-    call ru_word_second arg 1 arg 2
-    if answer is 0
-      set target to 2
-    end
-  end
-  if target is 0
-    call ru_word_third arg 1 arg 2
-    if answer is 0
-      set target to 3
-    end
-  end
-  if target is 0
-    call ru_word_last arg 1 arg 2
-    if answer is 0
-      set target to count
-    end
-  end
-  if target is 0
-    call ru_word_fourth arg 1 arg 2
-    if answer is 0
-      set target to 4
-    end
-  end
-  if target is 0
-    set target to count
-    decrement target
-    call ru_ends_stressed arg 2
-    if answer is 0
-      set target to count
-    else
-      call ru_ends_stem_stressed arg 2
-      if answer is 0
-        decrement target
-      end
-    end
+    call ru_unmarked_stress arg 1 arg 2 count
+    set target to answer
   end
   if target is more than count
     set target to count
@@ -171,9 +135,17 @@ rule ru_assign_stress takes 3 from et_strss.obj
     call ZZlprp_load__insert_2pt_i_7_2_ZZstring3 addr left addr right
     # A word Russian never stresses has every vowel reduced: но is нъ, не ни.
     set said to target
-    call ru_is_clitic arg 1 arg 2
-    if answer is 0
-      set said to 0
+    if marked is 0
+      call ru_is_clitic arg 1 arg 2
+      if answer is not 0
+        call ru_is_chto arg 1 arg 2
+      end
+      if answer is 0
+        call ru_has_neighbor arg 1 arg 2
+        if answer is 0
+          set said to 0
+        end
+      end
     end
     call ru_reduce arg 1 arg 2 said
     call ru_keep_stops arg 1 arg 2 target
@@ -188,9 +160,137 @@ place english
   give up
 end
 
+rule ru_unmarked_stress takes 4 from et_strss.obj
+  afresh
+  local target
+  call ZZfence_null
+  call ru_fixed_word_stress arg 1 arg 2 arg 3
+  set target to answer
+  if target is 0
+    call ru_prefixed_word_stress arg 1 arg 2 arg 3 addr target
+  end
+  if target is 0
+    set target to arg 3
+    call ru_ends_stressed arg 2
+    if answer is not 0
+      decrement target
+      call ru_ends_stem_stressed arg 2
+      if answer is 0
+        decrement target
+      end
+    end
+  end
+  call succeed
+  answer target
+end
+
+rule ru_fixed_word_stress takes 4 from et_strss.obj
+  bare
+  call ru_word_first arg 1 arg 2
+  if answer is 0
+    answer 1
+  end
+  call ru_word_second arg 1 arg 2
+  if answer is 0
+    answer 2
+  end
+  call ru_word_third arg 1 arg 2
+  if answer is 0
+    answer 3
+  end
+  call ru_word_last arg 1 arg 2
+  if answer is 0
+    answer arg 3
+  end
+  call ru_word_fourth arg 1 arg 2
+  if answer is 0
+    answer 4
+  end
+  answer 0
+end
+
+# Joining в, к or с to a number adds no vowel. Keep the number's stress.
+rule ru_prefixed_word_stress takes 5 from et_strss.obj
+  afresh
+  local after_prefix bytes 8
+  call ZZfence_null
+  call ZZlpta_load__setscan_r__1 arg 1
+  if answer is not 0
+    give up
+  end
+  call ru_scan_preposition
+  if answer is 0
+    give up
+  end
+  call push_ptr_init addr after_prefix
+  call savescptr 1 addr after_prefix
+  call ru_fixed_word_stress addr after_prefix arg 2 arg 3
+  if answer is 0
+    give up
+  end
+  put answer into arg 4 at 0
+  match
+end
+
+# The previous voice reduces что as it does the clitics in a phrase.
+rule ru_is_chto takes 3 from et_strss.obj
+  afresh
+  call ZZfence_null
+  call lpta_loadp arg 2
+  call setscan_l 1
+  if answer is not 0
+    give up
+  end
+  call test_string_s 1 3 sym ru_chto_backwards
+  if answer is not 0
+    give up
+  end
+  call lpta_loadp arg 1
+  call test_ptr
+  if answer is 0
+    match
+  end
+  give up
+end
+
+# A clitic keeps its full vowel when the reader speaks it on its own.
+rule ru_has_neighbor takes 3 from et_strss.obj
+  afresh
+  call ZZfence_null
+  call lpta_loadp arg 2
+  call setscan_r 1
+  if answer is 0
+    while 1
+      call test_string_s 1 1 sym ru_space
+      if answer is not 0
+        leave
+      end
+    end
+    call ru_is_russian
+    if answer is 0
+      match
+    end
+  end
+  call lpta_loadp arg 1
+  call setscan_l 1
+  if answer is 0
+    while 1
+      call test_string_s 1 1 sym ru_space
+      if answer is not 0
+        leave
+      end
+    end
+    call ru_is_russian
+    if answer is 0
+      match
+    end
+  end
+  give up
+end
+
 # What English does to a word once its syllables are stressed -- it flaps a
-# t, reduces a vowel -- is English's, so a Russian word is left as
-# ru_reduce left it and any other is handed on.
+# t, reduces a vowel -- remains English's. Russian keeps its vowels and
+# only aligns the stressed syllable boundary with the phonetic input path.
 rule ru_post_syll takes 3 from et_strss.obj
   afresh
   call ZZfence_null
@@ -199,6 +299,7 @@ rule ru_post_syll takes 3 from et_strss.obj
   if answer is 0
     call ru_is_russian
     if answer is 0
+      call ru_move_lateral arg 1 arg 2
       match
     end
   end
@@ -240,7 +341,7 @@ rule ru_reduce takes 4 from et_strss.obj
   end
   set seen to 0
   # What the phone before this one was: 0 nothing, 1 a vowel, 2 the glide,
-  # 3 ж or ш, 4 ч, 5 any other consonant.
+  # 3 ж, ш or ц, 4 ч, 5 any other consonant, 6 т.
   set before to 0
   while 1
     call savescptr 1 addr pl
@@ -340,6 +441,16 @@ rule ru_reduce takes 4 from et_strss.obj
     if answer is 0
       set togo to 3
     end
+    call testFldeq 2 0 4
+    if answer is 0
+      set togo to 6
+    end
+    call testFldeq 2 0 14
+    if answer is 0
+      if before is 6
+        set togo to 3
+      end
+    end
     call testFldeq 2 0 18
     if answer is 0
       set togo to 4
@@ -356,6 +467,13 @@ rule ru_reduce takes 4 from et_strss.obj
       set final to 1
     end
     if put is not 0
+      if kind is 3
+        if before is 3
+          if final is 1
+            set put to sym ru_ph_x
+          end
+        end
+      end
       # я at the end of a word keeps a vowel of its own: время, неделя.
       if kind is 1
         if before is 2
@@ -371,7 +489,9 @@ rule ru_reduce takes 4 from et_strss.obj
         set soft to 0
       end
       if ybefore is not 5
-        set soft to 0
+        if ybefore is not 6
+          set soft to 0
+        end
       end
       if soft is 1
         call lpta_rpta_loadp addr yl addr pr
@@ -596,6 +716,42 @@ end
 rule ru_is_clitic takes 3 from et_strss.obj
   afresh
   call ZZfence_null
+  call lpta_loadp arg 2                 # дом in the earlier voice's phrase reading
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 3 sym ru_dom_backwards
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # день in connected speech
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 4 sym ru_end_day
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # чем
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 3 sym ru_end_6f8d6d
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
   call lpta_loadp arg 2                 # а
   call setscan_l 1
   if answer is 0
@@ -949,13 +1105,16 @@ end
 
 # English flaps a t or a d that begins an unstressed syllable -- это came out
 # as эда -- and Russian never does. A secondary stress is what English does
-# not flap before, so every such syllable but the first is given one.
+# not flap before. The phonetic path adds it after a vowel plus st, where
+# it originally puts s in the coda. A longer coda such as k before st
+# already protects the stop without a secondary stress.
 rule ru_keep_stops takes 4 from et_strss.obj
   afresh
   local sl bytes 8
   local sr bytes 8
   local k
   local hit
+  local skip_s
   call ZZfence_null
   call lpta_loadp arg 1
   call setscan_r 7
@@ -977,6 +1136,23 @@ rule ru_keep_stops takes 4 from et_strss.obj
         call lpta_loadp addr sl
         call setscan_r 2
         if answer is 0
+          call testFldeq 2 0 14
+          if answer is 0
+            set skip_s to 0
+            call lpta_loadp addr sl
+            call setscan_l 2
+            if answer is 0
+              call testFldeq 2 1 1
+              if answer is 0
+                set skip_s to 1
+              end
+            end
+            call lpta_loadp addr sl
+            call setscan_r 2
+            if skip_s is 1
+              call advance_tok
+            end
+          end
           call testFldeq 2 0 4
           if answer is 0
             set hit to 1
@@ -1330,6 +1506,18 @@ end
 rule ru_word_first takes 3 from et_strss.obj
   afresh
   call ZZfence_null
+  call lpta_loadp arg 2                 # сорок
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 5 sym ru_end_6e85648584
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
   call lpta_loadp arg 2                 # тысяча
   call setscan_l 1
   if answer is 0

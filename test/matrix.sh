@@ -337,11 +337,9 @@ for t in $want; do
                 echo "# Polish can be told from an accident, which is the"
                 echo "# only check Polish will ever have besides an ear."
             elif [ "$t" = ruru ]; then
-                echo "# Russian is not IBM's and there is nothing to hold it"
-                echo "# to: these are what this engine does, not what any"
-                echo "# original did. They are here so that a change to"
-                echo "# Russian can be told from an accident, which is the"
-                echo "# only check Russian will ever have besides an ear."
+                echo "# Russian is a module written for OpenEVV. These are its"
+                echo "# recorded answers. test/ruru-parity.py compares it with"
+                echo "# the earlier Russian implementation separately."
             else
                 echo "# Every line was blessed by IBM's own binary when it was"
                 echo "# first written: the whole differential suite was run"

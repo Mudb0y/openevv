@@ -26841,6 +26841,12 @@ label L11 was $X66$99877
   cmp testl reg r0 reg r0
   branch jne to L8
 label L12 was $X67$99884
+  push state 844
+  push reg r6
+  call ru_keep_adjacent_vowels arity 2 depth 2
+  popn 2
+  cmp testl reg r0 reg r0
+  branch je to L69
   load movl slotaddr -52 into r0
   push slotaddr -52
   push reg r6

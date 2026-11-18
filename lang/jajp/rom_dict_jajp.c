@@ -173781,6 +173781,10 @@ const uint8_t *const jajp_s_apszSuppD[1] = {
 };
 const int32_t jajp_s_apszSuppD_n = 1;
 
+const int32_t jajp_s_apszSuppD_bytes[1] = {
+    sizeof jajp_s_szSuppD0,
+};
+
 const uint8_t *const jajp_s_apszSuppI[1] = {
     jajp_s_szSuppI0,
 };

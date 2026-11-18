@@ -32,10 +32,10 @@
 #define PTB_TAIL         0x0c   /* _PHR_TBL_T *, the last one */
 #define PTB_NUMREAD      0x10   /* NumRead * */
 
-/* Four pointers four bytes apart, so none of them can stay where IBM put it
+/* Five pointers four bytes apart, so none of them can stay where IBM put it
    on a build where a pointer is eight bytes wide. Parked past the record, as
    every other record in this directory parks its own. */
-#define PTB_ROOM         (PTB_BYTES + 4 * sizeof(void *))
+#define PTB_ROOM         (PTB_BYTES + 5 * sizeof(void *))
 #define PTB_VTABLE_AT    (PTB_BYTES + 0 * sizeof(void *))
 #define PTB_OWNER_AT     (PTB_BYTES + 1 * sizeof(void *))
 #define PTB_HEAD_AT      (PTB_BYTES + 2 * sizeof(void *))

@@ -2295,6 +2295,10 @@ label L2 was at_0x57
   load movw ind reg r6 1714 into r0w
   store movw reg r0w ind reg r6 1702
 label L3 was at_0x9a
+  push slotaddr -20
+  push reg r6
+  call ru_skip_invalid_annotation_payload arity 2 depth 2
+  popn 2
   push reg r6
   call ZZstarttest2 arity 1 depth 1
   load movl slotaddr -8 into r0
@@ -3251,6 +3255,10 @@ label L1 was $X2$99943
   call ZZsavescptr2 arity 2 depth 2
   popreg r1
   popreg r1
+  push slotaddr -84
+  push reg r6
+  call ru_skip_glued_pause_payload arity 2 depth 2
+  popn 2
 label L2 was $X3$99945
   push reg r6
   call ZZstarttest4 arity 1 depth 1

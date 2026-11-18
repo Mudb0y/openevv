@@ -14397,6 +14397,10 @@ label L2 was at_0xaf
   load movl imm 94 into r0
   jump to L5
 label L3 was at_0xbe
+  push slotaddr -12
+  push reg r6
+  call ru_skip_invalid_annotation_payload arity 2 depth 2
+  popn 2
   push reg r6
   call ZZstarttest2 arity 1 depth 1
   load movl slotaddr -20 into r0

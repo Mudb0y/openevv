@@ -231,6 +231,9 @@ static void utf8ToWide(const char *text, uint32_t len, uint16_t *out)
 
         if (c < 0x80) {
             *w++ = c;
+        } else if (len - i < (uint32_t)(c >= 0xc0 && c < 0xdf ? 2 : 3)) {
+            *w++ = '?';
+            break;
         } else if (c >= 0xc0 && c < 0xdf) {
             uint8_t hi = (uint8_t)((c & 0x1c) >> 2);
             uint8_t lo = (uint8_t)(((c & 0x03) << 6)
@@ -291,6 +294,8 @@ static int utf8ToWestern(const char *text, uint32_t len, char *out,
             want = -1;
         }
 
+        if (want > 0 && (uint32_t)want > len - i)
+            want = -1;
         for (k = 1; k < want; k++) {
             signed char cc = (signed char)text[i + k];
 
@@ -311,8 +316,9 @@ static int utf8ToWestern(const char *text, uint32_t len, char *out,
 
         /* The language in force first, since a character it names is its
            own business and its answer is the one its alphabet agrees with.
-           Then the Western set, and then the low byte, which is what the
-           original does and is nothing for a letter in neither. */
+           Then the Western set. Modules with their own alphabet substitute
+           a space for an unsupported code point to preserve word boundaries
+           without introducing an accidental NUL or letter. */
         {
             int done = 0;
 
@@ -333,6 +339,8 @@ static int utf8ToWestern(const char *text, uint32_t len, char *out,
                     }
                 }
             }
+            if (cp > 0xff && l != 0 && l->codepoints_n > 0)
+                cp = ' ';
         }
         *o++ = (char)cp;
     }
@@ -404,6 +412,7 @@ THIS void addTextRun(SynthThread *t, char *text, uint32_t len, int32_t seq,
     const char *source;
     char *filtered;
     uint32_t asked = len;
+    int romanizer_error = 0;
     void *lock;
 
     (void)seq;
@@ -482,8 +491,8 @@ THIS void addTextRun(SynthThread *t, char *text, uint32_t len, int32_t seq,
         ST_PENDING(t) += (int32_t)(len - asked);
 
     if (rz_addText(ST_ROMAN(t), filtered, (int32_t)len, last) == -1) {
-        stb_postRomanizerError(t, 0);
-        return;
+        romanizer_error = 1;
+        goto release;
     }
 
     /* And out the other side a sentence at a time, until there is not a
@@ -493,18 +502,23 @@ THIS void addTextRun(SynthThread *t, char *text, uint32_t len, int32_t seq,
         int32_t n = rz_processSentence(ST_ROMAN(t), &sentence, 0);
 
         if (n == -1) {
-            stb_postRomanizerError(t, 0);
-            return;
+            romanizer_error = 1;
+            break;
         }
         if (n == 0)
             break;
         stw_addTextToEngine(t, sentence, n);
     }
 
+release:
     if (wide_out)
         free(wide_out);
     if (mbcs_out)
         cpp_delete(mbcs_out);
+    if (romanizer_error) {
+        stb_postRomanizerError(t, 0);
+        return;
+    }
 
 counted:
     lock = ST_LOCK(t);

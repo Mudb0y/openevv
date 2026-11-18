@@ -1,0 +1,230 @@
+# The old Russian reader's 400-byte window contained phonetic annotations.
+# Count their widths as spelling is normalized. The shared letter arms
+# supply the phone widths without projecting any phonemes onto the spine.
+rule ru_pronunciation_window takes 3 from ut_norm.obj
+  afresh
+  variable width word 4296
+  variable previous word 4300
+  variable continued half 4310
+  local current bytes 8
+  local finish bytes 8
+  local word_width
+  local limit
+  call ZZfence_null
+  call push_ptr_init addr current
+  call push_ptr_init addr finish
+  if width is less than 0
+    give up
+  end
+  set limit to 395
+  if continued is not 0
+    set limit to 401
+  end
+  call lpta_loadp arg 1
+  call setscan_r 1
+  if answer is not 0
+    give up
+  end
+  while 1
+    call lpta_loadp arg 2
+    call test_ptr
+    if answer is 0
+      give up
+    end
+    call ru_is_russian
+    if answer is 0
+      call savescptr 1 addr current
+      call ru_measure_word addr current addr finish
+      set word_width to answer
+      if word_width is less than 1
+        go to unknown
+      end
+      add word_width to width
+      # The first window includes five opening bytes. A continuation
+      # starts with the retained annotation, without its preceding space.
+      # create_sentence backs up to the preceding word boundary.
+      if width is more than limit
+        if global word 4304 is not 0
+          call lpta_rpta_loadp addr previous arg 2
+          call delete_2pt 4 0
+          call create_sentence addr previous
+          if answer is 0
+            set continued to 1
+            match
+          end
+          go to unknown
+        end
+      end
+      call lpta_loadp addr current
+      call lpta_storep addr previous
+      call lpta_loadp addr finish
+      call setscan_r 1
+    else
+      call testFldeq 1 0 64                # comma
+      if answer is 0
+        increment width
+      else
+        call testFldeq 1 0 72              # space
+        if answer is not 0
+          go to unknown
+        end
+      end
+      call advance_tok
+    end
+    if answer is not 0
+      give up
+    end
+  end
+place unknown
+  if width is more than 0
+    set width to -1
+  end
+  give up
+end
+
+# A word's record uses three delimiters, two bytes per syllable and a
+# separator. The letter arms report a glide separately where reduction
+# can absorb it into the vowel.
+rule ru_measure_word takes 3 from ut_norm.obj
+  afresh
+  local left bytes 8
+  local right bytes 8
+  local count
+  local target
+  local phones
+  local letter
+  local vowel
+  local kind
+  local previous
+  local glide
+  call ZZfence_null
+  call push_ptr_init addr left
+  call push_ptr_init addr right
+  call lpta_loadp arg 1
+  call setscan_r 1
+  if answer is not 0
+    go to invalid
+  end
+  set count to 0
+  set target to 0
+  while 1
+    call ru_is_vowel
+    if answer is 0
+      increment count
+      call testFldeq 1 0 143              # ё
+      if answer is 0
+        if target is 0
+          set target to count
+        end
+      end
+    else
+      call testFldeq 1 0 157              # combining stress
+      if answer is 0
+        set target to count
+      else
+        call ru_is_russian
+        if answer is not 0
+          call ru_is_letter
+          if answer is 0
+            go to invalid
+          end
+          leave
+        end
+      end
+    end
+    call advance_tok
+    if answer is not 0
+      go to invalid
+    end
+  end
+  call savescptr 2 arg 2
+  if target is 0
+    call ru_unmarked_stress arg 1 arg 2 count
+    set target to answer
+  end
+  # A word can start without a consonant. A sign also leaves the following
+  # glide audible. The combining accent leaves this context unchanged.
+  if target is less than 1
+    set target to 1
+  end
+  set phones to 0
+  set vowel to 0
+  set previous to 0
+  call lpta_loadp arg 1
+  call setscan_r 1
+  while 1
+    call lpta_loadp arg 2
+    call test_ptr
+    if answer is 0
+      leave
+    end
+    call savescptr 3 addr left
+    set kind to 2
+    call ru_is_vowel
+    if answer is 0
+      set kind to 1
+    end
+    call testFldeq 1 0 160                # ь, ъ
+    if answer is 0
+      set kind to 0
+    end
+    call testFldeq 1 0 157                # combining stress
+    if answer is 0
+      set kind to 3
+    end
+    set glide to 0
+    call testFldeq 1 0 145                # я
+    if answer is 0
+      set glide to 1
+    end
+    call advance_tok
+    if answer is not 0
+      go to invalid
+    end
+    call savescptr 4 addr right
+    call ru_measure_letter addr left addr right arg 1 arg 2 addr letter
+    if answer is not 0
+      go to invalid
+    end
+    if letter is more than 7
+      increment vowel
+    end
+    if letter is more than 15
+      if previous is 2
+        if vowel is not target
+          if glide is 1
+            call lpta_loadp addr right
+            call setscan_r 1
+            call ru_is_russian
+            if answer is 0
+              decrement letter
+            end
+          else
+            decrement letter
+          end
+        end
+      end
+    end
+    and 7 into letter
+    add letter to phones
+    if kind is not 3
+      set previous to kind
+    end
+    call lpta_loadp addr right
+    call setscan_r 1
+    if answer is not 0
+      go to invalid
+    end
+  end
+  if vowel is 0
+    set vowel to 1
+  end
+  add vowel to phones
+  add vowel to phones
+  add 4 to phones
+  call succeed
+  answer phones
+place invalid
+  call succeed
+  answer 0
+end

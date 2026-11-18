@@ -17,13 +17,11 @@ the next time this is run, and one that loses a word puts it in.
 
 The engine is asked through probe's phoneme report, a batch of words a call,
 each word alone between commas, and the syllable carrying `.1' in what comes
-back is the one it stressed. The probe has to be built from the tree as it
-stands, with an empty main.dic or the one being replaced: a word main.dic
-already has comes back right and would be dropped, so the file is emptied
-first and the build is the caller's -- write, build, and run this again until
-it writes the same file twice. `make` rebuilds the dictionary's C from the
-file by itself. dictionary/main.hand, where it is there, is copied onto the
-end as it stands: entries written by hand that are not about stress.
+back is the one it stressed. Use a current probe, which disables its built-in
+dictionary when EVV_NO_BUILTIN_DICT is set. `make` rebuilds the dictionary's
+C from the file by itself. dictionary/main.hand, where it is there, is
+copied onto the end as it stands: entries written by hand that are not about
+stress.
 
 dictionary/openrussian.tsv.gz, where it is there, is every form of every word
 OpenRussian's dictionary has with the vowel its stress is on, which
@@ -39,6 +37,7 @@ usage: tools/module/stresswords.py <tag> <probe> <language number>
 """
 
 import gzip
+import io
 import os
 import re
 import subprocess
@@ -108,13 +107,22 @@ def stressed(probe, language, words):
     """Which syllable of each word the engine stresses, counted from one, or
     nought where it said the word as more than one or as none."""
     fd, path = tempfile.mkstemp(suffix=".txt")
-    os.write(fd, ", ".join(words).encode("utf-8"))
-    os.close(fd)
     out = path + ".out"
     try:
-        said = subprocess.run([probe, "@" + path, out, "p"],
-                              env=dict(os.environ, EVV_LANGUAGE=language),
-                              capture_output=True).stdout.decode("latin-1")
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write(", ".join(words))
+        run = subprocess.run(
+            [probe, "@" + path, out, "p"],
+            env=dict(os.environ, EVV_LANGUAGE=language, EVV_NO_BUILTIN_DICT="1"),
+            capture_output=True, check=True, timeout=30,
+        )
+        lines = run.stdout.splitlines()
+        if b"speak: built-in dictionary off" not in lines:
+            sys.exit("stresswords: rebuild %s to support EVV_NO_BUILTIN_DICT" % probe)
+        language_line = ("speak:   language %s" % hex(int(language, 0))).encode("ascii")
+        if language_line not in lines:
+            sys.exit("stresswords: %s does not have language %s" % (probe, language))
+        said = run.stdout.decode("latin-1")
     finally:
         for f in (path, out):
             if os.path.exists(f):
@@ -175,18 +183,21 @@ def theirs(lang, listed):
     spelling is no word of its own, said with the ё."""
     path = os.path.join(lang, "dictionary", "openrussian.tsv.gz")
     if not os.path.exists(path):
-        return []
+        return None
     guess = guesser(lang)
     forms = {}
     with gzip.open(path, "rt", encoding="utf-8") as f:
-        for line in f:
+        for n, line in enumerate(f, 1):
             word, _, vowel = line.rstrip("\n").partition("\t")
-            forms[word] = int(vowel)
+            if not vowel.isascii() or not vowel.isdecimal():
+                sys.exit("stresswords: %s line %d has no vowel index" % (path, n))
+            k = int(vowel)
+            if k >= sum(c in VOWELS for c in word):
+                sys.exit("stresswords: %s line %d has no vowel at index %d" % (path, n, k))
+            forms[word] = k
     out = []
     for word, k in forms.items():
         vowels = [i for i, c in enumerate(word) if c in VOWELS]
-        if k >= len(vowels):
-            continue
         at = vowels[k]
         if word not in listed and guess(word) != k + 1:
             marked = word if word[at] == "ё" else \
@@ -197,6 +208,22 @@ def theirs(lang, listed):
                 and plain not in forms and plain not in listed:
             out.append((plain, word))
     return sorted(out)
+
+
+def write_dictionary(path, data):
+    """Publish a complete dictionary at once, leaving identical files alone."""
+    if os.path.exists(path):
+        with open(path, "rb") as f:
+            if f.read() == data:
+                return
+    fd, temporary = tempfile.mkstemp(dir=os.path.dirname(path))
+    try:
+        with os.fdopen(fd, "wb") as f:
+            f.write(data)
+        os.replace(temporary, path)
+    finally:
+        if os.path.exists(temporary):
+            os.remove(temporary)
 
 
 def main(argv):
@@ -224,28 +251,28 @@ def main(argv):
             else:
                 wrong.append(w)
     wrong.sort()
-    with open(os.path.join(here, "main.dic"), "w", encoding="utf-8",
-              newline="\n") as f:
-        f.write(HEAD % dict(tag=tag))
-        for w in wrong:
-            f.write("%s\t%s\n" % (w[0], w[1]))
-        # And the entries written by hand, which are not about stress and
-        # which this never decides: dictionary/main.hand, as it is.
-        hand = os.path.join(here, "main.hand")
-        if os.path.exists(hand):
-            f.write("\n" + open(hand, encoding="utf-8").read())
+    rows = theirs(os.path.join(ROOT, "lang", tag), {w[0] for w in words})
+    hand = os.path.join(here, "main.hand")
+    hand_text = ""
+    if os.path.exists(hand):
+        with open(hand, encoding="utf-8") as f:
+            hand_text = "\n" + f.read()
+    curated = (HEAD % dict(tag=tag)
+               + "".join("%s\t%s\n" % (w[0], w[1]) for w in wrong)
+               + hand_text)
+    write_dictionary(os.path.join(here, "main.dic"), curated.encode("utf-8"))
     print("%s: %d words, %d the rules place right, %d written to main.dic"
           % (tag, len(words), right, len(wrong)))
     # And OpenRussian's forms, which are too many to ask the engine about
     # and too many to keep as plain text: main.dic.gz, written the same
     # way every time so that it changes only when what it holds does.
-    rows = theirs(os.path.join(ROOT, "lang", tag), {w[0] for w in words})
-    if rows:
+    if rows is not None:
         text = (HEAD_THEIRS + "".join("%s\t%s\n" % r for r in rows))
-        with open(os.path.join(here, "main.dic.gz"), "wb") as raw:
-            with gzip.GzipFile(filename="", mode="wb", fileobj=raw,
-                               mtime=0) as f:
-                f.write(text.encode("utf-8"))
+        raw = io.BytesIO()
+        with gzip.GzipFile(filename="", mode="wb", fileobj=raw, mtime=0) as f:
+            f.write(text.encode("utf-8"))
+        write_dictionary(os.path.join(here, "main.dic.gz"),
+                         raw.getvalue())
         print("%s: %d forms of OpenRussian's written to main.dic.gz"
               % (tag, len(rows)))
     return 0

@@ -280,12 +280,7 @@ static int number_in(int id, int fallback)
     return ok ? (int)v : fallback;
 }
 
-/* The code set a language's text goes to the engine in, as the NVDA
-   add-on's CODE_SETS has it: Japanese in Shift-JIS, which its romanizer
-   reads, Polish and Russian in UTF-8, which the engine converts itself, and
-   IBM's Western languages in the Windows Western set. Never the machine's own
-   ANSI page, which on a Russian Windows would hand Polish and Russian over in
-   1251. */
+/* Use the code set the selected language reads on every Windows locale. */
 static UINT code_page_for(uint32_t language)
 {
     switch (language) {
@@ -296,8 +291,7 @@ static UINT code_page_for(uint32_t language)
     }
 }
 
-/* The text box as the language reads it, read as Unicode so that nothing is
-   lost to the machine's code page on the way. */
+/* Read the text box as Unicode before converting it for the engine. */
 static char *text_for_engine(void)
 {
     HWND     box = GetDlgItem(dlg, IDC_TEXT);
@@ -679,7 +673,7 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE prev, LPSTR cmd, int show)
         return 1;
     }
 
-    dlg = CreateDialogParamA(inst, (LPCSTR)IDD_SPEAK, 0, on_dialog, 0);
+    dlg = CreateDialogParamW(inst, MAKEINTRESOURCEW(IDD_SPEAK), 0, on_dialog, 0);
     if (dlg == 0) {
         MessageBoxA(0, "The window would not open.", "OpenEVV",
                     MB_OK | MB_ICONERROR);
@@ -690,13 +684,13 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE prev, LPSTR cmd, int show)
     if (say_at_once)
         PostMessage(dlg, WM_COMMAND, IDC_SPEAK, 0);
 
-    while (GetMessage(&m, 0, 0, 0) > 0) {
+    while (GetMessageW(&m, 0, 0, 0) > 0) {
         if (acc != 0 && TranslateAcceleratorA(dlg, acc, &m))
             continue;
-        if (IsDialogMessage(dlg, &m))
+        if (IsDialogMessageW(dlg, &m))
             continue;
         TranslateMessage(&m);
-        DispatchMessage(&m);
+        DispatchMessageW(&m);
     }
 
     /* The worker may still be inside the engine, so it is asked to stop and

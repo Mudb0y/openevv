@@ -192,9 +192,14 @@ def add(tag, byte, args):
                               or [last]))
     lines.insert(at_name + 1, "    value %s" % written)
 
-    at_var = max(j for j in var_at) + 1        # the line after the last one
-    lines.insert(at_var, "  variants %s"
-                 % " ".join("%02x" % b for b in record))
+    offset = len(names) * size
+    for line in var_at:
+        fields = lines[line].split()
+        if offset <= len(fields) - 1:
+            fields[offset + 1:offset + 1] = ["%02x" % b for b in record]
+            lines[line] = "  " + " ".join(fields)
+            break
+        offset -= len(fields) - 1
 
     open(path_of(tag), "w", encoding="utf-8").write("\n".join(lines))
     print("%s: %s is code %d now, %s"

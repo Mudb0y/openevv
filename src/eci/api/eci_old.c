@@ -204,6 +204,44 @@ static int32_t eo_tell(OldInst *h, void *inst, int32_t msg, int32_t param,
     return said;
 }
 
+/* The Russian voice fades in over five milliseconds after ten milliseconds
+   below the quiet threshold. Apply it to the PCM before the caller sees it. */
+static void eo_russianAttack(OldInst *h, int16_t *samples, int32_t count)
+{
+    int32_t rate = ev_rateHz(OI_RATE(h));
+    int32_t quiet_needed = rate / 100;
+    int32_t length = rate / 200;
+
+    if (length == 0)
+        return;
+    if (h->attack_rate != rate) {
+        h->attack_rate = rate;
+        h->attack_quiet = quiet_needed;
+        h->attack_remaining = 0;
+    }
+
+    for (int32_t i = 0; i < count; i++) {
+        int32_t sample = samples[i];
+        int32_t magnitude = sample < 0 ? -sample : sample;
+
+        if (h->attack_remaining == 0) {
+            if (magnitude < 64) {
+                if (h->attack_quiet < quiet_needed)
+                    h->attack_quiet++;
+                continue;
+            }
+            if (h->attack_quiet >= quiet_needed)
+                h->attack_remaining = length;
+            h->attack_quiet = 0;
+        }
+        if (h->attack_remaining > 0) {
+            int32_t progress = length - h->attack_remaining + 1;
+            samples[i] = (int16_t)(sample * progress / (length + 1));
+            h->attack_remaining--;
+        }
+    }
+}
+
 /* The engine reports everything here, and this is where it is turned into
    what the older interface promised. The instance the caller knows is the
    one handed back as the data, so it is passed on as the handle. */
@@ -221,6 +259,8 @@ int32_t eo_callbackFn(void *inst, int32_t msg, int32_t param, void *data)
         break;
 
     case 1:     /* samples, counted in bytes here and in samples there */
+        if (h && OI_SAMPBUF(h) && (OI_LANG(h) & 0xff0000) == 0x120000)
+            eo_russianAttack(h, (int16_t *)OI_SAMPBUF(h), param / 2);
         if (h && OI_CALLBACK(h))
             eo_tell(h, inst, ECI_WAVEFORM, param / 2, &ret);
         break;

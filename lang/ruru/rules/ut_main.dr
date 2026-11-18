@@ -100,6 +100,9 @@ label L2 was at_0x55
   call ZZstarttest3 arity 1 depth 6
   push reg r6
   call init_vars arity 1 depth 7
+  store movl imm 0 ind reg r6 4296
+  store movl imm 0 ind reg r6 4304
+  store movw imm 0 ind reg r6 4310
   push reg r6
   call ZZstarttest4 arity 1 depth 8
   addk 2684 reg r6 into r0
