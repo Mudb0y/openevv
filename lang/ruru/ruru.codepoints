@@ -1,0 +1,103 @@
+# What each Russian letter arrives as: the code point a caller writes, and the
+# byte of the module's alphabet the letter is read as.
+#
+# The module is US English's, and its Latin letters stay English's: a word in
+# Latin letters inside Russian text is read by English's rules, as English.
+# So Russian's letters take bytes no English word is written with, the ones
+# the alphabet has for the accented letters of other Western languages --
+# à to ÿ but ñ and ÷, with ß,  and  -- which it knows as
+# letters already. ruru.statements says which of them is a vowel now, and
+# generate_diaphones in rules/et_phone.dr asks for them before anything
+# else, so none reaches the rule of the Latin letter it was an accent on.
+# ь and ъ share a byte: neither says anything, and what each does to the
+# letters beside it is the same.
+#
+# The cost is that an accented Latin letter inside Russian text is read as
+# the Russian letter that took its byte. ñ, the n with a tilde, is left
+#
+# A capital arrives as its own small letter. Nothing in the module lowers a
+# letter it was not written for, and nothing here wants to know a Russian
+# letter was a capital.
+
+0430 e0   # а
+0431 e1   # б
+0432 e2   # в
+0433 e3   # г
+0434 e4   # д
+0435 e5   # е
+0451 e6   # ё
+0436 e7   # ж
+0437 e8   # з
+0438 e9   # и
+0439 ea   # й
+043a eb   # к
+043b ec   # л
+043c ed   # м
+043d ee   # н
+043e ef   # о
+043f f0   # п
+0440 f2   # р
+0441 f3   # с
+0442 f4   # т
+0443 f5   # у
+0444 f6   # ф
+0445 f8   # х
+0446 f9   # ц
+0447 fa   # ч
+0448 fb   # ш
+0449 fc   # щ
+044b fd   # ы
+044c fe   # ь
+044a fe   # ъ
+044d f1   # э
+044e df   # ю
+044f 9c   # я
+
+0410 e0   # А, as its small letter
+0411 e1   # Б, as its small letter
+0412 e2   # В, as its small letter
+0413 e3   # Г, as its small letter
+0414 e4   # Д, as its small letter
+0415 e5   # Е, as its small letter
+0401 e6   # Ё, as its small letter
+0416 e7   # Ж, as its small letter
+0417 e8   # З, as its small letter
+0418 e9   # И, as its small letter
+0419 ea   # Й, as its small letter
+041a eb   # К, as its small letter
+041b ec   # Л, as its small letter
+041c ed   # М, as its small letter
+041d ee   # Н, as its small letter
+041e ef   # О, as its small letter
+041f f0   # П, as its small letter
+0420 f2   # Р, as its small letter
+0421 f3   # С, as its small letter
+0422 f4   # Т, as its small letter
+0423 f5   # У, as its small letter
+0424 f6   # Ф, as its small letter
+0425 f8   # Х, as its small letter
+0426 f9   # Ц, as its small letter
+0427 fa   # Ч, as its small letter
+0428 fb   # Ш, as its small letter
+0429 fc   # Щ, as its small letter
+042b fd   # Ы, as its small letter
+042c fe   # Ь, as its small letter
+042a fe   # Ъ, as its small letter
+042d f1   # Э, as its small letter
+042e df   # Ю, as its small letter
+042f 9c   # Я, as its small letter
+
+# The stress mark, the combining acute a writer puts after the vowel a word is
+# stressed on: за́мок and замо́к. It is a letter that says nothing, and the
+# stress rule reads it where it stands. It is how a dictionary says where a
+# word is stressed, too.
+0301 9a   # the stress mark
+
+# Two signs a Russian text writes that the Western set has not got, given
+# the bytes of two signs no Russian text writes, and named by ru_char_name.
+2116 a6   # №, the numero sign, as the broken bar
+20bd a4   # ₽, the rouble sign, as the currency sign
+
+# Unicode spaces used as digit-group separators share the nonbreaking byte.
+2009 a0   # thin space
+202f a0   # narrow nonbreaking space

@@ -1,0 +1,388 @@
+# has_lex_prefix written as what it does. The lower form of it is in
+# et_prfx.dr, which this stands in for; tools/rules/check-upper.sh holds the two
+# against each other, call for call, through the engine.
+#
+# It is here because of its shape rather than its size: two alternatives, a
+# tail they share, and a dispatch through six planted places, which is what
+# most of the language's real rules are made of.
+
+rule has_lex_prefix takes 3 from et_prfx.obj
+  through wrappers
+  local word bytes 8
+  local scan bytes 8
+  local chosen
+
+  call ZZget_parm_ptr2 addr word arg 1 addr scan arg 2
+  call ZZfence_null
+  plant test first
+  if global half 4078 is 1
+    match
+  end
+
+place first
+  plant test second
+  call ZZlpta_load__setscan_r__1 addr word
+  if answer is not 0
+    go to second
+  end
+  call ZZtest_string_s_1_2_ZZstring278
+  if answer is not 0
+    go to second
+  end
+  plant test done
+  plant choice cleanup with boa
+  set chosen to 351
+
+place try
+  call ZZlprp_load__setd addr word addr scan chosen
+  if answer is 0
+    set unwind to 1
+  end
+  backtrack
+
+place second
+  plant test done
+  plant choice cleanup with boa
+  set chosen to 350
+  go to try
+
+place cleanup
+  call bspop_boa
+  give up
+
+place done
+  set global half 4078 to 1
+  match
+end
+
+# 6.1's strip_scientific_prefixes, lifted by tools/rules/lift64.py out of
+# Apple's English module. 4.3's knew four prefixes; 6.1's knows audio, cardio,
+# chemo, electro, hydro, neuro, nitro, radio, ribo, tele and more, so a word
+# built on one is read as the prefix and the root rather than guessed whole:
+# neuroscience was nuh-RAH-shunts.
+
+rule strip_scientific_prefixes takes 1
+  instead
+  local cf0 bytes 8
+  local c100 bytes 8
+  local c120 bytes 8
+  local c130 bytes 8
+  local v108 word
+  local v110 word
+  local h_r13
+  local h_r14
+  local h_rcx
+  local h_rdx
+  local h_rsi
+  local s1531b2
+  local s1532c1
+  local s153321
+  local s15338a
+  local s15339f
+  local s1533e8
+  variable g668 word 876
+  variable g678 word 884
+  place p153038
+  place p15306d
+  place p1530cd
+  set h_rsi to addr c130
+  call push_ptr_init h_rsi
+  set h_rsi to addr c100
+  call push_ptr_init h_rsi
+  set h_rsi to addr c120
+  call push_ptr_init h_rsi
+  set cf0 to 65532
+  set h_rdx to sym eti_null
+  set h_r14 to 0
+  set h_rsi to 0
+  call fence 0 sym eti_null
+  set h_rdx to sym eti_s_1be896
+  set h_r13 to 1
+  set h_rsi to 1
+  call fence 1 sym eti_s_1be896
+  set v108 to addr g668
+  set cell c130 value to global word 880
+  set h_rsi to 1
+  call startloop h_rsi
+  set v110 to addr g678
+  place p15316f
+  set h_rsi to 1
+  call bspush_ca h_rsi
+  set h_rsi to addr g668
+  set h_rdx to 1
+  call lpta_loadp h_rsi
+  call setscan_r h_rdx
+  if answer is not 0
+    go to p15347a
+  end
+  place p153197
+  set h_rsi to 3
+  call bspush_ca_scan h_rsi
+  set h_rsi to 1
+  set h_rdx to 5
+  set h_rcx to sym eti_s_1be8b5
+  call test_string_s h_rsi h_rdx h_rcx
+  set s1531b2 to answer
+  set h_rcx to h_r14
+  if s1531b2 is not 0
+    go to p15347a
+  end
+  place p1531c2
+  go to p15341e
+  place p1531f9
+  place t1531f9_3 on 3
+  set h_r13 to unwind
+  set h_rsi to 5
+  call bspush_ca_scan h_rsi
+  set h_rcx to sym eti_s_1be8ba
+  go to p153318
+  place p153210
+  place t153210_5 on 5
+  set h_r13 to unwind
+  set h_rsi to 6
+  call bspush_ca_scan h_rsi
+  set h_rcx to sym eti_s_1be8c0
+  go to p1532f1
+  place p153227
+  place t153227_6 on 6
+  set h_r13 to unwind
+  set h_rsi to 7
+  call bspush_ca_scan h_rsi
+  set h_rcx to sym eti_s_1be8c5
+  set h_rsi to 1
+  set h_rdx to 7
+  go to p15331d
+  place p153243
+  place t153243_7 on 7
+  set h_r13 to unwind
+  set h_rsi to 8
+  call bspush_ca_scan h_rsi
+  set h_rcx to sym eti_s_1be8cc
+  go to p1532f1
+  place p15325a
+  place t15325a_8 on 8
+  set h_r13 to unwind
+  set h_rsi to 9
+  call bspush_ca_scan h_rsi
+  set h_rcx to sym eti_s_1be8d1
+  go to p1532f1
+  place p153271
+  place t153271_9 on 9
+  set h_r13 to unwind
+  set h_rsi to 10
+  call bspush_ca_scan h_rsi
+  set h_rcx to sym eti_s_1be8d6
+  go to p1532f1
+  place p153285
+  place t153285_10 on 10
+  set h_r13 to unwind
+  set h_rsi to 11
+  call bspush_ca_scan h_rsi
+  set h_rsi to 12
+  call bspush_ca_scan h_rsi
+  go to p1532d1
+  place p15329d
+  place t15329d_11 on 11
+  set h_r13 to unwind
+  set h_rsi to 14
+  call bspush_ca_scan h_rsi
+  set h_rcx to sym eti_s_1be8e0
+  go to p15330a
+  place p1532b1
+  place t1532b1_12 on 12
+  set h_r13 to unwind
+  set h_rcx to sym eti_s_1be8db
+  set h_rsi to 1
+  set h_rdx to 2
+  call test_string_s h_rsi h_rdx h_rcx
+  set s1532c1 to answer
+  set h_rsi to h_r13
+  if s1532c1 is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p1532d1
+  place t1532d1_13 on 13
+  set h_r13 to unwind
+  set h_rcx to sym eti_s_1be8dd
+  set h_rsi to 1
+  set h_rdx to 3
+  go to p15331d
+  place p1532df
+  place t1532df_14 on 14
+  set h_r13 to unwind
+  set h_rsi to 15
+  call bspush_ca_scan h_rsi
+  set h_rcx to sym eti_s_1be8e4
+  place p1532f1
+  set h_rsi to 1
+  set h_rdx to 5
+  go to p15331d
+  place p1532f8
+  place t1532f8_15 on 15
+  set h_r13 to unwind
+  set h_rsi to 16
+  call bspush_ca_scan h_rsi
+  set h_rcx to sym eti_s_1be8e9
+  place p15330a
+  set h_rsi to 1
+  set h_rdx to 4
+  go to p15331d
+  place p153311
+  place t153311_16 on 16
+  set h_r13 to unwind
+  set h_rcx to sym eti_s_1be8ed
+  place p153318
+  set h_rsi to 1
+  set h_rdx to 6
+  place p15331d
+  call test_string_s h_rsi h_rdx h_rcx
+  set s153321 to answer
+  set h_rcx to h_r13
+  set h_rsi to h_r13
+  if s153321 is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p153334
+  go to p15341e
+  place p153339
+  place t153339_18 on 18
+  set h_r13 to unwind
+  set h_rsi to 20
+  call starttest h_rsi
+  set h_rsi to addr c100
+  set h_rdx to 1
+  call lpta_loadp h_rsi
+  call setscan_r h_rdx
+  if answer is 0
+    go to p15339c
+  end
+  place p15335a
+  place t15335a_20 on 20
+  set h_r13 to unwind
+  set h_rsi to 23
+  call starttest h_rsi
+  set h_r14 to addr cf0
+  set h_rdx to 1
+  set h_rsi to addr cf0
+  call move_i h_rsi h_rdx
+  set h_rdx to addr c100
+  set h_rsi to addr g668
+  set h_rcx to addr cf0
+  call nonlex_prefixes h_rsi h_rdx h_rcx
+  set s15338a to answer
+  set h_rsi to h_r13
+  if s15338a is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p15339a
+  go to p1533fd
+  place p15339c
+  place t15339c_21 on 21
+  set h_r13 to unwind
+  call advance_tok
+  set s15339f to answer
+  set h_rsi to h_r13
+  if s15339f is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p1533af
+  set h_rsi to 21
+  call bspush_ca_scan h_rsi
+  place p1533ba
+  place t1533ba_22 on 22
+  set h_r13 to unwind
+  set h_rsi to 22
+  set h_r14 to addr c120
+  set h_rdx to addr c120
+  call savescptr h_rsi h_rdx
+  set h_rsi to addr g668
+  set h_rdx to addr c120
+  call lpta_rpta_loadp h_rsi h_rdx
+  set h_rsi to 1
+  set h_rdx to 349
+  call setd_lookup h_rsi 340
+  set s1533e8 to answer
+  set h_rsi to h_r13
+  if s1533e8 is not 0
+    set unwind to h_rsi
+    backtrack
+  end
+  place p1533f8
+  match
+  place p1533fd
+  place t1533fd_23 on 23
+  set h_r13 to unwind
+  set h_rsi to 1
+  set h_rdx to 2
+  call while_iterate h_rsi h_rdx
+  place p15340b
+  place t15340b_24 on 24
+  set h_r13 to unwind
+  set h_r14 to h_r13
+  set h_r13 to 1
+  go to p15316f
+  place p15341b
+  place t15341b_4 on 4
+  set h_r13 to unwind
+  set h_rcx to h_r13
+  place p15341e
+  set h_r13 to h_rcx
+  set h_rsi to 4
+  set h_rdx to addr c100
+  call savescptr h_rsi h_rdx
+  place p153433
+  place t153433_2 on 2
+  set h_r13 to unwind
+  set h_rsi to addr g668
+  set h_rdx to addr g678
+  call eng_roots_dict_lookup h_rsi h_rdx
+  if answer is 0
+    match
+  end
+  place p153449
+  place t153449_17 on 17
+  set h_r13 to unwind
+  set h_rsi to 18
+  call starttest h_rsi
+  set h_rsi to 19
+  call bspush_ca_boa h_rsi
+  set h_rsi to addr c100
+  call potential_prefix h_rsi
+  if answer is 0
+    set h_r13 to 1
+  end
+  set h_r14 to h_r13
+  place p15347a
+  set h_rsi to h_r14
+  set unwind to h_rsi
+  backtrack
+  place p153482
+  place t153482_1 on 1
+  set h_r13 to unwind
+  set h_rsi to addr g668
+  call lpta_loadpn h_rsi
+  set h_rsi to addr c130
+  call rpta_loadpn h_rsi
+  call compare_ptas
+  if answer is not 0
+    match
+  end
+  place p1534a8
+  call testeq
+  if answer is not 0
+    match
+  end
+  place p1534b4
+  give up
+  place p1534b9
+  place t1534b9_19 on 19
+  set h_r13 to unwind
+  call bspop_boa
+  match
+  place tm_25 on 25
+  match
+end

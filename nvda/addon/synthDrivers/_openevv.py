@@ -197,6 +197,7 @@ LOCALES = {
 	0x90000: "fi_FI",
 	0x70000: "pt_BR",
 	0x110000: "pl_PL",
+	0x120000: "ru_RU",
 }
 
 #: And what to call it in a list of voices. NVDA shows the voice's name, so
@@ -215,6 +216,7 @@ LANGUAGE_NAMES = {
 	0x90000: "Finnish",
 	0x70000: "Brazilian Portuguese",
 	0x110000: "Polish",
+	0x120000: "Russian",
 }
 
 
@@ -231,10 +233,11 @@ def nameOf(language):
 #: The code set each language's text goes in, which is not UTF-8. The engine
 #: reads bytes: IBM's eight Western languages take the Windows Western set and
 #: Japanese takes Shift-JIS, which its romanizer reads. Polish declares letters
-#: of its own, the one case in which the engine converts UTF-8 itself. Never
-#: the machine's own ANSI code page, which belongs to the person's Windows and
-#: not to the voice.
-CODE_SETS = {0x80000: "cp932", 0x110000: "utf-8"}
+#: of its own, and so does Russian: those are the two in which the engine
+#: converts UTF-8 itself, and in the Western set every Cyrillic letter would
+#: be a question mark. Never the machine's own ANSI code page, which belongs
+#: to the person's Windows and not to the voice.
+CODE_SETS = {0x80000: "cp932", 0x110000: "utf-8", 0x120000: "utf-8"}
 
 #: Characters that lay text out and say nothing.
 _LAYOUT = dict.fromkeys(map(ord, "\u00ad\u061c\u200e\u200f\u202a\u202b"
@@ -277,6 +280,7 @@ DICTIONARY_CODES = {
 	0x90000: "fin",
 	0x70000: "ptb",
 	0x110000: "plk",
+	0x120000: "rus",
 }
 
 #: The engine's three volumes, as a file's name says them.
@@ -693,12 +697,14 @@ class Engine:
 		return self._dll.eciSetParam(self._instance, which, value)
 
 	def _newPlayer(self, hz):
-		return nvwave.WavePlayer(
-			channels=1,
-			samplesPerSec=hz,
-			bitsPerSample=16,
-			outputDevice=config.conf["audio"]["outputDevice"],
-		)
+		options = {"channels": 1, "samplesPerSec": hz, "bitsPerSample": 16}
+		for section in ("audio", "speech"):
+			try:
+				options["outputDevice"] = config.conf[section]["outputDevice"]
+			except KeyError:
+				continue
+			break
+		return nvwave.WavePlayer(**options)
 
 	def setWideband(self, enable):
 		"""Turn the wideband voice on or off, between utterances.

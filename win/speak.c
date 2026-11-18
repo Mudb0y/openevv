@@ -280,16 +280,49 @@ static int number_in(int id, int fallback)
     return ok ? (int)v : fallback;
 }
 
+/* Use the code set the selected language reads on every Windows locale. */
+static UINT code_page_for(uint32_t language)
+{
+    switch (language) {
+    case 0x80000:  return 932;
+    case 0x110000:
+    case 0x120000: return CP_UTF8;
+    default:       return 1252;
+    }
+}
+
+/* Read the text box as Unicode before converting it for the engine. */
+static char *text_for_engine(void)
+{
+    HWND     box = GetDlgItem(dlg, IDC_TEXT);
+    int      n = GetWindowTextLengthW(box);
+    UINT     cp = code_page_for(langs[lang_now]);
+    wchar_t *wide;
+    char    *out;
+    int      m;
+
+    if (n <= 0)
+        return 0;
+    wide = malloc(((size_t)n + 1) * sizeof *wide);
+    if (wide == 0)
+        return 0;
+    GetWindowTextW(box, wide, n + 1);
+    m = WideCharToMultiByte(cp, 0, wide, -1, 0, 0, 0, 0);
+    out = m > 0 ? malloc((size_t)m) : 0;
+    if (out != 0)
+        WideCharToMultiByte(cp, 0, wide, -1, out, m, 0, 0);
+    free(wide);
+    return out;
+}
+
 static void start_speaking(void)
 {
     struct job *j;
-    int         n;
 
     if (speaking)
         return;
 
-    n = GetWindowTextLengthA(GetDlgItem(dlg, IDC_TEXT));
-    if (n <= 0) {
+    if (GetWindowTextLengthW(GetDlgItem(dlg, IDC_TEXT)) <= 0) {
         status("nothing to say");
         return;
     }
@@ -297,12 +330,11 @@ static void start_speaking(void)
     j = calloc(1, sizeof *j);
     if (j == 0)
         return;
-    j->text = malloc((size_t)n + 1);
+    j->text = text_for_engine();
     if (j->text == 0) {
         free(j);
         return;
     }
-    GetDlgItemTextA(dlg, IDC_TEXT, j->text, n + 1);
     j->voice = (int)SendDlgItemMessage(dlg, IDC_VOICE, CB_GETCURSEL, 0, 0) + 1;
     j->rate = number_in(IDC_RATE, 0);
     j->pitch = number_in(IDC_PITCH, 0);
@@ -641,7 +673,7 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE prev, LPSTR cmd, int show)
         return 1;
     }
 
-    dlg = CreateDialogParamA(inst, (LPCSTR)IDD_SPEAK, 0, on_dialog, 0);
+    dlg = CreateDialogParamW(inst, MAKEINTRESOURCEW(IDD_SPEAK), 0, on_dialog, 0);
     if (dlg == 0) {
         MessageBoxA(0, "The window would not open.", "OpenEVV",
                     MB_OK | MB_ICONERROR);
@@ -652,13 +684,13 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE prev, LPSTR cmd, int show)
     if (say_at_once)
         PostMessage(dlg, WM_COMMAND, IDC_SPEAK, 0);
 
-    while (GetMessage(&m, 0, 0, 0) > 0) {
+    while (GetMessageW(&m, 0, 0, 0) > 0) {
         if (acc != 0 && TranslateAcceleratorA(dlg, acc, &m))
             continue;
-        if (IsDialogMessage(dlg, &m))
+        if (IsDialogMessageW(dlg, &m))
             continue;
         TranslateMessage(&m);
-        DispatchMessage(&m);
+        DispatchMessageW(&m);
     }
 
     /* The worker may still be inside the engine, so it is asked to stop and

@@ -1,0 +1,134 @@
+# The machine's global variables, as ruru declares them.
+#
+# One line to a kind and how many in a row, in the order the language declares
+# them, which is the order that decides both where each lands in the tail of
+# the machine and what its number is. A compound says what it holds: the kind
+# of item and how many.
+#
+# Written by tools/gen-globals.py. Where each variable lands and how big a
+# machine of this language is are not in here -- they follow from the kinds,
+# by the same walk delta_new does.
+
+word 20
+short 2
+word 5
+short 8
+word 10
+short 30
+word 3
+short 2
+word 1
+short 3
+word 45
+short 2
+compound 1 5
+compound 1 5
+compound 1 5
+compound 7 2
+compound 9 2
+compound 0 2
+short 42
+long 11
+short 5
+word 3
+short 3
+compound 1 5
+short 11
+word 1
+short 4
+word 3
+short 1
+word 1
+short 89
+long 1
+short 30
+compound 5 10
+compound 5 10
+compound 5 10
+short 39
+word 1
+short 3
+long 1
+short 38
+long 1
+short 5
+long 1
+compound 4 16
+compound 6 32
+compound 4 16
+long 1
+short 1
+compound 1 5
+short 1
+long 1
+short 3
+word 1
+short 5
+long 1
+short 10
+word 6
+short 2
+long 1
+short 27
+long 1
+short 81
+word 1
+long 2
+word 1
+short 6
+compound 6 32
+compound 6 32
+compound 6 32
+short 2
+word 1
+short 4
+word 4
+short 1
+long 1
+short 1
+word 1
+short 26
+long 3
+word 1
+short 2
+compound 5 10
+compound 4 16
+compound 4 16
+short 3
+long 1
+short 98
+long 11
+short 20
+word 1
+short 13
+word 1
+long 1
+word 1
+
+# Six that ETI Eloquence 6.1 declares and 4.3 never had, which the rules
+# lifted out of it use: the cell count_input fills at the head of each pass
+# of normalize_text; what kind of token was last read whole, and the two
+# kinds it is compared against, a path or a host and a dictionary word,
+# which set_global_constants sets to two and one; and whether a slash was
+# read as per, with the one it is compared against.
+short 6
+
+# One of ours: where the number after a hyphen begins when that hyphen is one
+# of a chain of them, so that the hyphen after that number is read as one of
+# the chain too. hyphen_in_chain in et_numbr.up sets it and reset_sent_vars
+# clears it.
+long 1
+name long 39 hyphen_chain_next
+
+# Seven that 6.1 declares and 4.3 never had, which its money rules lifted into
+# et_numbr.up compare against: a thirteenth kind of currency, where both number
+# the first eleven alike, and six kinds of dollar. set_global_constants sets
+# them to 6.1's values.
+short 7
+
+# Bytes in the Russian pronunciation window and the preceding word's start.
+long 1
+word 1
+
+# A forced window continues after the reader's opening annotation prefix.
+short 1

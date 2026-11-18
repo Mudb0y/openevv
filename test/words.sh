@@ -63,11 +63,9 @@ for tag in $want; do
     trap 'rm -rf "$work"' EXIT
 
     # LC_ALL=C because a list is in the code set the engine reads rather than
-    # in UTF-8 -- docs/api.md says why -- and grep in a UTF-8 locale quietly
-    # drops a line whose bytes are not valid there. That is every accented
-    # word, which is to say every word worth having: Spanish and French lost
-    # three thousand apiece to it before anyone noticed the counts.
-    LC_ALL=C grep -v '^#' "$src" | LC_ALL=C grep -v '^$' > "$work/words.txt"
+    # in UTF-8 -- docs/api.md says why. Remove only line endings and leave the
+    # word bytes alone so the Windows checkout and probe work on the same list.
+    LC_ALL=C sed -e 's/\r$//' -e '/^#/d' -e '/^$/d' "$src" > "$work/words.txt"
     total=$(wc -l < "$work/words.txt")
 
     # Every word is its own instance -- test/harness/phonemes.c makes and
@@ -86,7 +84,7 @@ for tag in $want; do
     wait
     for p in "$work"/part.*; do
         case $p in *.said) continue ;; esac
-        cat "$p.said"
+        LC_ALL=C sed 's/\r$//' "$p.said"
     done > "$work/said.txt"
 
     # A word the engine answers nothing for is its own kind of failure and a
@@ -159,7 +157,7 @@ for tag in $want; do
         echo "words: no baseline in ${baseline#$root/}; record one" >&2
         bad=1; continue; }
 
-    LC_ALL=C grep -v '^#' "$baseline" > "$work/was.txt"
+    LC_ALL=C sed -e 's/\r$//' -e '/^#/d' "$baseline" > "$work/was.txt"
     moved=$(diff --unchanged-line-format= --old-line-format='%L' \
                  --new-line-format= "$work/was.txt" "$work/now.txt" \
             | wc -l)

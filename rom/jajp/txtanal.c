@@ -1118,7 +1118,7 @@ int32_t ta_processSnlkAnno(void *ta, const char *text, char **word,
 
     (void)ta;
     while (*p != '\0' && going != 0) {
-        next = ju_IsDBCSLeadByte(*p) ? p + 2 : p + 1;
+        next = ju_IsDBCSLeadByte(*p) && p[1] != '\0' ? p + 2 : p + 1;
 
         if (*p == '`') {
             if (tolower((unsigned char)next[0]) == 's') {
@@ -1267,14 +1267,13 @@ int32_t ta_FormatAddText(void *ta, char *out, const char *text, int32_t len)
     int16_t     charIndex = 0;
     int16_t     runLen    = 0;
 
-    (void)len;
     out[0] = '\0';
     *(int16_t *)((uint8_t *)ic + IC_LENGTH) = 0;
 
     /* Whatever was read before is skipped: its marks are not 0xff. */
     p = text;
-    while (raw[charIndex] != 0xff) {
-        p += ju_IsDBCSLeadByte(*p) ? 2 : 1;
+    while (charIndex < len && *p != '\0' && raw[charIndex] != 0xff) {
+        p += ju_IsDBCSLeadByte(*p) && p[1] != '\0' ? 2 : 1;
         charIndex++;
     }
     n = (int32_t)(p - text);
@@ -1300,7 +1299,9 @@ int32_t ta_FormatAddText(void *ta, char *out, const char *text, int32_t len)
     }
 
     while (*p != '\0') {
-        next = p + (ju_IsDBCSLeadByte(*p) ? 2 : 1);
+        /* A dangling lead byte consumes one byte, including when a
+           trailing control character has been stripped from the input. */
+        next = p + (ju_IsDBCSLeadByte(*p) && p[1] != '\0' ? 2 : 1);
 
         switch (state) {
         case 0:
@@ -1425,10 +1426,10 @@ int32_t ta_FormatAddText(void *ta, char *out, const char *text, int32_t len)
         if (flagCopy != 0) {
             const char *q = copyFrom;
 
-            while (q != segEnd) {
+            while (q < segEnd) {
                 if (raw[charIndex] == 0xff)
                     raw[charIndex] = 0;
-                q += ju_IsDBCSLeadByte(*q) ? 2 : 1;
+                q += ju_IsDBCSLeadByte(*q) && segEnd - q > 1 ? 2 : 1;
                 charIndex++;
             }
             n = (int32_t)(segEnd - copyFrom);
@@ -1481,7 +1482,7 @@ int32_t ta_FormatAddText(void *ta, char *out, const char *text, int32_t len)
             }
             for (q = partA; *q != '\0'; ) {
                 raw[charIndex] = (uint8_t)(q == partA ? 1 : 2);
-                q += ju_IsDBCSLeadByte(*q) ? 2 : 1;
+                q += ju_IsDBCSLeadByte(*q) && q[1] != '\0' ? 2 : 1;
                 charIndex++;
             }
             strcat(out, partA);

@@ -39,7 +39,7 @@ typedef struct {
     const char *name;
     /* Whether the engine wants this language's text as UTF-8 rather than as
      * the single bytes of its own code set. A language that declares code
-     * points of its own -- which is Polish and none of the nine IBM shipped
+     * points of its own -- which is Polish and Russian and none of the nine IBM shipped
      * -- has its text converted by the engine itself, so converting it here
      * as well would turn every letter the Western set has not got into a
      * question mark before the engine ever saw it. */
@@ -83,6 +83,7 @@ static const LanguageInfo knownLanguages[] = {
     { 0x00090000, "fifi", "fi-FI", "Finnish",              0 },
     { 0x00070000, "ptbr", "pt-BR", "Brazilian Portuguese", 0 },
     { 0x00110000, "plpl", "pl-PL", "Polish",               1 },
+    { 0x00120000, "ruru", "ru-RU", "Russian",              1 },
 };
 
 static const char *const voiceNames[VOICES_PER_LANGUAGE] = {

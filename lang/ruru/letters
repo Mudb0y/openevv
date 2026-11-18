@@ -1,0 +1,271 @@
+# US English letter-to-sound.
+#
+# One block a letter and its arms in order, the first that matches winning.
+# The last arm of a block is the bare letter: what it says when nothing else
+# applies. An arm may also say what must stand to its left and right without
+# swallowing it -- `after', `before', and `vowel', `consonant' or `glide' in
+# either place -- and `at start' or `at end' for a run that has to begin or
+# end where the piece of the word does.
+#
+# The letters are the language's own characters and the phones are the ETI
+# phone letters, the same ones enus.dict uses. tools/rules/letters.py writes
+# rules/et_phone.up out of this, and test/words.sh says whether any of 24,318
+# words moved.
+
+rules in et_phone.obj named %s_rules
+a piece runs from 876 to 884
+gmute means b c d f j k m p q s t v x z
+
+# Russian's, which the second half of this file is: see there.
+voiceless means п т к ф с ш щ х ц ч and the end of the word
+voiced means б д г з ж unless voiceless follows
+iot means е ё ю я
+а б в г д е ё ж з и й к л м н о п р с т у ф х ц ч ш щ ъ ы ь э ю я ́ come through q
+
+letter b
+  bt at end   says t     # debt
+  b    says b
+
+letter w
+  wr at start   says r   # write, wrong
+  w    says w
+
+letter d
+  dg   says J     # judge, badge
+  dj   says J     # adjust
+  dt at end   says t   # Ahrendt, Schmidt
+  d    says d
+
+letter m
+  mech          says m E k # mechanic, mechanism
+  mn at start   says n     # mnemonic
+  mn at end     says m     # autumn, column, damn
+  mb at end     says m     # lamb, comb
+  m             says m
+
+letter n
+  ng at end               says G   # sing, singing
+  ng before n at end      says G
+  ng before then at end   says G   # strengthen
+  ng before ton at end    says G
+  ng before th            says G   # length, strength
+  ngh before am           says G   # Bingham, gingham
+  ng before gmute         says G   # Lexingtonian, Gangtok, Helsingborg
+  n                       says n
+
+letter q
+  qu after i before et  says k     # etiquette, tourniquet
+  qu before ette        says k     # Arquette, croquette
+  qu before e at end    says k     # antique, clique
+  qu before vowel       says k w   # quick, queen
+  q                     says k     # Iraq
+
+
+
+
+
+# ---- Russian ------------------------------------------------------------
+#
+# Everything above is US English's, and reads a word in Latin letters as
+# English. Everything below is Russian's. Its letters have bytes of their
+# own, which lang/ruru/ruru.codepoints names, and no link of their own in the
+# dispatcher, so they come through q's: their blocks are arms of the rule
+# standing where q's stood, and q's own arms, above, come after them.
+#
+# The phones are US English's, and Russian is said with the nearest of them.
+# ы is X, the vowel of roses. р is F, the flap, alone before a vowel and with
+# r after it anywhere else, where a flap has nothing to release into. ц is t
+# and s, ч is C, ж and ш are Z and S, щ is S and the glide before a vowel and
+# S and C elsewhere, and х is h before a vowel and Q elsewhere, the velar
+# fricative English declares and never says, with a k before it in front of
+# л, р, м, н and в.
+#
+# A consonant is soft before е, ё, ю and я, and English has no soft
+# consonants, so the softness is the glide y laid before the vowel, which is
+# how an English voice comes nearest. ж, ш and ц are hard whatever follows,
+# and ч, щ and й soft already, so no glide follows those. After a vowel, at
+# the start of a word and after ь or ъ the glide is the letter's own: ель,
+# моё, вьюга, съел.
+#
+# A voiced consonant is voiceless before a voiceless one and at the end of a
+# word, and a voiceless one voiced before a voiced one: хлеб is хлеп, сделать
+# зделать. в loses its voice and gives none, so it is not in `voiced'.
+# A word's last consonant does not take the voice of the next word's first.
+#
+# The vowels here are the stressed ones. Where the stress falls, and what an
+# unstressed vowel becomes, is rules/et_strss.up's to say once these have
+# spoken.
+
+# The classes those arms ask for and the letters that come through q are
+# named above the first letter, where the file's other such lines are.
+
+# ---- vowels
+
+letter а
+  а    says a
+
+letter о
+  о    says o
+
+letter у
+  у    says u
+
+letter ы
+  ы    says X
+
+letter э
+  э    says E
+
+letter и
+  и after ж  says X        # жить
+  и after ш  says X        # шило
+  и after ц  says X        # цирк
+  и after ь  says y i      # соловьи
+  и    says i
+
+letter е
+  е after ж  says E
+  е after ш  says E
+  е after ц  says E
+  е after ч  says E
+  е after щ  says E
+  е    says y E            # нет, ель, поет, семье, съел
+
+letter ё
+  ё after ж  says o
+  ё after ш  says o
+  ё after ч  says o
+  ё after щ  says o
+  ё    says y o            # ёж, моё, бельё, нёс
+
+letter ю
+  ю after ж  says u
+  ю after ш  says u
+  ю after ч  says u
+  ю after щ  says u
+  ю    says y u
+
+letter я
+  я after ч  says a
+  я after щ  says a
+  я    says y a
+
+letter й
+  й    says y
+
+# ---- signs, and the stress mark, which say nothing
+
+letter ь
+  ь    is left alone
+
+letter ъ
+  ъ    is left alone
+
+letter ́
+  ́    is left alone
+
+# ---- consonants
+
+letter б
+  б before voiceless   says p      # хлеб, обхват
+  б    says b
+
+letter п
+  п before voiced      says b
+  п    says p
+
+letter в
+  вств                 says s t v  # чувство, здравствуйте
+  в before voiceless   says f      # вторник, кровь
+  в    says v
+
+letter ф
+  ф before voiced      says v
+  ф    says f
+
+letter м
+  м    says m
+
+letter г
+  г after о before о at end  says v      # нового
+  г after е before о́ at end says v       # ничего́
+  г after е́ before о at end says v       # explicit stress before г
+  г after е before о at end  says v      # его, моего
+  г after е before од  says v            # сегодня
+  гк                   says Q k    # лёгкий, мягкий, легко
+  г before voiceless   says k      # друг, ногти
+  г    says g
+
+letter к
+  к before voiced      says g      # вокзал
+  к    says k
+
+letter х
+  х before vowel       says h      # хорошо
+  х before л           says k Q    # хлеб
+  х before р           says k Q
+  х before м           says k Q
+  х before н           says k Q
+  х before в           says k Q
+  х    says Q                      # них, вход
+
+letter д
+  дц                   says t s    # двадцать
+  д before voiceless   says t      # сад, лодка
+  д    says d
+
+letter т
+  ться at end          says t s a  # учиться
+  тся at end           says t s a  # учится
+  т before voiced      says d      # отдать
+  т    says t
+
+letter з
+  зч                   says S C    # извозчик
+  здн                  says z n    # поздно, праздник
+  з before voiceless   says s      # раз, сказка
+  з    says z
+
+letter с
+  стьс after е before от says s      # шестьсот
+  сч before vowel      says S y    # счастье
+  сч                   says S C    # исчислить
+  стн                  says s n    # честный, известно
+  с before voiced      says z      # сделать
+  с    says s
+
+letter н
+  н    says n
+
+letter л
+  лнц                  says n t s  # солнце
+  л    says l
+
+letter р
+  рдц                  says F r t s  # сердце
+  р before vowel       says F      # река
+  р before ь+vowel     says F      # рьяно
+  р    says F r                    # март, царь
+
+letter ж
+  ж before voiceless   says S      # нож, ложка
+  ж    says Z
+
+letter ш
+  ш before voiced      says Z
+  ш    says S
+
+letter ч
+  чт before о at start  says S t   # что, чтобы
+  чт before о at end    says S t   # ничто
+  ч before voiced      says J
+  ч    says C
+
+letter щ
+  щ before и           says S
+  щ before е           says S
+  щ before vowel       says S y    # щука
+  щ    says S C                    # борщ, вещь
+
+letter ц
+  ц    says t s

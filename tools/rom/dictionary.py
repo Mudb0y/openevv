@@ -197,6 +197,13 @@ def emit(data, table, out, tag):
                 f.write("    %s,\n" % (("%s_%s" % (tag, nm)) if nm else "0"))
             f.write("};\n")
             f.write("const int32_t %s_%s_n = %d;\n\n" % (tag, arr, top))
+            if arr == "s_apszSuppD":
+                f.write("const int32_t %s_%s_bytes[%d] = {\n" % (tag, arr, top))
+                for i in range(top):
+                    name = slots.get(i)
+                    f.write("    %s,\n" % (
+                        "sizeof %s_%s" % (tag, name) if name else "0"))
+                f.write("};\n\n")
 
     print("%d blobs, %d bytes; %d arrays: %s"
           % (len(data), n, len(table),

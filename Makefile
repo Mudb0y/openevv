@@ -959,10 +959,11 @@ $(foreach l,$(LANGS),$(eval $(call \
 # prerequisite newer than the target, but it does change the directory.
 define builtin_for
 $(1)/delta_builtin_$(notdir $(1)).c: tools/module/builtindict.py \
-    $(wildcard $(1)/dictionary $(1)/dictionary/*.dic \
+    $(wildcard $(1)/dictionary $(1)/dictionary/*.dic $(1)/dictionary/*.dic.gz \
                $(1)/dictionary/split $(1)/dictionary/fold \
                $(1)/dictionary/sayable $(1)/dictionary/pieces \
-               $(1)/dictionary/compound $(1)/$(notdir $(1)).sets)
+               $(1)/dictionary/compound $(1)/$(notdir $(1)).sets \
+               $(1)/$(notdir $(1)).codepoints)
 	@python3 tools/module/builtindict.py write $(1)
 	@touch $$@
 endef

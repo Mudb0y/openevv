@@ -115,6 +115,8 @@ extern const int32_t        jajp_s_apszKana_n;
 extern const uint8_t *const jajp_s_apszTankanKana[];
 extern const int32_t        jajp_s_apszTankanKana_n;
 extern const uint8_t *const jajp_s_apszSuppD[];
+extern const int32_t        jajp_s_apszSuppD_n;
+extern const int32_t        jajp_s_apszSuppD_bytes[];
 extern const uint8_t *const jajp_s_apszSuppI[];
 
 /* ---- RomInstParam ---------------------------------------------------- */

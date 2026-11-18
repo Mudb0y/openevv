@@ -1,0 +1,64 @@
+# A written Russian vowel can be reduced before the phone stress has been
+# copied. Allow the same word-initial creak as the phonetic reader.
+rule ru_creak_after_written_vowel takes 3 from et_phnol.obj
+  afresh
+  call lpta_loadp arg 1
+  call setscan_r 1
+  if answer is not 0
+    give up
+  end
+  call ru_is_vowel
+  if answer is not 0
+    give up
+  end
+  call lpta_loadp arg 2
+  call setscan_r 1
+  if answer is not 0
+    give up
+  end
+  call ru_is_vowel
+  if answer is not 0
+    give up
+  end
+  call lpta_loadp arg 2
+  call setscan_r 2
+  if answer is not 0
+    give up
+  end
+  call testFldeq 2 1 1                          # vowel
+  if answer is not 0
+    give up
+  end
+  call testFldeq 2 0 29                         # reduced I
+  if answer is 0
+    # The conjunction и is a complete syllable. The phonetic reader gives
+    # it an onset after a vowel even though its own vowel is reduced.
+    call lpta_loadp arg 2
+    call setscan_r 1
+    if answer is not 0
+      give up
+    end
+    call test_string_s 1 1 sym ru_lt_6c
+    if answer is not 0
+      give up
+    end
+    call ru_is_russian
+    if answer is 0
+      give up
+    end
+    match
+  end
+  call testFldeq 2 0 46                         # reduced U
+  if answer is 0
+    give up
+  end
+  call testFldeq 2 0 35                         # reduced H
+  if answer is 0
+    give up
+  end
+  call testFldeq 2 0 36                         # reduced x
+  if answer is 0
+    give up
+  end
+  match
+end

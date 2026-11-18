@@ -1473,10 +1473,20 @@ int16_t ds_LookupUserDict(void *d, const uint8_t *dict, char *text,
         block = (int16_t)(i - 1);
     end = i;
 
+    for (int32_t table = 0; table < jajp_s_apszSuppD_n; table++) {
+        if (dict == jajp_s_apszSuppD[table]) {
+            int32_t blocks = jajp_s_apszSuppD_bytes[table] / 0x3e8;
+
+            if (end > blocks)
+                end = (int16_t)blocks;
+            break;
+        }
+    }
     for (b = block; b < end; b++) {
         const uint8_t *p = dict + b * 0x3e8;
+        const uint8_t *blockEnd = p + 0x3e8;
 
-        while (p[UH_LEN] != 0) {
+        while (p < blockEnd && p[UH_LEN] != 0) {
             int16_t        ti2 = ti;
             const uint8_t *q = p + UH_TEXT;
             uint16_t       recKey = ju_MakeUshort((const char *)q);
@@ -1554,6 +1564,10 @@ int16_t ds_LookupEngWordDict(void *d, uint8_t *roman, int16_t slot,
         block = (int16_t)(i - 1);
     end = (int16_t)(i * 2);
 
+    /* The hash covers more slots than the dictionary exports. Slots past
+       the pointer table have no entries to search. */
+    if (end > jajp_s_apszEng_n)
+        end = (int16_t)jajp_s_apszEng_n;
     for (b = block; b < end; b++) {
         const uint8_t *p = jajp_s_apszEng[(uint16_t)b];
 

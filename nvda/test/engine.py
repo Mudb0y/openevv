@@ -280,6 +280,25 @@ def restore_checks():
     engine.close()
 
 
+def output_device_checks():
+    players = []
+    mod = engine_module(FakeDll(), players)
+    engine = mod.Engine(lambda index: None)
+    original = mod.config.conf
+    try:
+        mod.config.conf = {"audio": {}, "speech": {"outputDevice": "legacy"}}
+        check("the player uses the legacy output device",
+              engine._newPlayer(11025).made["outputDevice"], "legacy")
+        mod.config.conf["audio"]["outputDevice"] = "current"
+        check("the player prefers the current output device",
+              engine._newPlayer(11025).made["outputDevice"], "current")
+        mod.config.conf = {}
+        check("the player uses NVDA's default if neither section has a device",
+              "outputDevice" in engine._newPlayer(11025).made, False)
+    finally:
+        mod.config.conf = original
+
+
 def samplerate_checks():
     """Changing the rate has to move the player with it, or not at all.
 
@@ -937,6 +956,7 @@ def main():
 
     control_checks()
     restore_checks()
+    output_device_checks()
     samplerate_checks()
     wideband_checks()
     pause_mode_checks()

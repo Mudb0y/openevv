@@ -11,8 +11,14 @@ lang/<tag>/dictionary holds it as text:
 
   main.dic, root.dic, abbr.dic
       the three volumes, in UTF-8, one entry a line; a line starting # is a
-      remark. US English's began as the community's IBMTTSDictionaries and
+      remark. A character the language's <tag>.codepoints declares is written
+      as the byte it arrives as, and the rest in the Windows Western set. US English's began as the community's IBMTTSDictionaries and
       each file says how it is laid out
+  main.dic.gz, root.dic.gz, abbr.dic.gz
+      if one is there, more of that volume in the same form, compressed
+      because a tool writes it and it is large: Russian's stress for every
+      form of OpenRussian's the rules place wrong. It is read before the
+      plain file, so a word both have keeps the plain file's reading
   split
       if it is there, a word with a capital inside it that no dictionary
       holds is read as the words it is made of; each line is a beginning
@@ -50,6 +56,8 @@ usage: tools/module/builtindict.py write <lang dir>
        tools/module/builtindict.py dump <lang dir> <volume>
 """
 
+import functools
+import gzip
 import os
 import sys
 
@@ -73,6 +81,39 @@ def parse(raw):
     return word[:WORD_MAX], says[:SAYS_MAX]
 
 
+@functools.lru_cache(maxsize=None)
+def own_bytes(lang):
+    """The bytes a language's own characters arrive as, from its
+    <tag>.codepoints, or nothing for a language that has none. The engine
+    converts a caller's text with that table before any dictionary is
+    asked, so a word of such a language is filed under those bytes and what
+    is said in its place is written in them."""
+    tag = os.path.basename(os.path.normpath(lang))
+    path = os.path.join(lang, "%s.codepoints" % tag)
+    out = {}
+    if os.path.exists(path):
+        for line in open(path, encoding="utf-8"):
+            f = line.split("#", 1)[0].split()
+            if len(f) == 2:
+                out[chr(int(f[0], 16))] = int(f[1], 16)
+    return out
+
+
+def western(text, lang):
+    """Text in the bytes the engine reads it in: the language's own for a
+    character it declares, and the Windows Western set for the rest."""
+    own = own_bytes(lang)
+    if not own:
+        return text.encode("cp1252")
+    out = bytearray()
+    for ch in text:
+        if ch in own:
+            out.append(own[ch])
+        else:
+            out += ch.encode("cp1252")
+    return bytes(out)
+
+
 def read_fold(here):
     """What the normaliser writes for each letter lang/<tag>/dictionary/fold
     names, as (letter, written) pairs in the Western set."""
@@ -87,7 +128,8 @@ def read_fold(here):
         if len(f) != 2:
             sys.exit("builtindict: %s line %d is not a letter and what is "
                      "written for it" % (path, n))
-        out.append((f[0].encode("cp1252"), f[1].encode("cp1252")))
+        lang = os.path.dirname(here)
+        out.append((western(f[0], lang), western(f[1], lang)))
     return out
 
 
@@ -96,36 +138,48 @@ def read_dic(path):
     words filed under what the normaliser writes first, so that one written
     that way already comes after it and keeps its reading."""
     written, folded = [], []
-    if not os.path.exists(path):
+    sources = [p for p in (path + ".gz", path) if os.path.exists(p)]
+    if not sources:
         return written
     fold = read_fold(os.path.dirname(path))
-    with open(path, "rb") as f:
-        for n, raw in enumerate(f, 1):
-            if raw.startswith(b"#"):
-                continue
-            try:
-                raw = raw.decode("utf-8").encode("cp1252")
-            except (UnicodeDecodeError, UnicodeEncodeError) as e:
-                sys.exit("builtindict: %s line %d: %s" % (path, n, e))
-            entry = parse(raw)
-            if not entry:
-                continue
-            word = entry[0]
-            for letter, written_as in fold:
-                word = word.replace(letter, written_as)
-            # The normaliser writes the plain letter for an accented one
-            # before the root volume is asked, so such a word there would
-            # never be found; the main volume is asked before it does.
-            if os.path.basename(path) == "root.dic" \
-                    and any(c >= 0x80 for c in word):
-                sys.exit("builtindict: %s line %d: an accented word in a "
-                         "root volume is never looked up; it belongs in "
-                         "main.dic or in a rule" % (path, n))
-            if word == entry[0]:
-                written.append(entry)
-            else:
-                folded.append((word[:WORD_MAX], entry[1]))
+    for path in sources:
+        if path.endswith(".gz"):
+            f = gzip.open(path, "rb")
+        else:
+            f = open(path, "rb")
+        with f:
+            read_lines(path, f, fold, written, folded)
     return folded + written
+
+
+def read_lines(path, f, fold, written, folded):
+    """The lines of one file of a volume, into written and folded."""
+    lang = os.path.dirname(os.path.dirname(path))
+    root = os.path.basename(path) in ("root.dic", "root.dic.gz")
+    for n, raw in enumerate(f, 1):
+        if raw.startswith(b"#"):
+            continue
+        try:
+            raw = western(raw.decode("utf-8"), lang)
+        except (UnicodeDecodeError, UnicodeEncodeError) as e:
+            sys.exit("builtindict: %s line %d: %s" % (path, n, e))
+        entry = parse(raw)
+        if not entry:
+            continue
+        word = entry[0]
+        for letter, written_as in fold:
+            word = word.replace(letter, written_as)
+        # The normaliser writes the plain letter for an accented one
+        # before the root volume is asked, so such a word there would
+        # never be found; the main volume is asked before it does.
+        if root and any(c >= 0x80 for c in word):
+            sys.exit("builtindict: %s line %d: an accented word in a "
+                     "root volume is never looked up; it belongs in "
+                     "main.dic or in a rule" % (path, n))
+        if word == entry[0]:
+            written.append(entry)
+        else:
+            folded.append((word[:WORD_MAX], entry[1]))
 
 
 def volumes(lang):
@@ -221,7 +275,7 @@ def read_split(lang):
             if not line or line.startswith(b"#"):
                 continue
             try:
-                out.append(line.decode("utf-8").encode("cp1252"))
+                out.append(western(line.decode("utf-8"), lang))
             except (UnicodeDecodeError, UnicodeEncodeError) as e:
                 sys.exit("builtindict: %s line %d: %s" % (path, n, e))
     return out

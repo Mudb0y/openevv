@@ -1,0 +1,269 @@
+# Which read is meant, where IBM's homograph rule guesses from too little.
+#
+# homog_roots tries the words around read one context at a time and says
+# reed for the first that fits, and red when none does. Two kinds of context
+# it has no test for came out the wrong way round.
+#
+# A determiner or a possessive before it, with or without an adjective or an
+# ordinal between, makes read a noun, and a noun is reed: a quick read, the
+# first read, her read on it. It had no test for that, so they fell through
+# to red. Each of the tagger's adjective categories counts, and each of its
+# possessive ones. It calls good, fun and favorite nouns, and a noun before
+# read is as often its subject -- the man read the paper -- so a noun counts
+# only after a or an, and only where read ends the sentence or a
+# preposition or a conjunction follows it rather than anything it could take
+# as an object: it is a good read, a fun read for anyone.
+#
+# And an adverb before it was taken for the start of a present tense, which
+# most are, but already, widely, previously, recently and yet are said of
+# something read before: already read, not yet read, a widely read book.
+# Those said reed.
+#
+# This is asked just before the adverb test, and answers 1 for reed, 2 for
+# red, and 0 to leave it to the tests after. Its arguments are the three
+# places homog_roots keeps: where read's word begins, and where the word
+# before it begins and ends in the letters. From the first, a scan leftwards
+# meets the word before read and a scan rightwards meets read itself. Past
+# read, the end of the sentence is a token of no category at all.
+
+rule read_by_its_neighbours takes 4 from ea_homog.obj
+  bare
+  afresh
+  call lpta_loadp arg 1
+  call setscan_l 4
+  if answer
+    answer 0
+  end
+  call testFldeq 4 1 7
+  if answer is 0
+    answer 1
+  end
+  call testFldeq 4 2 25
+  if answer is 0
+    answer 1
+  end
+  call testFldeq 4 2 42
+  if answer is 0
+    answer 1
+  end
+  call testFldeq 4 2 43
+  if answer is 0
+    answer 1
+  end
+  call testFldeq 4 1 1
+  if answer is 0
+    go to adjective
+  end
+  call testFldeq 4 1 21
+  if answer is 0
+    go to adjective
+  end
+  call testFldeq 4 1 23
+  if answer is 0
+    go to adjective
+  end
+  call testFldeq 4 1 24
+  if answer is 0
+    go to adjective
+  end
+  call testFldeq 4 2 24
+  if answer is 0
+    go to adjective
+  end
+  call testFldeq 4 1 10
+  if answer is 0
+    go to noun
+  end
+  go to adverb
+
+place adjective
+  call advance_tok
+  if answer
+    go to adverb
+  end
+  call testFldeq 4 1 7
+  if answer is 0
+    answer 1
+  end
+  call testFldeq 4 2 25
+  if answer is 0
+    answer 1
+  end
+  call testFldeq 4 2 42
+  if answer is 0
+    answer 1
+  end
+  call testFldeq 4 2 43
+  if answer is 0
+    answer 1
+  end
+  go to adverb
+
+place noun
+  call advance_tok
+  if answer
+    go to adverb
+  end
+  call testFldeq 4 1 7
+  if answer
+    go to adverb
+  end
+  call testFldeq 4 2 5
+  if answer is 0
+    go to adverb
+  end
+  call lpta_loadp arg 1
+  call setscan_r 4
+  if answer
+    go to adverb
+  end
+  call advance_tok
+  if answer
+    answer 1
+  end
+  call testFldeq 4 1 13
+  if answer is 0
+    answer 1
+  end
+  call testFldeq 4 1 5
+  if answer is 0
+    answer 1
+  end
+  call testFldeq 4 1 0
+  if answer is 0
+    go to adverb
+  end
+  call testFldeq 4 1 1
+  if answer is 0
+    go to adverb
+  end
+  call testFldeq 4 1 2
+  if answer is 0
+    go to adverb
+  end
+  call testFldeq 4 1 3
+  if answer is 0
+    go to adverb
+  end
+  call testFldeq 4 1 4
+  if answer is 0
+    go to adverb
+  end
+  call testFldeq 4 1 6
+  if answer is 0
+    go to adverb
+  end
+  call testFldeq 4 1 7
+  if answer is 0
+    go to adverb
+  end
+  call testFldeq 4 1 8
+  if answer is 0
+    go to adverb
+  end
+  call testFldeq 4 1 9
+  if answer is 0
+    go to adverb
+  end
+  call testFldeq 4 1 10
+  if answer is 0
+    go to adverb
+  end
+  call testFldeq 4 1 11
+  if answer is 0
+    go to adverb
+  end
+  call testFldeq 4 1 12
+  if answer is 0
+    go to adverb
+  end
+  call testFldeq 4 1 14
+  if answer is 0
+    go to adverb
+  end
+  call testFldeq 4 1 15
+  if answer is 0
+    go to adverb
+  end
+  call testFldeq 4 1 16
+  if answer is 0
+    go to adverb
+  end
+  call testFldeq 4 1 17
+  if answer is 0
+    go to adverb
+  end
+  call testFldeq 4 1 18
+  if answer is 0
+    go to adverb
+  end
+  call testFldeq 4 1 19
+  if answer is 0
+    go to adverb
+  end
+  call testFldeq 4 1 20
+  if answer is 0
+    go to adverb
+  end
+  call testFldeq 4 1 21
+  if answer is 0
+    go to adverb
+  end
+  call testFldeq 4 1 22
+  if answer is 0
+    go to adverb
+  end
+  call testFldeq 4 1 23
+  if answer is 0
+    go to adverb
+  end
+  call testFldeq 4 1 24
+  if answer is 0
+    go to adverb
+  end
+  answer 1
+
+place adverb
+  call lpta_loadp arg 2
+  call setscan_r 1
+  if answer
+    answer 0
+  end
+  call test_string_s 1 7 sym read_after_already
+  if answer is 0
+    go to whole
+  end
+  call lpta_loadp arg 2
+  call setscan_r 1
+  call test_string_s 1 6 sym read_after_widely
+  if answer is 0
+    go to whole
+  end
+  call lpta_loadp arg 2
+  call setscan_r 1
+  call test_string_s 1 10 sym read_after_previously
+  if answer is 0
+    go to whole
+  end
+  call lpta_loadp arg 2
+  call setscan_r 1
+  call test_string_s 1 8 sym read_after_recently
+  if answer is 0
+    go to whole
+  end
+  call lpta_loadp arg 2
+  call setscan_r 1
+  call test_string_s 1 3 sym read_after_yet
+  if answer is 0
+    go to whole
+  end
+  answer 0
+
+place whole
+  call lpta_loadp arg 3
+  call test_ptr
+  if answer is 0
+    answer 2
+  end
+  answer 0
+end

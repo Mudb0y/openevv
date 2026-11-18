@@ -93,7 +93,6 @@ extern int32_t setECIerror(int32_t rc, OldInst *h);
 extern int et_processManualQueue(OldInst *h)
     MANGLED("?processManualQueue@@YAHPAUoldECIInstData@@@Z");
 
-int32_t ev_rateHz(int32_t rate);
 int32_t ev_engineHz(int32_t hz);
 
 /* Whether the setting is one of the numbered rates rather than a rate given

@@ -1,0 +1,10 @@
+<speak version="1.0" xml:lang="ru-RU">Добрый день.</speak>
+<speak version="1.0" xml:lang="ru-RU"><prosody rate="slow">Теперь медленнее.</prosody> Снова нормально.</speak>
+<speak version="1.0" xml:lang="ru-RU"><prosody pitch="high" range="x-high" volume="loud">Все четыре сразу.</prosody></speak>
+<speak version="1.0" xml:lang="ru-RU"><emphasis level="strong">Этот</emphasis>, а не тот.</speak>
+<speak version="1.0" xml:lang="ru-RU">Пауза<break time="500ms"/>после слова.</speak>
+<speak version="1.0" xml:lang="ru-RU"><say-as interpret-as="characters">МГУ</say-as> и слово.</speak>
+<speak version="1.0" xml:lang="ru-RU"><prosody volume="soft">Тихо.</prosody> <prosody volume="x-loud">Громко!</prosody></speak>
+<speak version="1.0" xml:lang="ru-RU"><s>Первое предложение.</s><s>Второе предложение.</s></speak>
+<speak version="1.0" xml:lang="ru-RU"><p>Абзац один.</p><p>Абзац два.</p></speak>
+<speak version="1.0" xml:lang="ru-RU">Текст &amp; знаки &lt; и &gt; внутри.</speak>

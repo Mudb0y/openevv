@@ -1,0 +1,35 @@
+# Russian х, which is the phone Q, a velar fricative English declares and
+# never says: no word of English's lays it down, no Phoneme line gives it
+# numbers and no rule speaks it. So it is Russian's to take. Its record in
+# ruru.statements is th's, voiceless, so that every rule that asks what its
+# neighbour is answers as it does for th, and it is spoken by ru_ph_x, at
+# the end of es_val.dr, which the arm L900 added to eng_con_vals hands it
+# to: English's sh said at the velar place, with every noise band it sets
+# moved down two, which is where х has its energy.
+
+# Whether the phone about to be spoken is х, for the arm of eng_con_vals that
+# hands it to ru_ph_x.
+rule ru_test_x takes 1 from es_val.obj
+  bare
+  call test_string_s 2 1 sym ru_ph_kh
+  if answer is 0
+    answer 0
+  end
+  answer 1
+end
+
+# Whether the phone is th or х, for the rules that time a consonant, its
+# transition and the syllable it starts: х is spoken as English's th was
+# when it stood for it, so it is timed as th is.
+rule ru_test_th_or_x takes 1 from es_val.obj
+  bare
+  call ZZtest_string_s_2_1_ZZstring34
+  if answer is 0
+    answer 0
+  end
+  call test_string_s 2 1 sym ru_ph_kh
+  if answer is 0
+    answer 0
+  end
+  answer 1
+end

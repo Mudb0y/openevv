@@ -51,7 +51,7 @@ store=$here/samples
 # These are IBM's own, the ones its ini names each section for; a language
 # added to the tree adds a line here and to test/compare.sh, which has the
 # same list for the same reason.
-ALL="enus engb dede eses esus frfr frca itit plpl jajp fifi ptbr"
+ALL="enus engb dede eses esus frfr frca itit plpl ruru jajp fifi ptbr"
 language_of() {
     case $1 in
     enus) echo 0x10000 ;;
@@ -63,6 +63,7 @@ language_of() {
     dede) echo 0x40000 ;;
     itit) echo 0x50000 ;;
     plpl) echo 0x110000 ;;
+    ruru) echo 0x120000 ;;
     jajp) echo 0x80000 ;;
     fifi) echo 0x90000 ;;
     ptbr) echo 0x70000 ;;
@@ -335,6 +336,10 @@ for t in $want; do
                 echo "# original did. They are here so that a change to"
                 echo "# Polish can be told from an accident, which is the"
                 echo "# only check Polish will ever have besides an ear."
+            elif [ "$t" = ruru ]; then
+                echo "# Russian is a module written for OpenEVV. These are its"
+                echo "# recorded answers. test/ruru-parity.py compares it with"
+                echo "# the earlier Russian implementation separately."
             else
                 echo "# Every line was blessed by IBM's own binary when it was"
                 echo "# first written: the whole differential suite was run"

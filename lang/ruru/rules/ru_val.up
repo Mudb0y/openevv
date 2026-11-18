@@ -1,0 +1,25 @@
+# The place Russian р is spoken at, which the English module this one is a
+# copy of has not got. English r is retroflex: its locus, eng_ret_Fv, brings
+# the third formant down to 1650 and 1600, and that low third formant is the
+# whole of what makes it sound American. Russian р is alveolar, like Spanish
+# r, and the numbers below are Spanish's own, read off span_trill_Fv in
+# lang/eses: f2 1250, f3 2300 into the sound and 2100 out of it, f4 2800 and
+# f5 3600. The first formant is ga_ph_r's to set and it sets it before it
+# asks for a place, so nothing here touches it.
+#
+# The first three lines are eng_ret_Fv's own and are kept so that whatever
+# that rule set from state+2802 the r still has: the locus is the only thing
+# that changes.
+rule ru_trill_Fv takes 1 from es_val.obj
+  call ZZfence_null
+  raw load movw statefld 2802 into r0w
+  raw alu addw imm 100 reg r0w
+  raw store movw reg r0w statefld 2894
+  set global half 3086 to 1250
+  set global half 3090 to 1250
+  set global half 3094 to 2300
+  set global half 3098 to 2100
+  set global half 3102 to 2800
+  set global half 3110 to 3600
+  match
+end

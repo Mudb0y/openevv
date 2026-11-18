@@ -1,0 +1,283 @@
+# Count the vowels of a Russian word when intonation looks ahead into
+# words whose phonemes have not been built yet.
+rule ru_estimate_nsylls takes 4 from et_syll.obj
+  afresh
+  local count bytes 8
+  local vowels
+  call ZZfence_null
+  call get_parm addr count arg 1 -4
+  call lpta_loadp arg 2
+  call setscan_r 1
+  if answer is not 0
+    go to english
+  end
+  call ru_is_russian
+  if answer is not 0
+    go to english
+  end
+  set vowels to 0
+  while 1
+    call lpta_loadp arg 3
+    call test_ptr
+    if answer is 0
+      leave
+    end
+    call ru_is_vowel
+    if answer is 0
+      increment vowels
+    else
+      call ru_is_russian
+      if answer is not 0
+        call testFldeq 1 0 157              # combining stress
+        if answer is not 0
+          go to english
+        end
+      end
+    end
+    call advance_tok
+    if answer is not 0
+      leave
+    end
+  end
+  if vowels is 0
+    set vowels to 1
+  end
+  add cell count field to vowels
+  call move_i arg 1 vowels
+  match
+place english
+  call estimate_eng_nsylls arg 1 arg 2 arg 3
+  if answer is 0
+    match
+  end
+  give up
+end
+
+# The English voice closes a stressed syllable with an intervocalic l
+# before an unstressed vowel. Match the boundary produced for phonetic input.
+rule ru_move_lateral takes 3 from et_syll.obj
+  afresh
+  local left bytes 8
+  local middle bytes 8
+  local right bytes 8
+  local boundary bytes 8
+  local first_stress
+  local second_stress
+  call ZZfence_null
+  call lpta_loadp arg 1
+  call setscan_r 7
+  if answer is not 0
+    give up
+  end
+  while 1
+    call lpta_loadp arg 2
+    call test_ptr
+    if answer is 0
+      leave
+    end
+    call savescptr 1 addr left
+    set first_stress to 1
+    call ZZtest_string_i_7_2_ZZstring3
+    if answer is not 0
+      call ZZtest_string_i_7_2_ZZstring2
+      if answer is not 0
+        call advance_tok
+        if answer is not 0
+          leave
+        end
+        again
+      end
+      set first_stress to 0
+    end
+    call savescptr 2 addr middle
+    call lpta_loadp arg 2
+    call test_ptr
+    if answer is 0
+      leave
+    end
+    set second_stress to 0
+    call ZZtest_string_i_7_2_ZZstring2
+    if answer is not 0
+      call ZZtest_string_i_7_2_ZZstring5
+      if answer is not 0
+        go to next
+      end
+      set second_stress to 2
+    end
+    call savescptr 3 addr right
+    call ru_restore_cluster_onset addr left addr middle addr right first_stress second_stress
+    if answer is 0
+      match
+    end
+    if first_stress is 0
+      go to next
+    end
+    if second_stress is 2
+      leave
+    end
+    call lpta_loadp addr middle
+    call setscan_r 2
+    if answer is not 0
+      leave
+    end
+    call testFldeq 2 0 25
+    if answer is not 0
+      leave
+    end
+    call advance_tok
+    if answer is not 0
+      leave
+    end
+    call savescptr 4 addr boundary
+    call testFldeq 2 1 1
+    if answer is not 0
+      leave
+    end
+    call lpta_loadp addr middle
+    call setscan_l 2
+    if answer is not 0
+      leave
+    end
+    call testFldeq 2 1 1
+    if answer is not 0
+      leave
+    end
+    call testFldeq 2 0 33
+    if answer is 0
+      leave
+    end
+    call ZZlprp_load__insert_2pt_i_7_2_ZZstring3 addr left addr boundary
+    if answer is not 0
+      give up
+    end
+    call ZZlprp_load__insert_2pt_i_7_2_ZZstring2 addr boundary addr right
+    if answer is not 0
+      give up
+    end
+    match
+  place next
+    call lpta_loadp addr middle
+    call setscan_r 7
+    if answer is not 0
+      leave
+    end
+  end
+  give up
+end
+
+# Move an onset back from the preceding syllable when vowel reduction
+# removes the softening glide. Preserve the stress markings on both sides.
+rule ru_restore_cluster_onset takes 6 from et_syll.obj
+  afresh
+  local boundary bytes 8
+  call ZZfence_null
+  call lpta_loadp arg 2
+  call setscan_r 2
+  if answer is not 0
+    give up
+  end
+  if arg 5 is 2
+    if arg 4 is 0
+      give up
+    end
+    call testFldeq 2 0 4                       # t
+    if answer is not 0
+      give up
+    end
+    call advance_tok
+    if answer is not 0
+      give up
+    end
+  end
+  call testFldeq 2 0 29                        # I after loss of y
+  if answer is not 0
+    give up
+  end
+  call lpta_loadp arg 2
+  call setscan_l 2
+  if answer is not 0
+    give up
+  end
+  if arg 5 is 2
+    call testFldeq 2 0 14                      # s belongs with t
+  else
+    call testFldeq 2 0 25                      # l before I
+  end
+  if answer is not 0
+    give up
+  end
+  call advance_tok
+  if answer is not 0
+    give up
+  end
+  call savescptr 1 addr boundary
+  call testFldeq 2 1 1
+  if answer is 0
+    if arg 5 is 0
+      if arg 4 is 1
+        give up                               # stressed vowel keeps l
+      end
+    end
+  else
+    if arg 5 is 2
+      give up
+    end
+    call testFldeq 2 0 14                      # sl, as in после
+    if answer is 0
+      call advance_tok
+      if answer is not 0
+        give up
+      end
+      call savescptr 2 addr boundary
+    end
+  end
+  if arg 4 is 1
+    call ZZlprp_load__insert_2pt_i_7_2_ZZstring3 arg 1 addr boundary
+  else
+    call ZZlprp_load__insert_2pt_i_7_2_ZZstring2 arg 1 addr boundary
+  end
+  if answer is not 0
+    give up
+  end
+  if arg 5 is 2
+    call ZZlprp_load__insert_2pt_i_7_2_ZZstring5 addr boundary arg 3
+  else
+    call ZZlprp_load__insert_2pt_i_7_2_ZZstring2 addr boundary arg 3
+  end
+  if answer is not 0
+    give up
+  end
+  match
+end
+
+# Treat a repeated written vowel as two syllables, including across an acute.
+rule ru_keep_adjacent_vowels takes 2 from et_syll.obj
+  afresh
+  call ZZfence_null
+  call lpta_loadp arg 1
+  call setscan_r 1
+  if answer is not 0
+    give up
+  end
+  call ru_is_vowel
+  if answer is not 0
+    give up
+  end
+  call lpta_loadp arg 1
+  call setscan_l 1
+  if answer is not 0
+    give up
+  end
+  call testFldeq 1 0 157                       # combining acute
+  if answer is 0
+    call advance_tok
+    if answer is not 0
+      give up
+    end
+  end
+  call ru_is_vowel
+  if answer is not 0
+    give up
+  end
+  match
+end

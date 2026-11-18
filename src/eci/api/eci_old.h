@@ -82,12 +82,17 @@ typedef struct OldInst {
     int32_t  pauses_sent;
     int32_t  builtin;
     int32_t  builtin_sent;
+    /* Russian waveform attack, retained across callback buffers. */
+    int32_t  attack_rate;
+    int32_t  attack_quiet;
+    int32_t  attack_remaining;
 } OldInst;
 
 /* What eciPauseMode a new instance starts with, which eciSetDefaultParam
    sets as it does the eighteen it has a table for. */
 extern int32_t g_DefaultPauses;
 extern int32_t g_DefaultBuiltin;
+int32_t ev_rateHz(int32_t rate);
 
 #define OI_NEW(h)            ((h)->fresh)
 #define OI_CALLBACK(h)       ((h)->callback)

@@ -16,11 +16,13 @@ usage: build.py [--version V] [--tested V] [--out DIR]
 """
 
 import argparse
+import ast
 import os
 import re
 import struct
 import subprocess
 import sys
+import tempfile
 import zipfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -29,8 +31,8 @@ ADDON = os.path.join(HERE, "addon")
 
 #: Where the built libraries are, and what they are called inside the add-on.
 LIBRARIES = [
-    (os.path.join(ROOT, "build", "eci.dll"), "eci.dll"),
-    (os.path.join(ROOT, "build", "eci32.dll"), "eci32.dll"),
+    (os.path.join(ROOT, "build", "eci.dll"), "eci.dll", 0x8664),
+    (os.path.join(ROOT, "build", "eci32.dll"), "eci32.dll", 0x014C),
 ]
 
 #: Where the libraries go inside the add-on. Not "openevv", because that is
@@ -60,7 +62,7 @@ def _rva_to_offset(sections, rva):
     return None
 
 
-def exported_names(path):
+def exported_names(path, machine):
     """Every name a PE exports, read out of the file itself.
 
     Done here rather than with objdump so that packaging needs nothing but
@@ -69,11 +71,14 @@ def exported_names(path):
     with open(path, "rb") as f:
         image = f.read()
 
-    if image[:2] != b"MZ":
+    if len(image) < 64 or image[:2] != b"MZ":
         die("%s is not a PE file at all" % path)
     pe = struct.unpack_from("<I", image, 0x3C)[0]
-    if image[pe : pe + 4] != b"PE\0\0":
+    if pe + 26 > len(image) or image[pe : pe + 4] != b"PE\0\0":
         die("%s has no PE header" % path)
+    actual = struct.unpack_from("<H", image, pe + 4)[0]
+    if actual != machine:
+        die("%s has PE machine %#x, expected %#x" % (path, actual, machine))
 
     sections_count = struct.unpack_from("<H", image, pe + 6)[0]
     optional_size = struct.unpack_from("<H", image, pe + 20)[0]
@@ -148,6 +153,84 @@ def described():
     return out[1:] if out.startswith("v") else out
 
 
+# ---- translations ----------------------------------------------------------
+
+
+def _po_entries(path):
+    """The msgid and msgstr pairs of a .po file, plurals and contexts aside,
+    which the add-on has none of."""
+    entries = {}
+    msgid = msgstr = None
+    which = None
+
+    def done():
+        if msgid is not None and msgstr:
+            entries[msgid] = msgstr
+
+    def unquote(text):
+        # A .po string is quoted and escaped the way a Python one is.
+        return ast.literal_eval(text.strip())
+
+    for line in open(path, encoding="utf-8"):
+        line = line.strip()
+        if line.startswith("#") or not line:
+            continue
+        if line.startswith("msgid "):
+            done()
+            msgid, msgstr, which = unquote(line[6:]), None, "id"
+        elif line.startswith("msgstr "):
+            msgstr, which = unquote(line[7:]), "str"
+        elif line.startswith('"'):
+            if which == "id":
+                msgid += unquote(line)
+            else:
+                msgstr += unquote(line)
+    done()
+    return entries
+
+
+def compile_mo(path):
+    """A .po file as the .mo gettext reads, written here so that packing
+    needs nothing but Python."""
+    entries = sorted(_po_entries(path).items())
+    ids = b"".join(k.encode("utf-8") + b"\0" for k, _v in entries)
+    strs = b"".join(v.encode("utf-8") + b"\0" for _k, v in entries)
+    n = len(entries)
+    start = 7 * 4 + 16 * n
+    offsets = []
+    at = 0
+    for k, _v in entries:
+        offsets.append((len(k.encode("utf-8")), start + at))
+        at += len(k.encode("utf-8")) + 1
+    at = 0
+    soffsets = []
+    for _k, v in entries:
+        soffsets.append((len(v.encode("utf-8")), start + len(ids) + at))
+        at += len(v.encode("utf-8")) + 1
+    head = struct.pack("<7I", 0x950412DE, 0, n, 28, 28 + 8 * n, 0, 0)
+    table = b"".join(struct.pack("<2I", *o) for o in offsets)
+    table += b"".join(struct.pack("<2I", *o) for o in soffsets)
+    return head + table + ids + strs
+
+
+def translations():
+    """Every file the add-on's locale folder contributes, as zip names and
+    bytes: each manifest as it is and each catalog compiled."""
+    out = []
+    base = os.path.join(ADDON, "locale")
+    if not os.path.isdir(base):
+        return out
+    for root, _dirs, files in os.walk(base):
+        for name in sorted(files):
+            path = os.path.join(root, name)
+            rel = os.path.relpath(path, ADDON).replace(os.sep, "/")
+            if name.endswith(".po"):
+                out.append((rel[:-3] + ".mo", compile_mo(path)))
+            elif name == "manifest.ini":
+                out.append((rel, open(path, "rb").read()))
+    return out
+
+
 # ---- packing ---------------------------------------------------------------
 
 
@@ -160,7 +243,7 @@ def main():
 
     version = args.version or described()
 
-    for path, _name in LIBRARIES:
+    for path, _name, _machine in LIBRARIES:
         if not os.path.isfile(path):
             die(
                 "there is no %s; `make win' and `make win32' build both"
@@ -170,8 +253,8 @@ def main():
     wants = wanted_names()
     if not wants:
         die("the engine layer names no entry points, which cannot be right")
-    for path, name in LIBRARIES:
-        has = exported_names(path)
+    for path, name, machine in LIBRARIES:
+        has = exported_names(path, machine)
         missing = sorted(wants - has)
         if missing:
             die(
@@ -186,12 +269,19 @@ def main():
     os.makedirs(args.out, exist_ok=True)
     target = os.path.join(args.out, "openevv-%s.nvda-addon" % version)
 
-    with zipfile.ZipFile(target, "w", zipfile.ZIP_DEFLATED) as z:
-        z.writestr("manifest.ini", manifest)
-        for leaf in ("openevv.py", "_openevv.py", "_openevv_dictionaries.py"):
-            z.write(os.path.join(ADDON, "synthDrivers", leaf), "synthDrivers/" + leaf)
-        for path, name in LIBRARIES:
-            z.write(path, ENGINE_DIR + "/" + name)
+    with tempfile.TemporaryDirectory(dir=args.out) as directory:
+        staged = os.path.join(directory, "addon.zip")
+        with zipfile.ZipFile(staged, "w", zipfile.ZIP_DEFLATED) as z:
+            z.writestr("manifest.ini", manifest)
+            for leaf in ("LICENSE", "NOTICE"):
+                z.write(os.path.join(ROOT, leaf), leaf)
+            for leaf in ("openevv.py", "_openevv.py", "_openevv_dictionaries.py"):
+                z.write(os.path.join(ADDON, "synthDrivers", leaf), "synthDrivers/" + leaf)
+            for path, name, _machine in LIBRARIES:
+                z.write(path, ENGINE_DIR + "/" + name)
+            for name, data in translations():
+                z.writestr(name, data)
+        os.replace(staged, target)
 
     say("wrote %s, %d bytes" % (target, os.path.getsize(target)))
     return 0

@@ -53,6 +53,20 @@ FIELD = {"case": "letcase", "type": "character_type", "letter": "letter_type",
          "accent": "accent", "phoneme": "phon_form"}
 
 
+def record_of(tag):
+    """The fields a record of this language's carries, which is as many of
+    the five as its statement says a record is long: Italian's and its kin
+    carry all five, and the Englishes three, having no accent and no phoneme
+    in theirs."""
+    inside = False
+    for line in open(path_of(tag), encoding="utf-8"):
+        if line.startswith("statement "):
+            inside = line.split()[1] == STATEMENT
+        elif inside and line.startswith("  at start stride "):
+            return RECORD[:int(line.split()[3])]
+    return RECORD
+
+
 def path_of(tag):
     return os.path.join(ROOT, "lang", tag, "%s.statements" % tag)
 
@@ -115,14 +129,21 @@ def number(values, field, text):
 
 def show(tag, want):
     _l, _f, _t, names, values, variants, _at = read(tag)
+    record = record_of(tag)
+    size = len(record)
     print("%s: %d characters, %d bytes of records"
           % (tag, len(names), len(variants)))
     for code, ch in enumerate(names):
         if want and ch not in want:
             continue
-        r = variants[code * 5:code * 5 + 5]
-        if len(r) < 5:
+        r = variants[code * size:code * size + size]
+        if len(r) < size:
             print("%3d  %-4s no record" % (code, ch))
+            continue
+        if size < 5:
+            print("%3d  %-4s %s" % (code, ch if ch.strip() else "' '",
+                                   " ".join("%-6s" % named(values, k, r[n])
+                                            for n, k in enumerate(record))))
             continue
         print("%3d  %-4s %-6s %-6s %-5s %-5s says %s"
               % (code, ch if ch.strip() else "' '",
@@ -134,6 +155,8 @@ def show(tag, want):
 
 def add(tag, byte, args):
     lines, first, last, names, values, variants, var_at = read(tag)
+    RECORD = record_of(tag)
+    size = len(RECORD)
     want = {}
     for a in args:
         if "=" not in a:
@@ -151,7 +174,7 @@ def add(tag, byte, args):
     if ch in names:
         raise SystemExit("module/alphabet: %s already has that character, as"
                          " code %d" % (tag, names.index(ch)))
-    if len(variants) != len(names) * 5 + 5:
+    if len(variants) not in (len(names) * size, len(names) * size + size):
         raise SystemExit("module/alphabet: %d names and %d bytes of records is"
                          " not one record each" % (len(names), len(variants)))
 
@@ -169,9 +192,14 @@ def add(tag, byte, args):
                               or [last]))
     lines.insert(at_name + 1, "    value %s" % written)
 
-    at_var = max(j for j in var_at) + 1        # the line after the last one
-    lines.insert(at_var, "  variants %s"
-                 % " ".join("%02x" % b for b in record))
+    offset = len(names) * size
+    for line in var_at:
+        fields = lines[line].split()
+        if offset <= len(fields) - 1:
+            fields[offset + 1:offset + 1] = ["%02x" % b for b in record]
+            lines[line] = "  " + " ".join(fields)
+            break
+        offset -= len(fields) - 1
 
     open(path_of(tag), "w", encoding="utf-8").write("\n".join(lines))
     print("%s: %s is code %d now, %s"
@@ -182,6 +210,8 @@ def add(tag, byte, args):
 
 def set_fields(tag, byte, args):
     lines, _first, _last, names, values, variants, var_at = read(tag)
+    RECORD = record_of(tag)
+    size = len(RECORD)
     ch = bytes([int(byte, 16)]).decode("latin-1")
     if ch not in names:
         raise SystemExit("module/alphabet: %s has no character at byte %s"
@@ -195,7 +225,7 @@ def set_fields(tag, byte, args):
         if k not in RECORD:
             raise SystemExit("module/alphabet: a record has no %r; it has %s"
                              % (k, ", ".join(RECORD)))
-        changes[code * 5 + RECORD.index(k)] = number(values, k, v)
+        changes[code * size + RECORD.index(k)] = number(values, k, v)
     if not changes:
         raise SystemExit("module/alphabet: say which fields to set")
 

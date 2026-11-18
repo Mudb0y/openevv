@@ -36,11 +36,12 @@ import time
 if os.name == "nt":
     LOADER = ctypes.WinDLL
     CALLBACK_TYPE = ctypes.WINFUNCTYPE
-    CODEC = "mbcs"
 else:
     LOADER = ctypes.CDLL
     CALLBACK_TYPE = ctypes.CFUNCTYPE
-    CODEC = "latin-1"
+
+# The dictionary harness also uses this for names passed to the C file API.
+CODEC = "mbcs" if os.name == "nt" else "latin-1"
 
 FRAME = 2048
 
@@ -59,6 +60,7 @@ SAY = {
     0x50000: "La rapida volpe marrone salta sopra il cane pigro.",
     0x90000: "Nopea ruskea kettu hyppää laiskan koiran yli.",
     0x70000: "O rápido cachorro marrom pula sobre o cão preguiçoso.",
+    0x120000: "Двадцать две тысячи рублей.",
 }
 FALLBACK = SAY[0x10000]
 
@@ -111,7 +113,8 @@ class Voice:
             raise SystemExit("langs.py: 0x%x refused a sample buffer" % lang)
 
     def speak(self, text):
-        if not self.dll.eciAddText(self.h, text.encode(CODEC)):
+        codec = "utf-8" if self.lang == 0x120000 else "cp1252"
+        if not self.dll.eciAddText(self.h, text.encode(codec)):
             raise SystemExit("langs.py: 0x%x refused the text" % self.lang)
         if not self.dll.eciSynthesize(self.h):
             raise SystemExit("langs.py: 0x%x refused to speak" % self.lang)
@@ -119,6 +122,8 @@ class Voice:
             if not self.dll.eciSpeaking(self.h):
                 break
             time.sleep(0.01)
+        else:
+            raise TimeoutError("langs.py: 0x%x is still speaking after 30 seconds" % self.lang)
 
     def close(self):
         self.dll.eciDelete(self.h)

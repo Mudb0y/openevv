@@ -1,0 +1,2410 @@
+# Where a Russian word is stressed, and what its unstressed vowels become.
+#
+# The module is US English's, and English stresses a word by its roots and
+# its suffixes and then reduces what it left unstressed, none of which is
+# Russian's. So a word that begins with a Russian letter comes here instead:
+# ru_assign_stress stands where assign_eng_stress stood in
+# eng_symbolic_rules and ru_post_syll where post_syll_adjustments stood, and
+# each hands any other word on to the rule it stands for, so an English word
+# in Russian text is still English.
+#
+# Russian stress is the word's own and no rule finds it, so this takes what
+# the writing says and guesses the rest. In order:
+#
+#   the stress mark, the combining acute after a vowel, which a writer puts
+#   where a word would be misread and a dictionary puts in every word it has;
+#
+#   ё, which is stressed wherever it stands, the first of them if there are
+#   several;
+#
+#   a number word, each of which is listed whole with its syllable, since
+#   the number rules write them after any dictionary has been asked;
+#
+#   the ending. An infinitive is stressed on the vowel before its ть and a
+#   past tense on the one before its л, and -ист, -изм, -ант, -ент, -ок, -ец
+#   and -ой carry the stress themselves, so those are stressed on the last
+#   syllable. An adjective's ending of two vowels -- -ая, -ое, -ые, -ую --
+#   and -ыми, -ого, -ому and their soft forms, and a noun's -ия and -ие,
+#   leave it on the last vowel of the stem, which is two syllables before
+#   the last;
+#
+#   and failing all of that the syllable before the last, which is the
+#   commonest place.
+#
+# A vowel letter is a syllable in Russian, every one and nothing else, so the
+# place is counted in letters and marked in syllables.
+rule ru_assign_stress takes 3 from et_strss.obj
+  afresh
+  local left bytes 8
+  local right bytes 8
+  local count
+  local vowels
+  local target
+  local togo
+  local said
+  local marked
+  call ZZfence_null
+  call lpta_loadp arg 1
+  call setscan_r 1
+  if answer is 0
+    call ru_is_russian
+    if answer is not 0
+      go to english
+    end
+  else
+    go to english
+  end
+  call ZZget_parm_ptr2 addr left arg 1 addr right arg 2
+  # How many syllables there are, by walking to the end of the word. The
+  # scan starts outside the word, so this is one more than there are.
+  call ZZlpta_load__setscan_r__7 addr left
+  if answer is not 0
+    give up
+  end
+  set count to 0
+  while 1
+    increment count
+    call advance_tok
+    if answer is not 0
+      leave
+    end
+  end
+  decrement count
+  # The letters: which vowel, counted from one, the writing says.
+  set vowels to 0
+  set target to 0
+  set marked to 0
+  call lpta_loadp addr left
+  call setscan_r 1
+  if answer is 0
+    while 1
+      call ru_is_vowel
+      if answer is 0
+        increment vowels
+        call testFldeq 1 0 143                   # ё
+        if answer is 0
+          if target is 0
+            set target to vowels
+          end
+        end
+      else
+        call testFldeq 1 0 157                   # the stress mark
+        if answer is 0
+          set target to vowels
+          set marked to 1
+        else
+          call ru_is_letter
+          if answer is not 0
+            leave
+          end
+        end
+      end
+      call advance_tok
+      if answer is not 0
+        leave
+      end
+    end
+  end
+  # A number word, and then the ending, where the writing says nothing.
+  if target is 0
+    call ru_unmarked_stress arg 1 arg 2 count
+    set target to answer
+  end
+  if target is more than count
+    set target to count
+  end
+  if target is less than 1
+    set target to 1
+  end
+  # And the mark, over the syllable that many in: what it covers begins
+  # after its left end.
+  call ZZlpta_load__setscan_r__7 addr left
+  if answer is not 0
+    give up
+  end
+  set togo to target
+  decrement togo
+  while togo is more than 0
+    call advance_tok
+    decrement togo
+  end
+  call savescptr 1 addr left
+  call advance_tok
+  if answer is 0
+    call savescptr 2 addr right
+    call ZZlprp_load__insert_2pt_i_7_2_ZZstring3 addr left addr right
+    # A word Russian never stresses has every vowel reduced: но is нъ, не ни.
+    set said to target
+    if marked is 0
+      call ru_is_clitic arg 1 arg 2
+      if answer is not 0
+        call ru_is_chto arg 1 arg 2
+      end
+      if answer is 0
+        call ru_has_neighbor arg 1 arg 2
+        if answer is 0
+          set said to 0
+        end
+      end
+    end
+    call ru_reduce arg 1 arg 2 said
+    call ru_keep_stops arg 1 arg 2 target
+    match
+  end
+  give up
+place english
+  call assign_eng_stress arg 1 arg 2
+  if answer is 0
+    match
+  end
+  give up
+end
+
+rule ru_unmarked_stress takes 4 from et_strss.obj
+  afresh
+  local target
+  call ZZfence_null
+  call ru_fixed_word_stress arg 1 arg 2 arg 3
+  set target to answer
+  if target is 0
+    call ru_prefixed_word_stress arg 1 arg 2 arg 3 addr target
+  end
+  if target is 0
+    set target to arg 3
+    call ru_ends_stressed arg 2
+    if answer is not 0
+      decrement target
+      call ru_ends_stem_stressed arg 2
+      if answer is 0
+        decrement target
+      end
+    end
+  end
+  call succeed
+  answer target
+end
+
+rule ru_fixed_word_stress takes 4 from et_strss.obj
+  bare
+  call ru_word_first arg 1 arg 2
+  if answer is 0
+    answer 1
+  end
+  call ru_word_second arg 1 arg 2
+  if answer is 0
+    answer 2
+  end
+  call ru_word_third arg 1 arg 2
+  if answer is 0
+    answer 3
+  end
+  call ru_word_last arg 1 arg 2
+  if answer is 0
+    answer arg 3
+  end
+  call ru_word_fourth arg 1 arg 2
+  if answer is 0
+    answer 4
+  end
+  answer 0
+end
+
+# Joining в, к or с to a number adds no vowel. Keep the number's stress.
+rule ru_prefixed_word_stress takes 5 from et_strss.obj
+  afresh
+  local after_prefix bytes 8
+  call ZZfence_null
+  call ZZlpta_load__setscan_r__1 arg 1
+  if answer is not 0
+    give up
+  end
+  call ru_scan_preposition
+  if answer is 0
+    give up
+  end
+  call push_ptr_init addr after_prefix
+  call savescptr 1 addr after_prefix
+  call ru_fixed_word_stress addr after_prefix arg 2 arg 3
+  if answer is 0
+    give up
+  end
+  put answer into arg 4 at 0
+  match
+end
+
+# The previous voice reduces что as it does the clitics in a phrase.
+rule ru_is_chto takes 3 from et_strss.obj
+  afresh
+  call ZZfence_null
+  call lpta_loadp arg 2
+  call setscan_l 1
+  if answer is not 0
+    give up
+  end
+  call test_string_s 1 3 sym ru_chto_backwards
+  if answer is not 0
+    give up
+  end
+  call lpta_loadp arg 1
+  call test_ptr
+  if answer is 0
+    match
+  end
+  give up
+end
+
+# A clitic keeps its full vowel when the reader speaks it on its own.
+rule ru_has_neighbor takes 3 from et_strss.obj
+  afresh
+  call ZZfence_null
+  call lpta_loadp arg 2
+  call setscan_r 1
+  if answer is 0
+    while 1
+      call test_string_s 1 1 sym ru_space
+      if answer is not 0
+        leave
+      end
+    end
+    call ru_is_russian
+    if answer is 0
+      match
+    end
+  end
+  call lpta_loadp arg 1
+  call setscan_l 1
+  if answer is 0
+    while 1
+      call test_string_s 1 1 sym ru_space
+      if answer is not 0
+        leave
+      end
+    end
+    call ru_is_russian
+    if answer is 0
+      match
+    end
+  end
+  give up
+end
+
+# What English does to a word once its syllables are stressed -- it flaps a
+# t, reduces a vowel -- remains English's. Russian keeps its vowels and
+# only aligns the stressed syllable boundary with the phonetic input path.
+rule ru_post_syll takes 3 from et_strss.obj
+  afresh
+  call ZZfence_null
+  call lpta_loadp arg 1
+  call setscan_r 1
+  if answer is 0
+    call ru_is_russian
+    if answer is 0
+      call ru_move_lateral arg 1 arg 2
+      match
+    end
+  end
+  call post_syll_adjustments arg 1 arg 2
+  if answer is 0
+    match
+  end
+  give up
+end
+
+# What an unstressed vowel becomes, in the phones English has for it. An а
+# or an о is H in the syllable before the stress, at the start of a word and
+# after another vowel, and the schwa anywhere else: молоко is мълако. An е,
+# an э and an и are I, and X, the vowel of roses, where the е follows ж or ш.
+# An у is U. я is I, and the schwa where the word ends in it; it is told from
+# а by the glide or the soft consonant before it.
+#
+# It walks the phones of the word once the stress is marked, counting the
+# vowels as it goes: the stressed one is the one ru_assign_stress counted to.
+rule ru_reduce takes 4 from et_strss.obj
+  afresh
+  local togo
+  local pl bytes 8
+  local pr bytes 8
+  local kind
+  local final
+  local seen
+  local before
+  local pretonic
+  local put
+  local yl bytes 8
+  local ybefore
+  local soft
+  call ZZfence_null
+  call lpta_loadp arg 1
+  call setscan_r 2
+  if answer is not 0
+    give up
+  end
+  set seen to 0
+  # What the phone before this one was: 0 nothing, 1 a vowel, 2 the glide,
+  # 3 ж, ш or ц, 4 ч, 5 any other consonant, 6 т.
+  set before to 0
+  while 1
+    call savescptr 1 addr pl
+    set kind to 0
+    call testFldeq 2 0 44                      # а, я
+    if answer is 0
+      set kind to 1
+    end
+    call testFldeq 2 0 47                      # о
+    if answer is 0
+      set kind to 2
+    end
+    call testFldeq 2 0 31                      # е, э
+    if answer is 0
+      set kind to 3
+    end
+    call testFldeq 2 0 28                      # и
+    if answer is 0
+      set kind to 4
+    end
+    call testFldeq 2 0 45                      # у, ю
+    if answer is 0
+      set kind to 5
+    end
+    call testFldeq 2 0 33                      # ы
+    if answer is 0
+      set kind to 6
+    end
+    set put to 0
+    set soft to 0
+    if kind is not 0
+      increment seen
+      if seen is not arg 3
+        set pretonic to 0
+        set togo to arg 3
+        decrement togo
+        if seen is togo
+          set pretonic to 1
+        end
+        if before is 0
+          set pretonic to 1
+        end
+        if before is 1
+          set pretonic to 1
+        end
+        if kind is 1
+          set put to sym ru_ph_x
+          if pretonic is 1
+            set put to sym ru_ph_H
+          end
+          if before is 2
+            set put to sym ru_ph_I
+            set soft to 1
+          end
+          if before is 4
+            set put to sym ru_ph_I
+          end
+        end
+        if kind is 2
+          set put to sym ru_ph_x
+          if pretonic is 1
+            set put to sym ru_ph_H
+          end
+        end
+        if kind is 3
+          set put to sym ru_ph_I
+          set soft to 1
+          if before is 3
+            set put to sym ru_ph_X
+          end
+        end
+        if kind is 4
+          set put to sym ru_ph_I
+        end
+        if kind is 5
+          set put to sym ru_ph_U
+        end
+      end
+    end
+    # What this phone is to the one after it.
+    set togo to 5
+    if kind is not 0
+      set togo to 1
+    end
+    call testFldeq 2 0 26
+    if answer is 0
+      set togo to 2
+      # Where the glide begins and what stood before it, for the vowel after.
+      set ybefore to before
+      call savescptr 3 addr yl
+    end
+    call testFldeq 2 0 15
+    if answer is 0
+      set togo to 3
+    end
+    call testFldeq 2 0 16
+    if answer is 0
+      set togo to 3
+    end
+    call testFldeq 2 0 4
+    if answer is 0
+      set togo to 6
+    end
+    call testFldeq 2 0 14
+    if answer is 0
+      if before is 6
+        set togo to 3
+      end
+    end
+    call testFldeq 2 0 18
+    if answer is 0
+      set togo to 4
+    end
+    call advance_tok
+    if answer is not 0
+      leave
+    end
+    call savescptr 2 addr pr
+    set final to 0
+    call lpta_loadp arg 2
+    call test_ptr
+    if answer is 0
+      set final to 1
+    end
+    if put is not 0
+      if kind is 3
+        if before is 3
+          if final is 1
+            set put to sym ru_ph_x
+          end
+        end
+      end
+      # я at the end of a word keeps a vowel of its own: время, неделя.
+      if kind is 1
+        if before is 2
+          if final is 1
+            set put to sym ru_ph_x
+            set soft to 0
+          end
+        end
+      end
+      # The glide that softened a consonant goes where the vowel after it has
+      # become I, which is soft enough by itself: тебя is тибя, not тйибя.
+      if before is not 2
+        set soft to 0
+      end
+      if ybefore is not 5
+        if ybefore is not 6
+          set soft to 0
+        end
+      end
+      if soft is 1
+        call lpta_rpta_loadp addr yl addr pr
+      else
+        call lpta_rpta_loadp addr pl addr pr
+      end
+      call insert_2pt_s 2 1 put 0
+    end
+    set before to togo
+    if final is not 0
+      leave
+    end
+    # Back to the phones, after this one.
+    call lpta_loadp addr pr
+    call setscan_r 2
+    if answer is not 0
+      leave
+    end
+  end
+  match
+end
+
+# Whether the next letter is one of Russian's vowels.
+rule ru_is_vowel takes 1 from et_strss.obj
+  bare
+  afresh
+  call testFldeq 1 0 97                    # а
+  if answer is 0
+    answer 0
+  end
+  call testFldeq 1 0 141                    # е
+  if answer is 0
+    answer 0
+  end
+  call testFldeq 1 0 143                    # ё
+  if answer is 0
+    answer 0
+  end
+  call testFldeq 1 0 108                    # и
+  if answer is 0
+    answer 0
+  end
+  call testFldeq 1 0 133                    # о
+  if answer is 0
+    answer 0
+  end
+  call testFldeq 1 0 128                    # у
+  if answer is 0
+    answer 0
+  end
+  call testFldeq 1 0 149                    # ы
+  if answer is 0
+    answer 0
+  end
+  call testFldeq 1 0 155                    # э
+  if answer is 0
+    answer 0
+  end
+  call testFldeq 1 0 159                    # ю
+  if answer is 0
+    answer 0
+  end
+  call testFldeq 1 0 145                    # я
+  if answer is 0
+    answer 0
+  end
+  answer 1
+end
+
+# Whether the next thing is a letter of any kind, rather than a space, a
+# mark or nothing at all.
+rule ru_is_letter takes 1 from et_strss.obj
+  bare
+  afresh
+  call testFldeq 1 3 1
+  if answer is 0
+    answer 0
+  end
+  answer 1
+end
+
+# Whether the next letter is one of Russian's, which is how a Russian word
+# is told from an English one: by its first letter.
+rule ru_is_russian takes 1 from et_strss.obj
+  bare
+  afresh
+  call testFldeq 1 0 97                    # а
+  if answer is 0
+    answer 0
+  end
+  call testFldeq 1 0 107                    # б
+  if answer is 0
+    answer 0
+  end
+  call testFldeq 1 0 117                    # в
+  if answer is 0
+    answer 0
+  end
+  call testFldeq 1 0 127                    # г
+  if answer is 0
+    answer 0
+  end
+  call testFldeq 1 0 131                    # д
+  if answer is 0
+    answer 0
+  end
+  call testFldeq 1 0 141                    # е
+  if answer is 0
+    answer 0
+  end
+  call testFldeq 1 0 143                    # ё
+  if answer is 0
+    answer 0
+  end
+  call testFldeq 1 0 151                    # ж
+  if answer is 0
+    answer 0
+  end
+  call testFldeq 1 0 98                    # з
+  if answer is 0
+    answer 0
+  end
+  call testFldeq 1 0 108                    # и
+  if answer is 0
+    answer 0
+  end
+  call testFldeq 1 0 118                    # й
+  if answer is 0
+    answer 0
+  end
+  call testFldeq 1 0 132                    # к
+  if answer is 0
+    answer 0
+  end
+  call testFldeq 1 0 99                    # л
+  if answer is 0
+    answer 0
+  end
+  call testFldeq 1 0 109                    # м
+  if answer is 0
+    answer 0
+  end
+  call testFldeq 1 0 119                    # н
+  if answer is 0
+    answer 0
+  end
+  call testFldeq 1 0 133                    # о
+  if answer is 0
+    answer 0
+  end
+  call testFldeq 1 0 153                    # п
+  if answer is 0
+    answer 0
+  end
+  call testFldeq 1 0 100                    # р
+  if answer is 0
+    answer 0
+  end
+  call testFldeq 1 0 110                    # с
+  if answer is 0
+    answer 0
+  end
+  call testFldeq 1 0 120                    # т
+  if answer is 0
+    answer 0
+  end
+  call testFldeq 1 0 128                    # у
+  if answer is 0
+    answer 0
+  end
+  call testFldeq 1 0 134                    # ф
+  if answer is 0
+    answer 0
+  end
+  call testFldeq 1 0 147                    # х
+  if answer is 0
+    answer 0
+  end
+  call testFldeq 1 0 101                    # ц
+  if answer is 0
+    answer 0
+  end
+  call testFldeq 1 0 111                    # ч
+  if answer is 0
+    answer 0
+  end
+  call testFldeq 1 0 121                    # ш
+  if answer is 0
+    answer 0
+  end
+  call testFldeq 1 0 135                    # щ
+  if answer is 0
+    answer 0
+  end
+  call testFldeq 1 0 149                    # ы
+  if answer is 0
+    answer 0
+  end
+  call testFldeq 1 0 160                    # ь
+  if answer is 0
+    answer 0
+  end
+  call testFldeq 1 0 155                    # э
+  if answer is 0
+    answer 0
+  end
+  call testFldeq 1 0 159                    # ю
+  if answer is 0
+    answer 0
+  end
+  call testFldeq 1 0 145                    # я
+  if answer is 0
+    answer 0
+  end
+  answer 1
+end
+
+# Whether the word between the two points is one of the words Russian never
+# stresses: the prepositions, the conjunctions и, а, но and ни, не, and the
+# particles же, ли and бы. Read leftwards from its end, and then
+# asked whether that was the whole of it.
+rule ru_is_clitic takes 3 from et_strss.obj
+  afresh
+  call ZZfence_null
+  call lpta_loadp arg 2                 # дом in the earlier voice's phrase reading
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 3 sym ru_dom_backwards
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # день in connected speech
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 4 sym ru_end_day
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # чем
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 3 sym ru_end_6f8d6d
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # а
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 1 sym ru_end_61
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # и
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 1 sym ru_end_6c
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # но
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 2 sym ru_end_7785
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # не
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 2 sym ru_end_778d
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # ни
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 2 sym ru_end_776c
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # же
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 2 sym ru_end_978d
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # ли
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 2 sym ru_end_636c
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # бы
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 2 sym ru_end_6b95
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # во
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 2 sym ru_end_7585
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # ко
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 2 sym ru_end_8485
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # со
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 2 sym ru_end_6e85
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # у
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 1 sym ru_end_80
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # о
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 1 sym ru_end_85
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # об
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 2 sym ru_end_856b
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # обо
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 3 sym ru_end_856b85
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # от
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 2 sym ru_end_8578
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # ото
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 3 sym ru_end_857885
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # до
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 2 sym ru_end_8385
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # за
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 2 sym ru_end_6261
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # на
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 2 sym ru_end_7761
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # по
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 2 sym ru_end_9985
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # из
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 2 sym ru_end_6c62
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # изо
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 3 sym ru_end_6c6285
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # без
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 3 sym ru_end_6b8d62
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # для
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 3 sym ru_end_836391
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # над
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 3 sym ru_end_776183
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # под
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 3 sym ru_end_998583
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # при
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 3 sym ru_end_99646c
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # про
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 3 sym ru_end_996485
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  give up
+end
+
+# English flaps a t or a d that begins an unstressed syllable -- это came out
+# as эда -- and Russian never does. A secondary stress is what English does
+# not flap before. The phonetic path adds it after a vowel plus st, where
+# it originally puts s in the coda. A longer coda such as k before st
+# already protects the stop without a secondary stress.
+rule ru_keep_stops takes 4 from et_strss.obj
+  afresh
+  local sl bytes 8
+  local sr bytes 8
+  local k
+  local hit
+  local skip_s
+  call ZZfence_null
+  call lpta_loadp arg 1
+  call setscan_r 7
+  if answer is not 0
+    give up
+  end
+  set k to 0
+  while 1
+    call savescptr 1 addr sl
+    call advance_tok
+    if answer is not 0
+      leave
+    end
+    call savescptr 2 addr sr
+    increment k
+    set hit to 0
+    if k is more than 1
+      if k is not arg 3
+        call lpta_loadp addr sl
+        call setscan_r 2
+        if answer is 0
+          call testFldeq 2 0 14
+          if answer is 0
+            set skip_s to 0
+            call lpta_loadp addr sl
+            call setscan_l 2
+            if answer is 0
+              call testFldeq 2 1 1
+              if answer is 0
+                set skip_s to 1
+              end
+            end
+            call lpta_loadp addr sl
+            call setscan_r 2
+            if skip_s is 1
+              call advance_tok
+            end
+          end
+          call testFldeq 2 0 4
+          if answer is 0
+            set hit to 1
+          end
+          call testFldeq 2 0 3
+          if answer is 0
+            set hit to 1
+          end
+          if hit is 1
+            set hit to 0
+            call advance_tok
+            if answer is 0
+              call testFldeq 2 1 1
+              if answer is 0
+                set hit to 1
+              end
+            end
+          end
+        end
+      end
+    end
+    if hit is 1
+      call ZZlprp_load__insert_2pt_i_7_2_ZZstring5 addr sl addr sr
+    end
+    call lpta_loadp addr sr
+    call setscan_r 7
+    if answer is not 0
+      leave
+    end
+  end
+  match
+end
+
+# Whether the word that ends at this point ends in one of the endings stressed on the last syllable.
+# The letters are read leftwards from the end, nearest first, so each
+# ending is written backwards in rules/constants.
+rule ru_ends_stressed takes 2 from et_strss.obj
+  afresh
+  call ZZfence_null
+  call lpta_loadp arg 1                 # ать
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 3 sym ru_end_6178a0
+    if answer is 0
+      match
+    end
+  end
+  call lpta_loadp arg 1                 # ять
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 3 sym ru_end_9178a0
+    if answer is 0
+      match
+    end
+  end
+  call lpta_loadp arg 1                 # ить
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 3 sym ru_end_6c78a0
+    if answer is 0
+      match
+    end
+  end
+  call lpta_loadp arg 1                 # еть
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 3 sym ru_end_8d78a0
+    if answer is 0
+      match
+    end
+  end
+  call lpta_loadp arg 1                 # уть
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 3 sym ru_end_8078a0
+    if answer is 0
+      match
+    end
+  end
+  call lpta_loadp arg 1                 # ыть
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 3 sym ru_end_9578a0
+    if answer is 0
+      match
+    end
+  end
+  call lpta_loadp arg 1                 # оть
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 3 sym ru_end_8578a0
+    if answer is 0
+      match
+    end
+  end
+  call lpta_loadp arg 1                 # ал
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 2 sym ru_end_6163
+    if answer is 0
+      match
+    end
+  end
+  call lpta_loadp arg 1                 # ял
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 2 sym ru_end_9163
+    if answer is 0
+      match
+    end
+  end
+  call lpta_loadp arg 1                 # ил
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 2 sym ru_end_6c63
+    if answer is 0
+      match
+    end
+  end
+  call lpta_loadp arg 1                 # ел
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 2 sym ru_end_8d63
+    if answer is 0
+      match
+    end
+  end
+  call lpta_loadp arg 1                 # ист
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 3 sym ru_end_6c6e78
+    if answer is 0
+      match
+    end
+  end
+  call lpta_loadp arg 1                 # изм
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 3 sym ru_end_6c626d
+    if answer is 0
+      match
+    end
+  end
+  call lpta_loadp arg 1                 # ант
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 3 sym ru_end_617778
+    if answer is 0
+      match
+    end
+  end
+  call lpta_loadp arg 1                 # ент
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 3 sym ru_end_8d7778
+    if answer is 0
+      match
+    end
+  end
+  call lpta_loadp arg 1                 # ок
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 2 sym ru_end_8584
+    if answer is 0
+      match
+    end
+  end
+  call lpta_loadp arg 1                 # ец
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 2 sym ru_end_8d65
+    if answer is 0
+      match
+    end
+  end
+  call lpta_loadp arg 1                 # ой
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 2 sym ru_end_8576
+    if answer is 0
+      match
+    end
+  end
+  call lpta_loadp arg 1                 # сот
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 3 sym ru_end_6e8578
+    if answer is 0
+      match
+    end
+  end
+  call lpta_loadp arg 1                 # десят
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 5 sym ru_end_838d6e9178
+    if answer is 0
+      match
+    end
+  end
+  give up
+end
+
+# Whether the word that ends at this point ends in one of the endings that leave the stress on the stem.
+# The letters are read leftwards from the end, nearest first, so each
+# ending is written backwards in rules/constants.
+rule ru_ends_stem_stressed takes 2 from et_strss.obj
+  afresh
+  call ZZfence_null
+  call lpta_loadp arg 1                 # ая
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 2 sym ru_end_6191
+    if answer is 0
+      match
+    end
+  end
+  call lpta_loadp arg 1                 # яя
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 2 sym ru_end_9191
+    if answer is 0
+      match
+    end
+  end
+  call lpta_loadp arg 1                 # ое
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 2 sym ru_end_858d
+    if answer is 0
+      match
+    end
+  end
+  call lpta_loadp arg 1                 # ее
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 2 sym ru_end_8d8d
+    if answer is 0
+      match
+    end
+  end
+  call lpta_loadp arg 1                 # ые
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 2 sym ru_end_958d
+    if answer is 0
+      match
+    end
+  end
+  call lpta_loadp arg 1                 # ие
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 2 sym ru_end_6c8d
+    if answer is 0
+      match
+    end
+  end
+  call lpta_loadp arg 1                 # ую
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 2 sym ru_end_809f
+    if answer is 0
+      match
+    end
+  end
+  call lpta_loadp arg 1                 # юю
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 2 sym ru_end_9f9f
+    if answer is 0
+      match
+    end
+  end
+  call lpta_loadp arg 1                 # ия
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 2 sym ru_end_6c91
+    if answer is 0
+      match
+    end
+  end
+  call lpta_loadp arg 1                 # ию
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 2 sym ru_end_6c9f
+    if answer is 0
+      match
+    end
+  end
+  call lpta_loadp arg 1                 # ии
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 2 sym ru_end_6c6c
+    if answer is 0
+      match
+    end
+  end
+  call lpta_loadp arg 1                 # ыми
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 3 sym ru_end_956d6c
+    if answer is 0
+      match
+    end
+  end
+  call lpta_loadp arg 1                 # ими
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 3 sym ru_end_6c6d6c
+    if answer is 0
+      match
+    end
+  end
+  call lpta_loadp arg 1                 # ого
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 3 sym ru_end_857f85
+    if answer is 0
+      match
+    end
+  end
+  call lpta_loadp arg 1                 # его
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 3 sym ru_end_8d7f85
+    if answer is 0
+      match
+    end
+  end
+  call lpta_loadp arg 1                 # ому
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 3 sym ru_end_856d80
+    if answer is 0
+      match
+    end
+  end
+  call lpta_loadp arg 1                 # ему
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 3 sym ru_end_8d6d80
+    if answer is 0
+      match
+    end
+  end
+  give up
+end
+
+# Whether the word between the two points is one of the number words
+# stressed on the first syllable. Read leftwards from its end, and then
+# asked whether that was the whole of it.
+rule ru_word_first takes 3 from et_strss.obj
+  afresh
+  call ZZfence_null
+  call lpta_loadp arg 2                 # сорок
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 5 sym ru_end_6e85648584
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # тысяча
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 6 sym ru_end_78956e916f61
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # тысячи
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 6 sym ru_end_78956e916f6c
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # десять
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 6 sym ru_end_838d6e9178a0
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # девять
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 6 sym ru_end_838d759178a0
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # восемь
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 6 sym ru_end_75856e8d6da0
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # семьдесят
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 9 sym ru_end_6e8d6da0838d6e9178
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # восемьдесят
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 11 sym ru_end_75856e8d6da0838d6e9178
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # двадцать
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 8 sym ru_end_83756183656178a0
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # тридцать
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 8 sym ru_end_78646c83656178a0
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  give up
+end
+
+# Whether the word between the two points is one of the number words
+# stressed on the second syllable. Read leftwards from its end, and then
+# asked whether that was the whole of it.
+rule ru_word_second takes 3 from et_strss.obj
+  afresh
+  call ZZfence_null
+  call lpta_loadp arg 2                 # одиннадцать
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 11 sym ru_end_85836c77776183656178a0
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # двенадцать
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 10 sym ru_end_83758d776183656178a0
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # тринадцать
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 10 sym ru_end_78646c776183656178a0
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # четырнадцать
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 12 sym ru_end_6f8d789564776183656178a0
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # пятнадцать
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 10 sym ru_end_999178776183656178a0
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # шестнадцать
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 11 sym ru_end_798d6e78776183656178a0
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # семнадцать
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 10 sym ru_end_6e8d6d776183656178a0
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # четыреста
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 9 sym ru_end_6f8d7895648d6e7861
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # второй
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 6 sym ru_end_757885648576
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # вторая
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 6 sym ru_end_757885646191
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # второе
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 6 sym ru_end_75788564858d
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # второго
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 7 sym ru_end_75788564857f85
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # второму
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 7 sym ru_end_75788564856d80
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # вторыми
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 7 sym ru_end_75788564956d6c
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # втором
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 6 sym ru_end_75788564856d
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # вторых
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 6 sym ru_end_757885649593
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # вторую
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 6 sym ru_end_75788564809f
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # шестой
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 6 sym ru_end_798d6e788576
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # шестая
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 6 sym ru_end_798d6e786191
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # шестое
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 6 sym ru_end_798d6e78858d
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # шестого
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 7 sym ru_end_798d6e78857f85
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # шестому
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 7 sym ru_end_798d6e78856d80
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # шестыми
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 7 sym ru_end_798d6e78956d6c
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # шестом
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 6 sym ru_end_798d6e78856d
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # шестых
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 6 sym ru_end_798d6e789593
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # шестую
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 6 sym ru_end_798d6e78809f
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # седьмой
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 7 sym ru_end_6e8d83a06d8576
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # седьмая
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 7 sym ru_end_6e8d83a06d6191
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # седьмое
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 7 sym ru_end_6e8d83a06d858d
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # седьмого
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 8 sym ru_end_6e8d83a06d857f85
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # седьмому
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 8 sym ru_end_6e8d83a06d856d80
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # седьмыми
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 8 sym ru_end_6e8d83a06d956d6c
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # седьмом
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 7 sym ru_end_6e8d83a06d856d
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # седьмых
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 7 sym ru_end_6e8d83a06d9593
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # седьмую
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 7 sym ru_end_6e8d83a06d809f
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # восьмой
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 7 sym ru_end_75856ea06d8576
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # восьмая
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 7 sym ru_end_75856ea06d6191
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # восьмое
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 7 sym ru_end_75856ea06d858d
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # восьмого
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 8 sym ru_end_75856ea06d857f85
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # восьмому
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 8 sym ru_end_75856ea06d856d80
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # восьмыми
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 8 sym ru_end_75856ea06d956d6c
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # восьмом
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 7 sym ru_end_75856ea06d856d
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # восьмых
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 7 sym ru_end_75856ea06d9593
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # восьмую
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 7 sym ru_end_75856ea06d809f
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  give up
+end
+
+# Whether the word between the two points is one of the number words
+# stressed on the third syllable. Read leftwards from its end, and then
+# asked whether that was the whole of it.
+rule ru_word_third takes 3 from et_strss.obj
+  afresh
+  call ZZfence_null
+  call lpta_loadp arg 2                 # восемнадцать
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 12 sym ru_end_75856e8d6d776183656178a0
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # девятнадцать
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 12 sym ru_end_838d759178776183656178a0
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # запятая
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 7 sym ru_end_62619991786191
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  give up
+end
+
+# Whether the word between the two points is one of the number words
+# stressed on the last syllable. Read leftwards from its end, and then
+# asked whether that was the whole of it.
+rule ru_word_last takes 3 from et_strss.obj
+  afresh
+  call ZZfence_null
+  call lpta_loadp arg 2                 # один
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 4 sym ru_end_85836c77
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # одна
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 4 sym ru_end_85837761
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # миллион
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 7 sym ru_end_6d6c63636c8577
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # миллиард
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 8 sym ru_end_6d6c63636c616483
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # равно
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 5 sym ru_end_6461757785
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # амперсанд
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 9 sym ru_end_616d998d646e617783
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  give up
+end
+
+# Whether the word between the two points is one of the number words
+# stressed on the fourth syllable. Read leftwards from its end, and then
+# asked whether that was the whole of it.
+rule ru_word_fourth takes 3 from et_strss.obj
+  afresh
+  call ZZfence_null
+  call lpta_loadp arg 2                 # сороковой
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 9 sym ru_end_6e8564858485758576
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # сороковая
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 9 sym ru_end_6e8564858485756191
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # сороковое
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 9 sym ru_end_6e856485848575858d
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # сорокового
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 10 sym ru_end_6e856485848575857f85
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # сороковому
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 10 sym ru_end_6e856485848575856d80
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # сороковыми
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 10 sym ru_end_6e856485848575956d6c
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # сороковом
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 9 sym ru_end_6e856485848575856d
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # сороковых
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 9 sym ru_end_6e8564858485759593
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  call lpta_loadp arg 2                 # сороковую
+  call setscan_l 1
+  if answer is 0
+    call test_string_s 1 9 sym ru_end_6e856485848575809f
+    if answer is 0
+      call lpta_loadp arg 1
+      call test_ptr
+      if answer is 0
+        match
+      end
+    end
+  end
+  give up
+end
