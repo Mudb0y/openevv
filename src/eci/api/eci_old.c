@@ -90,6 +90,7 @@ int32_t setECIerror(int32_t rc, OldInst *h);
 int STDCALL eo_stop(OldInst *h);
 int STDCALL eo_speaking(OldInst *h);
 int32_t eo_callbackFn(void *inst, int32_t msg, int32_t param, void *data);
+extern void ev_forgetSentAfterStop(OldInst *h);
 
 /* Refuse a call that arrived while another was still running, and remember
    which one it was. Answers true when the call must not go on. */
@@ -444,40 +445,44 @@ int eo_getDefaultEnvironment(OldInst *h, int32_t check)
 /* And the voice it starts out speaking with. The concatenative side is asked
    first, because a voice it knows about overrides the standard one; a voice
    it has nothing to say about falls back to the table. */
+/* The preset a voice number starts as in this instance's language, written
+   into `out`. Also what a stopped instance of a language lifted from 6.1 is
+   taken to be speaking with again: see ev_forgetSentAfterStop. */
+void eo_defaultVoiceInto(OldInst *h, int32_t voiceno, char *out)
+{
+    uint8_t family = (uint8_t)((OI_LANG(h) & 0xff0000) >> 16);
+    uint8_t dialect = (uint8_t)(OI_LANG(h) & 0xff);
+    char *entry = (char *)OI_CONCAT(h)
+                + ((int8_t)family - 1) * 0x1e18
+                + (int8_t)dialect * 0xf0c
+                + OI_DEVICE(h) * SV_DIALECT_BYTES
+                + (voiceno - 1) * VOICE_BYTES;
+
+    if (*(int32_t *)(entry + 0x44)) {
+        memcpy(out, entry + SV_FIRST, VOICE_BYTES);
+    } else {
+        char *std = standardVoices
+                  + ((int8_t)family - 1) * SV_FAMILY_BYTES
+                  + (int8_t)dialect * SV_DIALECT_BYTES
+                  + (voiceno - 1) * VOICE_BYTES;
+
+        memcpy(out, std + SV_FIRST, VOICE_BYTES);
+    }
+
+    /* The settings the caller reads back are in its own units, not the
+       engine's, so they are converted once here. */
+    setRealWorldParamsFromECIParams(out, -1);
+}
+
 int eo_getDefaultActiveVoice(OldInst *h, int32_t check)
 {
-    uint8_t family, dialect;
-    char *entry;
-
     if (check && eo_speaking(h)) {
         OI_REFUSED(h) = 0x100;
         OI_REFUSEDALL(h) |= 0x100;
         return 0;
     }
 
-    family = (uint8_t)((OI_LANG(h) & 0xff0000) >> 16);
-    dialect = (uint8_t)(OI_LANG(h) & 0xff);
-
-    entry = (char *)OI_CONCAT(h)
-          + ((int8_t)family - 1) * 0x1e18
-          + (int8_t)dialect * 0xf0c
-          + OI_DEVICE(h) * SV_DIALECT_BYTES
-          + (OI_VOICENO(h) - 1) * VOICE_BYTES;
-
-    if (*(int32_t *)(entry + 0x44)) {
-        memcpy(OI_VOICE(h), entry + SV_FIRST, VOICE_BYTES);
-    } else {
-        char *std = standardVoices
-                  + ((int8_t)family - 1) * SV_FAMILY_BYTES
-                  + (int8_t)dialect * SV_DIALECT_BYTES
-                  + (OI_VOICENO(h) - 1) * VOICE_BYTES;
-
-        memcpy(OI_VOICE(h), std + SV_FIRST, VOICE_BYTES);
-    }
-
-    /* The settings the caller reads back are in its own units, not the
-       engine's, so they are converted once here. */
-    setRealWorldParamsFromECIParams(OI_VOICE(h), -1);
+    eo_defaultVoiceInto(h, OI_VOICENO(h), OI_VOICE(h));
     memcpy(OI_VOICE_SAVED(h), OI_VOICE(h), VOICE_BYTES);
     return 1;
 }
@@ -658,6 +663,7 @@ int STDCALL eo_stop(OldInst *h)
         return 0;
     }
     OI_STOPPED(h) = 1;
+    ev_forgetSentAfterStop(h);
     OI_BUSY(h) = 0;
     return 1;
 }

@@ -399,6 +399,34 @@ def main():
         print("speechd: recovery", flush=True)
         audio, _, _, event = module.speak("After cancellation.")
         assert event == "702 END" and audio
+
+        # A stop resets the machine, and Finnish and Brazilian Portuguese
+        # keep the rate and the voice there. Until 23 November 2026 nothing
+        # told them again afterwards, so every utterance after an
+        # interrupted one was at the default rate with the default voice --
+        # 2.3 times as long in Portuguese at Orca's +30 -- which a screen
+        # reader user heard on every Alt+Tab. Lengths and not bytes, and
+        # within three per cent rather than exact: what an instance has
+        # already said moves its later utterances by design, English's by
+        # 0.6 per cent here, and the fault this is for doubled them.
+        print("speechd: the rate after a stop", flush=True)
+        offered = {voice[1] for voice in module.list_voices()}
+        for language, sentence in (
+            ("en-US", "This is a test sentence."),
+            ("fi-FI", "Tämä on testilause."),
+            ("pt-BR", "Esta é uma frase de teste."),
+        ):
+            if language not in offered:
+                continue
+            module.set(language=language, synthesis_voice="NULL",
+                       voice="male2", rate="60")
+            before, _, _, _ = module.speak(sentence)
+            module.speak(" ".join([sentence] * 20), interrupt="STOP")
+            after, _, _, event = module.speak(sentence)
+            assert event == "702 END"
+            assert abs(len(after) - len(before)) * 100 <= len(before) * 3, (
+                language, len(before), len(after))
+        module.set(language="en-US", voice="male1", rate="0")
     finally:
         result = module.close()
     assert result == 0
