@@ -13,7 +13,7 @@ That wants a C compiler, Python, an installed `pw-play`, `paplay`, or `aplay`, a
 
 `openevv-say -h` lists the voice, speed, pitch, pitch-range, volume, language and sample-rate options. The lower-level `build/evv` command remains available when a program wants WAV data on standard output.
 
-For desktop and screen-reader speech there is a native Speech Dispatcher output module: `make speechd` builds it, it hands its samples back to Speech Dispatcher rather than opening a device, and it offers every language in the build with its eight voices. `docs/speech-dispatcher.md` says how to install it, how to try it without installing it, and what it does not do.
+For desktop and screen-reader speech there is a native Speech Dispatcher output module: `make speechd` builds it, it hands its samples back to Speech Dispatcher rather than opening a device, and it offers every language in the build with its eight voices. To hear it in Orca, or in anything else that speaks through Speech Dispatcher, with every language, the quick start at the top of `docs/speech-dispatcher.md` is one `make` line, a restart and a choice in Orca's preferences; the rest of that document says how to try it without installing it and what it does not do.
 
 On Android it is a text-to-speech engine TalkBack can be told to use, on a phone, a tablet or a Wear OS watch, with all twelve languages and their eight voices. Every release carries the packages, and the `android-dev` pre-release is the same built from main. `docs/android.md` says how to install it, how to turn it off again, and how to build and test it.
 
