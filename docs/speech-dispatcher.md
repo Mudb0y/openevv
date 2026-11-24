@@ -5,6 +5,55 @@ engine instance alive, streams 16-bit mono 11025 Hz PCM back to Speech
 Dispatcher for playback -- 22050 Hz with the wideband voice -- and does not
 open an audio device itself.
 
+## Quick start: every language, for Orca or anything else
+
+This is the whole of getting OpenEVV into Orca, or into anything else that speaks through Speech Dispatcher, with every language in it. The rest of this document is the detail behind it.
+
+**What it needs.** A C compiler, Python 3, `pkg-config`, and Speech Dispatcher's files for building a module: `spd_module_main.h` and `libspeechd_module`. On Debian 13, and on Ubuntu 25.04 and later, that is `sudo apt install build-essential python3 pkg-config libspeechd-dev`. Ubuntu 24.04 is the exception: its Speech Dispatcher is a 0.12 release candidate whose `libspeechd-dev` has the client library only and not those two, and there `nix develop` from the top of the checkout is the way to get them. Nothing else, and no `.so`: the module carries the engine, every language and its rules inside itself, and reads no file of its own when it runs.
+
+**Build and install it for your account.** From the top of the checkout, as one line:
+
+    make RULES=c LANGS="lang/enus lang/engb lang/dede lang/eses lang/esus lang/frfr lang/frca lang/itit lang/plpl lang/jajp lang/fifi lang/ptbr" PREFIX="$HOME/.local" SPEECHD_CONFDIR="$HOME/.config/speech-dispatcher/modules" speechd-install
+
+`speechd-install` is a target of `make`, not a command of its own. Keep the quotes round the whole of `LANGS="..."`, or the module is built with English alone and nothing says so. The first build takes about a quarter of an hour, nearly all of it compiling the rules; a later one rebuilds only what changed. It prints three `installed` lines when it is done: the module in `~/.local/libexec/speech-dispatcher-modules`, which Speech Dispatcher looks in for the current user, and its configuration in `~/.config/speech-dispatcher/modules`.
+
+What each part of that line is for:
+
+- `LANGS` says which languages go into the module, all twelve here. Japanese is built but not offered; see below.
+- `RULES=c` is the default and the one to want: the rules compiled to machine code, which is the fastest voice and the quickest to interrupt. `RULES=bytecode` builds in half a minute and speaks the same samples at less than half the speed, and is for working on the engine.
+- `PREFIX` and `SPEECHD_CONFDIR` say where it goes. These two put it in your home and need no `sudo`.
+
+**Do not add anything to `speechd.conf`.** Speech Dispatcher finds the module by itself. An `AddModule` line turns that finding off for every module at once and hides espeak and every other voice; the section on installing below says why.
+
+**Restart Speech Dispatcher.** It looks for modules only when it starts, and one already running will not see the new module. Logging out and in again is the safe way. From a terminal, this restarts it and Orca together:
+
+    killall speech-dispatcher; sleep 1; setsid orca --replace >/dev/null 2>&1 &
+
+That stops speech for a second or two. If Orca does not come back, Super+Alt+S turns it on again in GNOME, or log out and in.
+
+**Check it.**
+
+    spd-say -O
+    spd-say -o openevv -L
+    spd-say -o openevv -l pt-BR "Olá, tudo bem?"
+
+The first should list `openevv`, the second its voices, eight to a language.
+
+**Choose it in Orca.** Orca's preferences (Orca+Space), the Voice tab: Speech system *Speech Dispatcher*, Speech synthesizer *openevv*, then the language and voice. Any other program that speaks through Speech Dispatcher chooses it the same way it chooses any other module, by the name `openevv`.
+
+**Updating.** `git pull`, the same `make` line, and restart Speech Dispatcher as above. The module that was running keeps speaking until then.
+
+**Removing it.** Delete the two files it installed, then restart Speech Dispatcher:
+
+    rm ~/.local/libexec/speech-dispatcher-modules/sd_openevv ~/.config/speech-dispatcher/modules/openevv.conf
+
+**For every account on the machine** instead of yours, build as yourself first and install as root into the directories your distribution's Speech Dispatcher reads. `pkg-config` knows the module directory:
+
+    make RULES=c LANGS="..." speechd
+    sudo make RULES=c LANGS="..." SPEECHD_MODULEDIR="$(pkg-config --variable=modulebindir speech-dispatcher)" SPEECHD_CONFDIR=/etc/speech-dispatcher/modules speechd-install
+
+with the same `LANGS` as above in both. On a system managed declaratively, NixOS among them, install it through the distribution instead.
+
 ## Build and automatic test
 
 Install Speech Dispatcher's development headers and module helper library,
@@ -40,20 +89,13 @@ passes a smoke test. Quote the whole assignment as one word. What caught it was
 it, which failed with `AssertionError: {'en-US'}` -- the argument for stating a
 count rather than computing one from the same thing you are trying to check.
 
-Ten languages are linked and nine are offered. Japanese is deliberately left
-out of the module's table: its text is Shift-JIS, EUC-JP or one of three
-seven-bit JIS sets and its romanizer recodes whichever it was given, none of
-which is UTF-8, and there is no converter here for them. Offering it would
-hand a screen reader a language this module would mis-speak. `speechd-test-all`
-therefore states the count it expects rather than counting `LANGS`, so a
-language that quietly stopped being offered fails the check.
+Twelve languages are linked and eleven are offered. Japanese is deliberately left out of the module's table: its text is Shift-JIS, EUC-JP or one of three seven-bit JIS sets and its romanizer recodes whichever it was given, none of which is UTF-8, and there is no converter here for them. Offering it would hand a screen reader a language this module would mis-speak. `speechd-test-all` therefore states the count it expects rather than counting `LANGS`, so a language that quietly stopped being offered fails the check.
 
 ## Install
 
-For a user-local compiled-rule installation with every language, use absolute
-paths appropriate to the account:
+For a user-local compiled-rule installation with every language:
 
-    make -j"$(nproc)" RULES=c LANGS="lang/enus lang/engb lang/dede lang/eses lang/esus lang/frfr lang/frca lang/itit lang/plpl lang/jajp lang/fifi lang/ptbr" PREFIX=/home/Username/.local SPEECHD_CONFDIR=/home/Username/.config/speech-dispatcher/modules speechd-install
+    make -j"$(nproc)" RULES=c LANGS="lang/enus lang/engb lang/dede lang/eses lang/esus lang/frfr lang/frca lang/itit lang/plpl lang/jajp lang/fifi lang/ptbr" PREFIX="$HOME/.local" SPEECHD_CONFDIR="$HOME/.config/speech-dispatcher/modules" speechd-install
 
 This installs `sd_openevv` below the chosen module directory and `openevv.conf` below the chosen configuration directory. Distribution packagers can set `DESTDIR`, `SPEECHD_MODULEDIR`, and `SPEECHD_CONFDIR` directly. Nothing further is needed to make the module visible: Speech Dispatcher walks its user and system module directories itself and loads what it finds there, so an installed module is offered the next time the daemon starts.
 
