@@ -134,16 +134,9 @@
             # this hands back the object for one it has compiled before.
             pkgs.ccache
 
-            # The Speech Dispatcher output module compiles against Speech
-            # Dispatcher's own headers and links its out-of-tree module helper.
-            # Headers and a library, nothing else: the module hands its samples
-            # back to the server rather than opening a device, so building it
-            # here neither needs a running server nor touches one.
-            pkgs.speechd
-            pkgs.pkg-config
-            # speech-dispatcher.pc requires glib-2.0, so pkg-config cannot
-            # answer for it without glib's own .pc beside it.
-            pkgs.glib.dev
+            # The Speech Dispatcher output module needs nothing here: the
+            # module side of the protocol is in speechd/spd, so it builds
+            # with the compiler alone.
           ];
 
           shellHook = ''

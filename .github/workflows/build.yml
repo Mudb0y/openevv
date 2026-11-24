@@ -134,14 +134,13 @@ jobs:
           sudo apt-get install -y -q gcc-multilib
           make -j"$(nproc)" RULES=bytecode CC32="gcc -m32" crashers32
 
-      # Ubuntu's libspeechd-dev is the client API only: it has neither
-      # spd_module_main.h nor libspeechd_module. The development shell has
-      # Speech Dispatcher's out-of-tree module interface on every runner,
-      # which is the same environment this target is documented against.
-      - uses: cachix/install-nix-action@v31.11.1
-
+      # On the runner as it comes, with no Speech Dispatcher package: the
+      # module carries its side of the protocol in speechd/spd, and this is
+      # what says it still needs nothing else. Ubuntu 24.04's libspeechd-dev
+      # has neither spd_module_main.h nor libspeechd_module, which is why
+      # this step once ran inside nix develop.
       - name: Check the Speech Dispatcher module, every language
-        run: nix develop --command make -j"$(nproc)" RULES=bytecode speechd-test-all
+        run: make -j"$(nproc)" RULES=bytecode speechd-test-all
 
       - name: Check the Speech Dispatcher configuration helper
         run: make speechd-enable-test

@@ -52,6 +52,43 @@ copyright notice is in LICENSE beside ours. What it builds is the engine
 here, so the language data an Android package carries is everything under
 `lang` on the terms below, exactly as in every other build.
 
+Four files in `speechd/spd` are Speech Dispatcher's and not ours:
+`module_main.c`, `module_process.c`, `module_readline.c` and
+`spd_module_main.h`, the module side of its output-module protocol, as
+Speech Dispatcher 0.12.0 has them. They are Samuel Thibault's, under the
+two-clause BSD licence written at the head of each, which is not the LGPL the
+rest of Speech Dispatcher is under, and they are kept exactly as they came so
+that they can be held against that release. `speechd_types.h` and
+`spd_audio.h` beside them are ours, under the MIT licence: the few types
+those four and the module use, declared here so that nothing of Speech
+Dispatcher's has to be installed to build the module.
+
+Their notice, which goes with any module built from them:
+
+    Copyright (C) 2020-2023 Samuel Thibault <samuel.thibault@ens-lyon.org>
+    All rights reserved.
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions
+    are met:
+    1. Redistributions of source code must retain the above copyright
+       notice, this list of conditions and the following disclaimer.
+    2. Redistributions in binary form must reproduce the above copyright
+       notice, this list of conditions and the following disclaimer in the
+       documentation and/or other materials provided with the distribution.
+
+    THIS SOFTWARE IS PROVIDED BY Samuel Thibault AND CONTRIBUTORS ``AS IS'' AND
+    ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+    ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+    FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+    OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+    HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+    LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+    OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+    SUCH DAMAGE.
+
 IBM's
 -----
 

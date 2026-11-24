@@ -552,26 +552,26 @@ $(BUILD)/voices: test/harness/voices.c $(BUILD)/libevv.a
 # A native Speech Dispatcher output module, which is what makes the engine a
 # voice a screen reader can choose rather than something driven through a
 # shim. It hands its samples back to the server and opens no device itself,
-# so it needs Speech Dispatcher's headers and its out-of-tree module helper
-# and nothing that plays sound. speechd/spd_audio.h is a shim for one header
-# spd_module_main.h includes and Speech Dispatcher 0.12 does not install.
-#
-# The library directory comes from pkg-config and is repeated as an rpath,
-# because a store path is not on any system link path and the binary has to
-# find the helper again when the server runs it. On a distribution that keeps
-# its libraries where the linker already looks, pkg-config answers nothing
-# here and the line is what it always was.
-SPEECHD_CFLAGS ?= $(shell pkg-config --cflags speech-dispatcher 2>/dev/null)
-SPEECHD_LIBDIRS := $(shell pkg-config --libs-only-L speech-dispatcher 2>/dev/null \
-                     | sed 's|-L\([^ ]*\)|-L\1 -Wl,-rpath,\1|g')
-SPEECHD_LIBS   ?= $(SPEECHD_LIBDIRS) -lspeechd_module
+# so it needs nothing that plays sound -- and nothing of Speech Dispatcher's
+# installed either. The module side of the protocol is in speechd/spd:
+# module_main.c, module_process.c, module_readline.c and spd_module_main.h are
+# Speech Dispatcher 0.12.0's own, under their author's two-clause BSD licence
+# rather than the LGPL of the rest, and are as they came, so they can be held
+# against that release; speechd_types.h and spd_audio.h
+# beside them are ours, the few types those files and the module use. So the
+# module builds wherever there is a C compiler, and depends on nothing but the
+# C library -- Ubuntu 24.04, whose libspeechd-dev has neither the header nor
+# the library, among them.
+SPEECHD_PROTOCOL := speechd/spd/module_main.c speechd/spd/module_process.c \
+                    speechd/spd/module_readline.c
 
 speechd: $(BUILD)/sd_openevv$(SUF)
 
-$(BUILD)/sd_openevv$(SUF): speechd/openevv.c speechd/spd_audio.h \
+$(BUILD)/sd_openevv$(SUF): speechd/openevv.c $(SPEECHD_PROTOCOL) \
+                           $(wildcard speechd/spd/*.h) \
                            $(BUILD)/libevv$(SUF).a $(RULESTAMP)
-	@$(CC) $(ALL_CFLAGS) -Ispeechd $(SPEECHD_CFLAGS) speechd/openevv.c \
-	   $(BUILD)/libevv$(SUF).a $(SPEECHD_LIBS) -lpthread -lm -o $@
+	@$(CC) $(ALL_CFLAGS) -Ispeechd/spd speechd/openevv.c $(SPEECHD_PROTOCOL) \
+	   $(BUILD)/libevv$(SUF).a -lpthread -lm -o $@
 	@echo "built $@"
 
 # The module driven over its own protocol, which is the only way to check it
