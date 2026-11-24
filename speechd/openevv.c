@@ -17,7 +17,7 @@
 #include <time.h>
 #include <unistd.h>
 
-#include <speech-dispatcher/spd_module_main.h>
+#include "spd_module_main.h"
 
 #include "evv_abi.h"
 

@@ -7,15 +7,7 @@ open an audio device itself.
 
 ## Build and automatic test
 
-Install Speech Dispatcher's development headers and module helper library,
-plus `pkg-config`. Package names vary; on Arch Linux the files are supplied by
-`speech-dispatcher`, while Debian-family systems normally use
-`libspeechd-dev`. On a Nix machine `nix develop` has them: the flake's shell
-carries `speechd`, `pkg-config` and `glib.dev`, the last because
-`speech-dispatcher.pc` requires glib and pkg-config cannot answer for it
-otherwise. None of that touches a running server -- the module hands its
-samples back rather than opening a device, so what it needs is headers and a
-library.
+The module needs a C compiler and Python, as the rest of the build does, and nothing of Speech Dispatcher's: no development package, no `pkg-config`, and no library at run time but the C library. The module side of Speech Dispatcher's output-module protocol is in `speechd/spd` -- `module_main.c`, `module_process.c`, `module_readline.c` and `spd_module_main.h` exactly as Speech Dispatcher 0.12.0 has them, which are under their author's two-clause BSD licence rather than the LGPL of the rest, and `speechd_types.h` and `spd_audio.h`, ours, for the few types they use. So it builds on Ubuntu 24.04, whose `libspeechd-dev` has neither that header nor `libspeechd_module`, as it does everywhere else, and a module built on one machine runs on another without anything of Speech Dispatcher's beyond the server itself. Until 24 November 2026 the module linked `libspeechd_module` and wanted the header from the distribution; a session driven through both, voices, settings, eighty-one audio blocks, marks, icons and the error replies, came back the same to the byte.
 
     make -j"$(nproc)" RULES=bytecode speechd-test
 
