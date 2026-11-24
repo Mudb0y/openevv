@@ -287,6 +287,8 @@ jobs:
             build/libeci-enus-dede-engb-eses-esus-frfr-frca-itit-plpl-jajp-fifi-ptbr.so
           python3 test/lib/giveup.py \
             build/libeci-enus-dede-engb-eses-esus-frfr-frca-itit-plpl-jajp-fifi-ptbr.so
+          python3 test/lib/afterstop.py \
+            build/libeci-enus-dede-engb-eses-esus-frfr-frca-itit-plpl-jajp-fifi-ptbr.so
           python3 test/lib/builtin.py \
             build/libeci-enus-dede-engb-eses-esus-frfr-frca-itit-plpl-jajp-fifi-ptbr.so
 
