@@ -1205,8 +1205,15 @@ install: $(BUILD)/evv $(BUILD)/openevv-say
 # own directories, and putting a module there is a decision about somebody's
 # speech rather than a build step. Speech Dispatcher discovers the installed
 # module automatically when speechd.conf has no explicit AddModule directives.
+#
+# The old module is taken away before the new one is copied, because it is
+# usually running: Speech Dispatcher keeps it alive for as long as a screen
+# reader is connected, and copying over a running program fails with "Text
+# file busy". Removing the name leaves the running one its copy until
+# Speech Dispatcher next starts, which is when the new one is taken up.
 speechd-install: $(BUILD)/sd_openevv$(SUF)
 	@mkdir -p $(DESTDIR)$(PREFIX)/bin $(DESTDIR)$(SPEECHD_MODULEDIR) $(DESTDIR)$(SPEECHD_CONFDIR)
+	@rm -f $(DESTDIR)$(SPEECHD_MODULEDIR)/sd_openevv
 	@cp $(BUILD)/sd_openevv$(SUF) $(DESTDIR)$(SPEECHD_MODULEDIR)/sd_openevv
 	@cp speechd/openevv.conf $(DESTDIR)$(SPEECHD_CONFDIR)/openevv.conf
 	@cp speechd/openevv-speechd-enable $(DESTDIR)$(PREFIX)/bin/openevv-speechd-enable

@@ -18,6 +18,7 @@
 #include <string.h>
 #include "eci_synththread.h"
 #include "evv_abi.h"
+#include "delta_lang.h"
 
 #define OK              0
 #define ERR_FAILED     (-2)
@@ -425,6 +426,23 @@ THIS SynthThread *stl_ctorWithLanguage(SynthThread *t, void *app, void *state,
 
 /* ---- settling on a language ------------------------------------------ */
 
+/* Put an engine through the line it starts from. Answers whether either
+   line was refused. */
+static int32_t stl_sendDefaults(SynthThread *t, void *engine)
+{
+    EngCommand command = (EngCommand)ENG_CALL_ON(engine, ENG_COMMAND);
+    int32_t refused = 0;
+
+    ST_DIRECT(t) = 1;
+    if (command(engine, CMD_DEFAULTS))
+        refused = 1;
+    /* Newer corpora want one more line than the older ones do. */
+    if (ST_CORPORA(t) > 0 && command(engine, CMD_NORMALISE))
+        refused = 1;
+    ST_DIRECT(t) = 0;
+    return refused;
+}
+
 /* Put the thread on a language and get the engine behind it ready to speak.
 
    The old engine is given back first, because the array only keeps one per
@@ -493,13 +511,8 @@ THIS int32_t stl_initialize(SynthThread *t, LangIdentifier *want)
     cm_registerCallbackA(ST_CONCAT(t), CAT_CB_BREAK, 0, t);
 
     command = (EngCommand)ENG_CALL_ON(engine, ENG_COMMAND);
-    ST_DIRECT(t) = 1;
-    if (command(engine, CMD_DEFAULTS))
+    if (stl_sendDefaults(t, engine))
         rc = ERR_ENGINE;
-    /* Newer corpora want one more line than the older ones do. */
-    if (ST_CORPORA(t) > 0 && command(engine, CMD_NORMALISE))
-        rc = ERR_ENGINE;
-    ST_DIRECT(t) = 0;
 
     if (rc != OK || !stw_engineInitialize(t, engine)) {
         ea_removeEngine(ST_ENGINES(t), want);
@@ -599,6 +612,23 @@ THIS int32_t stl_stop(SynthThread *t)
            it would be the first thing heard of whatever is said next. */
         if (ew_machine(ST_ENGINE(t)))
             clearSynthesisTail(ew_machine(ST_ENGINE(t)));
+
+        /* The reset put every variable of the machine back to nought,
+           which takes back what the line an engine starts from had set as
+           well: phrase prediction and the abbreviation dictionary are on
+           again after it. A language of the older interface is told every
+           setting again before it next speaks, and that puts them back. A
+           language lifted from 6.1 is told only what its caller has changed
+           (see ev_forgetSentAfterStop), on the understanding that a stopped
+           engine is where a new one starts, so here it is put back there.
+           Without this, every sentence after a stop spoke with the breaks
+           phrase prediction guesses at -- five per cent longer in Brazilian
+           Portuguese -- and read "Dr." and "mg" through the dictionary,
+           until the instance was deleted. */
+        if (ew_machine(ST_ENGINE(t))
+            && delta_lang_of(ew_machine(ST_ENGINE(t)))->settings_on_change
+            && stl_sendDefaults(t, ST_ENGINE(t)))
+            rc = ERR_ENGINE;
     }
     if (ST_CONVERTER(t))
         pcm_cvt_clear(ST_CONVERTER(t));

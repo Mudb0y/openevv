@@ -515,13 +515,58 @@ int ev_sendChangedActiveVoice(OldInst *h, ECIVoice v, int32_t force)
    audio format; the rest go one at a time.
 
    The language is sent twice. After the first it matches the saved copy, so
-   the second does nothing unless everything is being forced. */
+   the second does nothing unless everything is being forced.
+
+   The third number is what an engine is left at by the line it is put
+   through when it is made, and again after a stop: `v1 `ts0 `da0 `ty1 `pp0,
+   CMD_DEFAULTS in src/eci/synth/eci_synthlife.c. Phonemes go unwanted until
+   asked for. The language has none, since a stop does not take it back. */
+static const struct { int env; int param; int32_t start; } SEND_CHANGED[] = {
+    { 17, 0x10, 1 }, { 2, 0, 0 }, { 3, 3, 0 }, { 11, 0x0d, 0 }, { 7, 4, 0 },
+    { 9, 2, -1 }, { 10, 1, 1 },
+};
+
+extern void eo_defaultVoiceInto(OldInst *h, int32_t voiceno, char *out);
+
+/* A stop resets the machine, and a language lifted from 6.1 keeps the voice
+   and the settings it was told in the machine, so after a stop it is
+   speaking with its defaults again. The forced send a stop asks for (see
+   eo_stop) is the original's way back from that, and it is withheld from
+   such a language by ev_mayForce, so without this the copy of what was sent
+   still held what the caller had asked for, nothing differed from it, and
+   nothing was sent again: every utterance after an interrupted one spoke at
+   the default rate with the default voice, whatever the caller had set,
+   until the language changed. So the copy is put back to what a stopped
+   engine is speaking with again, and what the caller has asked for that
+   differs from it goes with the next text.
+
+   That is the line's values and not g_DefaultEnvironment's, which the caller
+   moves with eciSetDefaultParam. Taken from there, phrase prediction, the
+   dictionary, a text mode or a number mode asked for that way read as
+   already sent after a stop, so none was sent again and the engine spoke on
+   with the line's: in Portuguese "O Dr. Silva tomou 5 mg hoje." went from
+   34,100 samples to 42,218 after the first stop, and in both languages a
+   sentence phrase prediction breaks lost its breaks. An instance's first
+   text does not need this, since ev_setDefaultEnvironment sends all four
+   whatever the copy says. */
+void ev_forgetSentAfterStop(OldInst *h)
+{
+    const delta_language *l = delta_lang_by_id(OI_ENV(h)[ENV_LANGUAGE]);
+    size_t i;
+
+    if (!l || !l->settings_on_change)
+        return;
+    /* The language is the one thing a stop does not take back, and sending
+       it again would be a change of language, which starts more over than
+       a stop does. */
+    for (i = 0; i < sizeof SEND_CHANGED / sizeof SEND_CHANGED[0]; i++)
+        if (SEND_CHANGED[i].env != ENV_LANGUAGE)
+            OI_ENV_SAVED(h)[SEND_CHANGED[i].env] = SEND_CHANGED[i].start;
+    eo_defaultVoiceInto(h, SEND_CHANGED[0].start, OI_VOICE_SAVED(h));
+}
+
 int ev_sendChangedEnvironment(OldInst *h, Environment env, int32_t force)
 {
-    static const struct { int env; int param; } SEND[] = {
-        { 17, 0x10 }, { 2, 0 }, { 3, 3 }, { 11, 0x0d }, { 7, 4 },
-        { 9, 2 }, { 10, 1 },
-    };
     const int32_t *e = env.w;
     int32_t *sent = OI_ENV_SAVED(h);
     int32_t langMoved = 0;
@@ -588,12 +633,13 @@ int ev_sendChangedEnvironment(OldInst *h, Environment env, int32_t force)
         sent[ENV_LANGUAGE] = e[ENV_LANGUAGE];
     }
 
-    for (i = 0; i < (int)(sizeof SEND / sizeof SEND[0]); i++) {
-        int n = SEND[i].env;
+    for (i = 0; i < (int)(sizeof SEND_CHANGED / sizeof SEND_CHANGED[0]); i++) {
+        int n = SEND_CHANGED[i].env;
 
         if (!ev_mayForce(h, force) && e[n] == sent[n])
             continue;
-        if (setECIerror(api_set_param(OI_NEW(h), 0, SEND[i].param, e[n]), h))
+        if (setECIerror(api_set_param(OI_NEW(h), 0, SEND_CHANGED[i].param,
+                                      e[n]), h))
             return 0;
         sent[n] = e[n];
     }
